@@ -1,0 +1,27 @@
+{
+  "name": "tmpose-kamishibai",
+  "version": "3.0.0",
+  "private": true,
+  "description": "TMPose紙芝居 — ポーズで進めるAIインタラクティブ紙芝居",
+  "homepage": "https://kubohiroya.github.io/tmpose-kamishibai/",
+  "scripts": {
+    "build": "node scripts/build-site.mjs",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
+  },
+  "keywords": [
+    "turbowarp",
+    "scratch",
+    "teachable-machine",
+    "pose-recognition",
+    "kamishibai"
+  ],
+  "author": "Hiroya Kubo",
+  "license": "MIT",
+  "devDependencies": {
+    "gh-pages": "^6.3.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
