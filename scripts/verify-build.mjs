@@ -92,6 +92,13 @@ export async function verifyBuild() {
   const toc = await readFile(tocPath, 'utf8');
   const html = await readFile(htmlPath, 'utf8');
   const rubyCount = (html.match(/<ruby\b/gu) ?? []).length;
+  const sourceNameCount = (source.match(/久保裕也/gu) ?? []).length;
+  const correctNameRubyCount = (
+    html.match(/<ruby><rb>裕也<\/rb>[\s\S]*?<rt>ひろや<\/rt>[\s\S]*?<\/ruby>/gu) ?? []
+  ).length;
+  const incorrectNameRubyCount = (
+    html.match(/<ruby><rb>裕也<\/rb>[\s\S]*?<rt>ゆうや<\/rt>[\s\S]*?<\/ruby>/gu) ?? []
+  ).length;
   const tocLabelCount = (toc.match(/class="toc-label"/gu) ?? []).length;
   const codeBlocks = html.match(/<pre\b[\s\S]*?<\/pre>/gu) ?? [];
   const docsEntries = await readdir(docsDirectory, {withFileTypes: true});
@@ -131,6 +138,10 @@ export async function verifyBuild() {
     'rubygana changed a code block.');
   assert(html.includes('<rt>りゅうぐうじょう</rt>'),
     'The 竜宮城 reading override was not applied.');
+  assert(sourceNameCount > 0 && correctNameRubyCount === sourceNameCount,
+    'The scoped 久保裕也 name reading override was not applied to every occurrence.');
+  assert(incorrectNameRubyCount === 0,
+    'Documentation HTML still contains the incorrect ゆうや reading.');
   assert(images.length === 66,
     `Expected 66 documentation image elements, found ${images.length}.`);
   assert(!html.includes('data:image/'), 'Documentation HTML contains an embedded image data URL.');

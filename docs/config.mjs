@@ -6,6 +6,7 @@ export const documentConfig = {
   pdfFilename: 'tmpose-kamishibai-20260801.pdf',
   tocSectionDepth: 4,
   rubyOverrides: [
+    '久保裕也:裕也:ひろや',
     '竜宮城:りゅうぐうじょう',
     '玉手箱:たまてばこ',
     '浦島太郎:うらしまたろう',

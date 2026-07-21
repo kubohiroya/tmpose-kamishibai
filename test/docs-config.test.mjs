@@ -33,6 +33,11 @@ test('rejects values outside elementary school grades', () => {
   }
 });
 
+test('scopes the Hiroya name reading to the full name', () => {
+  assert(documentConfig.rubyOverrides.includes('久保裕也:裕也:ひろや'));
+  assert(!documentConfig.rubyOverrides.includes('裕也:ひろや'));
+});
+
 test('delegates the documentation table of contents to Vivliostyle', () => {
   const source = readFileSync(
     new URL(`../docs/${documentConfig.sourceFilename}`, import.meta.url),
