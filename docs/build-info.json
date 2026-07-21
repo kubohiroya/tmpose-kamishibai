@@ -15,9 +15,15 @@
   },
   "htmlAndPdfGenerator": "Vivliostyle CLI 11.1.0",
   "publicationKind": "documentation",
+  "navigation": {
+    "viewerBookMode": true,
+    "pdfBookmarks": "generatedTableOfContents"
+  },
+  "coverFilename": "tmpose-kamishibai-cover-20260801.md",
   "sourceFilename": "tmpose-kamishibai-20260801.md",
   "generatedTableOfContents": {
     "title": "目次",
+    "htmlFilename": "toc.html",
     "sectionDepth": 4
   }
 }

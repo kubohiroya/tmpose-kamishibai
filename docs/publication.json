@@ -8,17 +8,23 @@
   "name": "AIを使って「紙芝居の物語に参加する仕組み」を作ろう！",
   "author": "Hiroya Kubo",
   "inLanguage": "ja",
-  "dateModified": "2026-07-21T10:34:22.017Z",
+  "dateModified": "2026-07-21T12:31:55.659Z",
   "readingOrder": [
     {
       "url": "index.html",
+      "name": "AIを使って「紙芝居の物語に参加する仕組み」を作ろう！ 「親子AIプログラミング体験会」@千葉商科大学 (2026/08/01)",
+      "rel": "cover",
+      "type": "LinkedResource"
+    },
+    {
+      "url": "toc.html",
       "name": "目次",
       "rel": "contents",
       "type": "LinkedResource"
     },
     {
       "url": "tmpose-kamishibai-20260801.html",
-      "name": "AIを使って「紙芝居の物語に参加する仕組み」を作ろう！ 「親子AIプログラミング体験会」@千葉商科大学 (2026/08/01)"
+      "name": "0. この教材と体験会について"
     }
   ],
   "resources": [
