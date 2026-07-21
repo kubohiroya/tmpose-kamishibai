@@ -127,9 +127,11 @@ export async function verifyBuild() {
   ).length;
   const tocLabelCount = (toc.match(/class="toc-label"/gu) ?? []).length;
   const codeBlocks = combinedHtml.match(/<pre\b[\s\S]*?<\/pre>/gu) ?? [];
-  const sourceImageCount = (
-    combinedSource.match(/!\[\]\[image\d+\]\{style="width: [0-9.]+px;"\}/gu) ?? []
-  ).length;
+  const sourceImagePlacements = [...combinedSource.matchAll(
+    /!\[\]\[(image\d+)\](?:\{style="width: ([0-9.]+)px;"\})?/gu,
+  )];
+  const sourceImageCount = sourceImagePlacements.length;
+  const sourceImageWidths = sourceImagePlacements.map(([, , width]) => width);
   const docsEntries = await readdir(docsDirectory, {withFileTypes: true});
   const tocLinks = await verifyLocalReferences(tocPath, 'a', 'href');
   const coverImages = await verifyLocalReferences(coverHtmlPath, 'img', 'src');
@@ -215,15 +217,19 @@ export async function verifyBuild() {
     'The scoped 久保裕也 name reading override was not applied to every occurrence.');
   assert(incorrectNameRubyCount === 0,
     'Documentation HTML still contains the incorrect ゆうや reading.');
-  assert(sourceImageCount === 73,
-    `Expected 73 sized image placements in Markdown, found ${sourceImageCount}.`);
+  assert(sourceImageCount > 0, 'Documentation Markdown does not contain any images.');
+  assert(sourceImageWidths.every((width) => width && Number(width) > 0),
+    'Every Markdown image placement must have a positive pixel width.');
   assert(images.length === sourceImageCount,
     `Expected ${sourceImageCount} documentation image elements, found ${images.length}.`);
-  assert(
-    imageStyles.length === images.length
-      && imageStyles.every((style) => /(?:^|;)\s*width:\s*[0-9.]+px;/u.test(style)),
-    'A generated documentation image is missing its source placement width.',
-  );
+  const generatedImageWidths = imageStyles.map((style) => (
+    style.match(/(?:^|;)\s*width:\s*([0-9.]+)px;/u)?.[1]
+  ));
+  assert(imageStyles.length === images.length
+      && generatedImageWidths.every((width) => width && Number(width) > 0),
+  'A generated documentation image is missing its source placement width.');
+  assert(JSON.stringify(generatedImageWidths) === JSON.stringify(sourceImageWidths),
+    'Generated documentation image widths do not match the Markdown placements.');
   assert(!combinedHtml.includes('data:image/'),
     'Documentation HTML contains an embedded image data URL.');
   assert(toc.includes(`data-rubygana-grade="${grade}"`),
