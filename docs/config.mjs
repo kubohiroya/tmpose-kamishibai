@@ -11,6 +11,15 @@ export const documentConfig = {
   ],
 };
 
+export const textbookConfig = {
+  title: 'AIを使って「紙芝居の物語に参加する仕組み」を作ろう！',
+  author: 'Hiroya Kubo',
+  sourceFilename: 'tmpose-kamishibai-textbook-20260801.md',
+  outputDirectory: 'textbook',
+  pdfFilename: 'tmpose-kamishibai-textbook-20260801.pdf',
+  tocSectionDepth: 4,
+};
+
 export function resolveLearnedThroughGrade(value = process.env.RUBYGANA_GRADE) {
   const grade = value === undefined || value === ''
     ? documentConfig.learnedThroughGrade

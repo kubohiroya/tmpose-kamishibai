@@ -5,7 +5,11 @@ import {copyFile, cp, mkdir, readFile, readdir, rename, rm, writeFile} from 'nod
 import path from 'node:path';
 import {fileURLToPath, pathToFileURL} from 'node:url';
 
-import {documentConfig, resolveLearnedThroughGrade} from '../docs/config.mjs';
+import {
+  documentConfig,
+  resolveLearnedThroughGrade,
+  textbookConfig,
+} from '../docs/config.mjs';
 
 const require = createRequire(import.meta.url);
 const projectRoot = fileURLToPath(new URL('../', import.meta.url));
@@ -90,6 +94,43 @@ async function findHtmlFiles(directory) {
   return nested.flat();
 }
 
+async function processHtmlFiles(directory, grade) {
+  const htmlFiles = await findHtmlFiles(directory);
+  if (htmlFiles.length === 0) {
+    throw new Error('Vivliostyle did not generate an HTML document.');
+  }
+
+  for (const htmlFile of htmlFiles) {
+    await addBuildNote(htmlFile, grade);
+    const rubyOutput = `${htmlFile}.rubygana`;
+    await runRubygana(htmlFile, rubyOutput, grade);
+    await rename(rubyOutput, htmlFile);
+  }
+
+  return htmlFiles;
+}
+
+function createBuildInfo(grade, details = {}) {
+  return {
+    learnedThroughGrade: grade,
+    rubyGenerator: `${rubyganaPackage.name} ${rubyganaPackage.version}`,
+    kanjiDataset: {
+      id: rubyganaGradeData.id,
+      sourceUrl: rubyganaGradeData.sourceUrl,
+      gradeCounts: rubyganaGradeData.expectedGradeCounts,
+    },
+    htmlAndPdfGenerator: 'Vivliostyle CLI 11.1.0',
+    ...details,
+  };
+}
+
+async function writeBuildInfo(directory, grade, details) {
+  await writeFile(
+    path.join(directory, 'build-info.json'),
+    `${JSON.stringify(createBuildInfo(grade, details), null, 2)}\n`,
+  );
+}
+
 async function addBuildNote(htmlPath, grade) {
   const source = await readFile(htmlPath, 'utf8');
   const note = `<p class="furigana-build-note">このHTMLとPDFは、小学${grade}年生までに学ぶ漢字を既習として、以後に学ぶ漢字へふりがなを付けています。</p>`;
@@ -147,17 +188,7 @@ export async function buildDocs({distDirectory = path.join(projectRoot, 'dist')}
   ], {cwd: sourceDirectory});
 
   await cp(tempDirectory, docsDirectory, {recursive: true});
-  const htmlFiles = await findHtmlFiles(docsDirectory);
-  if (htmlFiles.length === 0) {
-    throw new Error('Vivliostyle did not generate an HTML document.');
-  }
-
-  for (const htmlFile of htmlFiles) {
-    await addBuildNote(htmlFile, grade);
-    const rubyOutput = `${htmlFile}.rubygana`;
-    await runRubygana(htmlFile, rubyOutput, grade);
-    await rename(rubyOutput, htmlFile);
-  }
+  const htmlFiles = await processHtmlFiles(docsDirectory, grade);
 
   const indexHtml = htmlFiles.find((htmlFile) => path.basename(htmlFile) === 'index.html')
     ?? htmlFiles[0];
@@ -172,21 +203,74 @@ export async function buildDocs({distDirectory = path.join(projectRoot, 'dist')}
     ...browserArguments(),
   ]);
   await copyFile(pdfPath, path.join(docsDirectory, documentConfig.pdfFilename));
-  await writeFile(path.join(docsDirectory, 'build-info.json'), `${JSON.stringify({
-    learnedThroughGrade: grade,
-    rubyGenerator: `${rubyganaPackage.name} ${rubyganaPackage.version}`,
-    kanjiDataset: {
-      id: rubyganaGradeData.id,
-      sourceUrl: rubyganaGradeData.sourceUrl,
-      gradeCounts: rubyganaGradeData.expectedGradeCounts,
-    },
-    htmlAndPdfGenerator: 'Vivliostyle CLI 11.1.0',
-  }, null, 2)}\n`);
+  await writeBuildInfo(docsDirectory, grade, {publicationKind: 'guide'});
 
   console.log(`Built grade ${grade} furigana docs in ${path.relative(projectRoot, docsDirectory)}/`);
   console.log(`Built PDF in ${path.relative(projectRoot, pdfPath)}`);
 }
 
+export async function buildTextbook({distDirectory = path.join(projectRoot, 'dist')} = {}) {
+  const grade = resolveLearnedThroughGrade();
+  const configPath = path.join(projectRoot, 'docs/vivliostyle.textbook.config.mjs');
+  const workspaceDirectory = path.join(projectRoot, 'tmp/textbook-vivliostyle');
+  const tempDirectory = path.join(projectRoot, 'tmp/textbook-webpub');
+  const textbookDirectory = path.join(
+    distDirectory,
+    'docs',
+    textbookConfig.outputDirectory,
+  );
+  const pdfDirectory = path.join(projectRoot, 'output/pdf');
+  const pdfPath = path.join(pdfDirectory, textbookConfig.pdfFilename);
+
+  await rm(workspaceDirectory, {recursive: true, force: true});
+  await rm(tempDirectory, {recursive: true, force: true});
+  await rm(textbookDirectory, {recursive: true, force: true});
+  await mkdir(pdfDirectory, {recursive: true});
+
+  await runNode(vivliostyleBin, [
+    'build',
+    '--config',
+    configPath,
+    '--output',
+    tempDirectory,
+    '--format',
+    'webpub',
+  ], {cwd: path.dirname(configPath)});
+
+  await cp(tempDirectory, textbookDirectory, {recursive: true});
+  await processHtmlFiles(textbookDirectory, grade);
+
+  const publicationManifest = path.join(textbookDirectory, 'publication.json');
+  if (!existsSync(publicationManifest)) {
+    throw new Error('Textbook Web Publication does not contain publication.json.');
+  }
+
+  await runNode(vivliostyleBin, [
+    'build',
+    'publication.json',
+    '--size',
+    'A4',
+    '--output',
+    pdfPath,
+    ...browserArguments(),
+  ], {cwd: textbookDirectory});
+  await copyFile(pdfPath, path.join(textbookDirectory, textbookConfig.pdfFilename));
+  await writeBuildInfo(textbookDirectory, grade, {
+    publicationKind: 'textbook',
+    sourceFilename: textbookConfig.sourceFilename,
+    generatedTableOfContents: {
+      title: '目次',
+      sectionDepth: textbookConfig.tocSectionDepth,
+    },
+  });
+
+  console.log(
+    `Built textbook Web Publication in ${path.relative(projectRoot, textbookDirectory)}/`,
+  );
+  console.log(`Built textbook PDF in ${path.relative(projectRoot, pdfPath)}`);
+}
+
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   await buildDocs();
+  await buildTextbook();
 }

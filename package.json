@@ -9,6 +9,7 @@
   "scripts": {
     "build": "node scripts/build-site.mjs",
     "preview:docs": "vivliostyle preview docs/index.md --theme docs/theme.css",
+    "preview:textbook": "vivliostyle preview --config docs/vivliostyle.textbook.config.mjs",
     "test": "node --test test/docs-config.test.mjs",
     "predeploy": "pnpm run build",
     "deploy": "gh-pages -d dist"

@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import test from 'node:test';
 
-import {documentConfig, resolveLearnedThroughGrade} from '../docs/config.mjs';
+import {
+  documentConfig,
+  resolveLearnedThroughGrade,
+  textbookConfig,
+} from '../docs/config.mjs';
 
 test('uses the configured grade when no environment override is present', () => {
   const originalGrade = process.env.RUBYGANA_GRADE;
@@ -27,4 +32,18 @@ test('rejects values outside elementary school grades', () => {
   for (const value of ['0', '7', '2.5', 'three']) {
     assert.throws(() => resolveLearnedThroughGrade(value), RangeError);
   }
+});
+
+test('delegates the textbook table of contents to Vivliostyle', () => {
+  const source = readFileSync(
+    new URL(`../docs/${textbookConfig.sourceFilename}`, import.meta.url),
+    'utf8',
+  );
+
+  assert.equal(textbookConfig.tocSectionDepth, 4);
+  assert.doesNotMatch(source, /^## 目次\s*$/mu);
+  assert.doesNotMatch(source, /^#{1,6}\s+!\[/mu);
+  assert.match(source, /^## A\. 付録1:/mu);
+  assert.match(source, /^## B\. 付録2:/mu);
+  assert.match(source, /^## C\. 付録3:/mu);
 });
