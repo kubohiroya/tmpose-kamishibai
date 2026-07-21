@@ -13,5 +13,11 @@
       191
     ]
   },
-  "htmlAndPdfGenerator": "Vivliostyle CLI 11.1.0"
+  "htmlAndPdfGenerator": "Vivliostyle CLI 11.1.0",
+  "publicationKind": "documentation",
+  "sourceFilename": "tmpose-kamishibai-20260801.md",
+  "generatedTableOfContents": {
+    "title": "目次",
+    "sectionDepth": 4
+  }
 }
