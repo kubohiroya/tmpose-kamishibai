@@ -60,6 +60,7 @@ function runRubygana(input, output, grade) {
     const chunks = [];
 
     child.stdout.on('data', (chunk) => chunks.push(chunk));
+    child.stdout.on('error', reject);
     child.on('error', reject);
     child.on('exit', async (code, signal) => {
       if (code !== 0) {

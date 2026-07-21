@@ -1,6 +1,6 @@
 import {readFile, readdir, stat} from 'node:fs/promises';
 import path from 'node:path';
-import {fileURLToPath} from 'node:url';
+import {fileURLToPath, pathToFileURL} from 'node:url';
 
 import {documentConfig, resolveLearnedThroughGrade} from '../docs/config.mjs';
 
@@ -46,4 +46,6 @@ export async function verifyBuild() {
   console.log(`Verified HTML, ${rubyCount} ruby elements, excluded code blocks, and both PDF copies.`);
 }
 
-await verifyBuild();
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  await verifyBuild();
+}

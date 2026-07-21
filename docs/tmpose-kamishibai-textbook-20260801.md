@@ -999,8 +999,6 @@ M365 Copilotを提供しているMicrosoftの側でのトラブルにより、Co
 * tmpose-kamishibai: アプリ本体・ドキュメント・サンプル
   * [https://github.com/kubohiroya/tmpose-kamishibai](https://github.com/kubohiroya/tmpose-kamishibai)
 
-#
-
 # C. 付録3: ライブラリなど
 
 tmpose-kamishibaiの動作基盤として開発したものですが、他のプロジェクトでも使えるものとして抽出し、オープンソースライセンス(MPL2.0)で公開しているライブラリを、以下に列挙します。
@@ -1013,7 +1011,7 @@ tmpose-kamishibaiの動作基盤として開発したものですが、他のプ
 ## C.2 TurboWarp 機能拡張開発用テンプレート
 
 * turbowarp-extension-template: A reusable TypeScript template for developing, testing, building, and releasing TurboWarp extensions with Vite.
-  * https://[github.com/kubohiroya/turbowarp-extension-template](http://github.com/kubohiroya/turbowarp-extension-template)
+  * <https://github.com/kubohiroya/turbowarp-extension-template>
 
 ## C.3 TurboWarp 機能拡張
 

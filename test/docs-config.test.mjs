@@ -4,7 +4,17 @@ import test from 'node:test';
 import {documentConfig, resolveLearnedThroughGrade} from '../docs/config.mjs';
 
 test('uses the configured grade when no environment override is present', () => {
-  assert.equal(resolveLearnedThroughGrade(undefined), documentConfig.learnedThroughGrade);
+  const originalGrade = process.env.RUBYGANA_GRADE;
+  delete process.env.RUBYGANA_GRADE;
+  try {
+    assert.equal(resolveLearnedThroughGrade(), documentConfig.learnedThroughGrade);
+  } finally {
+    if (originalGrade === undefined) {
+      delete process.env.RUBYGANA_GRADE;
+    } else {
+      process.env.RUBYGANA_GRADE = originalGrade;
+    }
+  }
 });
 
 test('accepts every elementary school grade', () => {
