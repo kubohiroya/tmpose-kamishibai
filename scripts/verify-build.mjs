@@ -101,9 +101,13 @@ export async function verifyBuild() {
   ).length;
   const tocLabelCount = (toc.match(/class="toc-label"/gu) ?? []).length;
   const codeBlocks = html.match(/<pre\b[\s\S]*?<\/pre>/gu) ?? [];
+  const sourceImageCount = (
+    source.match(/!\[\]\[image\d+\]\{style="width: [0-9.]+px;"\}/gu) ?? []
+  ).length;
   const docsEntries = await readdir(docsDirectory, {withFileTypes: true});
   const tocLinks = await verifyLocalReferences(tocPath, 'a', 'href');
   const images = await verifyLocalReferences(htmlPath, 'img', 'src');
+  const imageStyles = attributeValues(html, 'img', 'style');
   const sampleCount = await verifySamples();
 
   assert(buildInfo.kanjiDataset.id === 'mext-h29',
@@ -132,6 +136,8 @@ export async function verifyBuild() {
     'Documentation table of contents includes headings deeper than configured.');
   assert(html.includes('<h2 id="c-付録3-ライブラリなど">'),
     'Documentation appendix C does not use the same heading level as appendices A and B.');
+  assert(!html.includes('{#1.3-この作品は、どんな技術でできているの？}'),
+    'Documentation HTML contains an unresolved Markdown ID attribute.');
   assert(rubyCount >= 500,
     `Expected at least 500 ruby elements, found ${rubyCount}.`);
   assert(codeBlocks.every((block) => !block.includes('<ruby')),
@@ -142,8 +148,15 @@ export async function verifyBuild() {
     'The scoped 久保裕也 name reading override was not applied to every occurrence.');
   assert(incorrectNameRubyCount === 0,
     'Documentation HTML still contains the incorrect ゆうや reading.');
-  assert(images.length === 66,
-    `Expected 66 documentation image elements, found ${images.length}.`);
+  assert(sourceImageCount === 73,
+    `Expected 73 sized image placements in Markdown, found ${sourceImageCount}.`);
+  assert(images.length === sourceImageCount,
+    `Expected ${sourceImageCount} documentation image elements, found ${images.length}.`);
+  assert(
+    imageStyles.length === images.length
+      && imageStyles.every((style) => /(?:^|;)\s*width:\s*[0-9.]+px;/u.test(style)),
+    'A generated documentation image is missing its source placement width.',
+  );
   assert(!html.includes('data:image/'), 'Documentation HTML contains an embedded image data URL.');
   assert(toc.includes(`data-rubygana-grade="${grade}"`),
     'Documentation TOC does not record the configured grade.');
