@@ -1,5 +1,17 @@
 {
   "learnedThroughGrade": 3,
-  "rubyGenerator": "rubygana 0.8.1",
+  "rubyGenerator": "@kubohiroya/rubygana 0.9.0",
+  "kanjiDataset": {
+    "id": "mext-h29",
+    "sourceUrl": "https://www.mext.go.jp/content/20220606-mxt_kyoiku02-100002607_002.pdf",
+    "gradeCounts": [
+      80,
+      160,
+      200,
+      202,
+      193,
+      191
+    ]
+  },
   "htmlAndPdfGenerator": "Vivliostyle CLI 11.1.0"
 }
