@@ -5,6 +5,7 @@ import {fileURLToPath, pathToFileURL} from 'node:url';
 
 import {
   documentConfig,
+  generalDocumentConfig,
   resolveLearnedThroughGrade,
 } from '../docs/config.mjs';
 
@@ -18,18 +19,27 @@ const {
   PDFNumber,
 } = vivliostyleRequire('pdf-lib');
 const docsDirectory = path.join(projectRoot, 'dist/docs');
-const tocPath = path.join(docsDirectory, documentConfig.tocHtmlFilename);
-const coverHtmlPath = path.join(docsDirectory, documentConfig.coverHtmlFilename);
+const docsIndexPath = path.join(docsDirectory, 'index.html');
+const generalDirectory = path.join(docsDirectory, generalDocumentConfig.outputDirectory);
+const workshopDirectory = path.join(docsDirectory, documentConfig.outputDirectory);
+const tocPath = path.join(workshopDirectory, documentConfig.tocHtmlFilename);
+const coverHtmlPath = path.join(workshopDirectory, documentConfig.coverHtmlFilename);
 const htmlPath = path.join(
-  docsDirectory,
+  workshopDirectory,
   documentConfig.sourceFilename.replace(/\.md$/u, '.html'),
 );
-const coverSourcePath = path.join(projectRoot, 'docs', documentConfig.coverFilename);
-const sourcePath = path.join(projectRoot, 'docs', documentConfig.sourceFilename);
-const publicationManifestPath = path.join(docsDirectory, 'publication.json');
-const publishedPdfPath = path.join(docsDirectory, documentConfig.pdfFilename);
-const outputPdfPath = path.join(projectRoot, 'output/pdf', documentConfig.pdfFilename);
-const buildInfoPath = path.join(docsDirectory, 'build-info.json');
+const workshopSourceDirectory = path.join(projectRoot, 'docs', documentConfig.sourceDirectory);
+const coverSourcePath = path.join(workshopSourceDirectory, documentConfig.coverFilename);
+const sourcePath = path.join(workshopSourceDirectory, documentConfig.sourceFilename);
+const publicationManifestPath = path.join(workshopDirectory, 'publication.json');
+const publishedPdfPath = path.join(workshopDirectory, documentConfig.pdfFilename);
+const outputPdfPath = path.join(
+  projectRoot,
+  'output/pdf',
+  documentConfig.outputDirectory,
+  documentConfig.pdfFilename,
+);
+const buildInfoPath = path.join(workshopDirectory, 'build-info.json');
 const samplesSourceDirectory = path.join(projectRoot, 'samples');
 const samplesDirectory = path.join(projectRoot, 'dist/samples');
 const samplesIndexPath = path.join(samplesDirectory, 'index.html');
@@ -106,6 +116,92 @@ async function pdfBookmarkCount(pdfPath) {
   return outlines.lookupMaybe(PDFName.of('Count'), PDFNumber)?.asNumber() ?? 0;
 }
 
+async function verifyPdfFile(pdfPath, minimumSize = 10_000) {
+  const pdf = await readFile(pdfPath);
+  const pdfStat = await stat(pdfPath);
+  assert(pdf.subarray(0, 5).toString() === '%PDF-', `${pdfPath} is not a PDF.`);
+  assert(pdfStat.size > minimumSize, `${pdfPath} is unexpectedly small.`);
+  const document = await PDFDocument.load(pdf);
+  assert(document.getPageCount() > 0, `${pdfPath} does not contain any pages.`);
+  return document.getPageCount();
+}
+
+async function verifyGeneralDocuments() {
+  const buildInfo = JSON.parse(await readFile(path.join(generalDirectory, 'build-info.json'), 'utf8'));
+  const publicationManifest = JSON.parse(
+    await readFile(path.join(generalDirectory, 'publication.json'), 'utf8'),
+  );
+  const readingOrder = publicationManifest.readingOrder.map((entry) => entry.url ?? entry);
+  const docsIndexLinks = await verifyLocalReferences(docsIndexPath, 'a', 'href');
+  const generalTocLinks = await verifyLocalReferences(
+    path.join(generalDirectory, generalDocumentConfig.tocHtmlFilename),
+    'a',
+    'href',
+  );
+  let totalPages = 0;
+
+  assert(buildInfo.publicationKind === 'general-documentation',
+    'General build metadata does not identify the general publication.');
+  assert(buildInfo.rubyApplied === false,
+    'General build metadata does not explicitly disable rubygana.');
+  assert(buildInfo.documents.length === generalDocumentConfig.documents.length,
+    'General build metadata does not list every configured document.');
+
+  for (const generalDocument of generalDocumentConfig.documents) {
+    const htmlFilename = generalDocument.sourceFilename.replace(/\.md$/u, '.html');
+    const pdfFilename = generalDocument.sourceFilename.replace(/\.md$/u, '.pdf');
+    const sourcePath = path.join(
+      projectRoot,
+      'docs',
+      generalDocumentConfig.sourceDirectory,
+      generalDocument.sourceFilename,
+    );
+    const htmlPath = path.join(generalDirectory, htmlFilename);
+    const publishedPdfPath = path.join(generalDirectory, pdfFilename);
+    const outputPdfPath = path.join(
+      projectRoot,
+      'output/pdf',
+      generalDocumentConfig.outputDirectory,
+      pdfFilename,
+    );
+    const [source, html, publishedPdf, outputPdf] = await Promise.all([
+      readFile(sourcePath, 'utf8'),
+      readFile(htmlPath, 'utf8'),
+      readFile(publishedPdfPath),
+      readFile(outputPdfPath),
+    ]);
+
+    assert(source.startsWith(`# ${generalDocument.title}\n`),
+      `${generalDocument.sourceFilename} does not start with its configured title.`);
+    assert(html.includes(generalDocument.title),
+      `${htmlFilename} does not contain its configured title.`);
+    assert(!html.includes('<ruby') && !html.includes('data-rubygana-grade='),
+      `${htmlFilename} was unexpectedly processed by rubygana.`);
+    assert(readingOrder.includes(htmlFilename),
+      `${htmlFilename} is missing from the general publication reading order.`);
+    assert(docsIndexLinks.includes(`${generalDocumentConfig.outputDirectory}/${htmlFilename}`),
+      `${htmlFilename} is missing from the documentation entrance page.`);
+    assert(docsIndexLinks.includes(`${generalDocumentConfig.outputDirectory}/${pdfFilename}`),
+      `${pdfFilename} is missing from the documentation entrance page.`);
+    assert(publishedPdf.equals(outputPdf),
+      `${pdfFilename} differs between dist/docs and output/pdf.`);
+
+    totalPages += await verifyPdfFile(publishedPdfPath);
+    await verifyPdfFile(outputPdfPath);
+  }
+
+  assert(generalTocLinks.length >= generalDocumentConfig.documents.length,
+    'General publication TOC does not link to every document.');
+  assert(docsIndexLinks.includes(
+    `${documentConfig.outputDirectory}/${documentConfig.pdfFilename}`,
+  ), 'Workshop PDF is missing from the documentation entrance page.');
+
+  return {
+    documentCount: generalDocumentConfig.documents.length,
+    pageCount: totalPages,
+  };
+}
+
 export async function verifyBuild() {
   const grade = resolveLearnedThroughGrade();
   const buildInfo = JSON.parse(await readFile(buildInfoPath, 'utf8'));
@@ -142,14 +238,17 @@ export async function verifyBuild() {
     ...attributeValues(html, 'img', 'style'),
   ];
   const readingOrder = publicationManifest.readingOrder.map((entry) => entry.url ?? entry);
+  const generalResults = await verifyGeneralDocuments();
   const sampleCount = await verifySamples();
 
+  assert(buildInfo.rubyApplied === true,
+    'Workshop build metadata does not record rubygana processing.');
   assert(buildInfo.kanjiDataset.id === 'mext-h29',
     'Build does not use the current MEXT kanji dataset.');
   assert(buildInfo.kanjiDataset.gradeCounts.reduce((total, count) => total + count, 0) === 1026,
     'Build does not record all 1,026 elementary school kanji.');
-  assert(buildInfo.publicationKind === 'documentation',
-    'Build metadata does not identify the documentation publication.');
+  assert(buildInfo.publicationKind === 'workshop-documentation',
+    'Build metadata does not identify the workshop publication.');
   assert(buildInfo.navigation.viewerBookMode === true,
     'Build metadata does not record Vivliostyle Viewer Book Mode.');
   assert(buildInfo.navigation.pdfBookmarks === 'generatedTableOfContents',
@@ -158,6 +257,8 @@ export async function verifyBuild() {
     'Build metadata does not identify the configured Markdown cover.');
   assert(buildInfo.sourceFilename === documentConfig.sourceFilename,
     'Build metadata does not identify the configured Markdown source.');
+  assert(buildInfo.sourceDirectory === documentConfig.sourceDirectory,
+    'Build metadata does not identify the workshop source directory.');
   assert(buildInfo.generatedTableOfContents.sectionDepth === documentConfig.tocSectionDepth,
     'Build metadata does not record the configured TOC depth.');
   assert(buildInfo.generatedTableOfContents.htmlFilename === documentConfig.tocHtmlFilename,
@@ -244,17 +345,16 @@ export async function verifyBuild() {
     'Web Publication still contains the replaced guide PDF.');
 
   for (const pdfPath of [publishedPdfPath, outputPdfPath]) {
-    const pdf = await readFile(pdfPath);
-    const pdfStat = await stat(pdfPath);
-    assert(pdf.subarray(0, 5).toString() === '%PDF-', `${pdfPath} is not a PDF.`);
-    assert(pdfStat.size > 50_000, `${pdfPath} is unexpectedly small.`);
+    await verifyPdfFile(pdfPath, 50_000);
     const bookmarkCount = await pdfBookmarkCount(pdfPath);
     assert(bookmarkCount === tocLinks.length,
       `Expected ${tocLinks.length} PDF bookmarks in ${pdfPath}, found ${bookmarkCount}.`);
   }
 
   console.log(
-    `Verified ${tocLinks.length} documentation TOC links, ${images.length} images, `
+    `Verified ${generalResults.documentCount} general HTML/PDF pairs `
+      + `(${generalResults.pageCount} PDF pages), ${tocLinks.length} workshop TOC links, `
+      + `${images.length} workshop images, `
       + `${rubyCount} ruby elements, ${sampleCount} sample file(s), `
       + `${tocLinks.length} PDF bookmarks, and both PDF copies.`,
   );

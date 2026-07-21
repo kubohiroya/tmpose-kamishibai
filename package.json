@@ -8,7 +8,8 @@
   "packageManager": "pnpm@11.11.0",
   "scripts": {
     "build": "node scripts/build-site.mjs",
-    "preview:docs": "vivliostyle preview --config docs/vivliostyle.config.mjs",
+    "preview:docs": "vivliostyle preview --config docs/vivliostyle.general.config.mjs",
+    "preview:workshop": "vivliostyle preview --config docs/vivliostyle.workshop.config.mjs",
     "test": "node --test test/*.test.mjs",
     "predeploy": "pnpm run build",
     "deploy": "gh-pages -d dist"

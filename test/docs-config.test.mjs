@@ -4,9 +4,11 @@ import test from 'node:test';
 
 import {
   documentConfig,
+  generalDocumentConfig,
   resolveLearnedThroughGrade,
 } from '../docs/config.mjs';
-import vivliostyleConfig from '../docs/vivliostyle.config.mjs';
+import generalVivliostyleConfig from '../docs/vivliostyle.general.config.mjs';
+import workshopVivliostyleConfig from '../docs/vivliostyle.workshop.config.mjs';
 
 test('uses the configured grade when no environment override is present', () => {
   const originalGrade = process.env.RUBYGANA_GRADE;
@@ -39,18 +41,24 @@ test('scopes the Hiroya name reading to the full name', () => {
   assert(!documentConfig.rubyOverrides.includes('裕也:ひろや'));
 });
 
-test('delegates the documentation table of contents to Vivliostyle', () => {
+test('delegates the workshop table of contents to Vivliostyle', () => {
   const source = readFileSync(
-    new URL(`../docs/${documentConfig.sourceFilename}`, import.meta.url),
+    new URL(
+      `../docs/${documentConfig.sourceDirectory}/${documentConfig.sourceFilename}`,
+      import.meta.url,
+    ),
     'utf8',
   );
   const cover = readFileSync(
-    new URL(`../docs/${documentConfig.coverFilename}`, import.meta.url),
+    new URL(
+      `../docs/${documentConfig.sourceDirectory}/${documentConfig.coverFilename}`,
+      import.meta.url,
+    ),
     'utf8',
   );
 
   assert.equal(documentConfig.tocSectionDepth, 4);
-  assert.equal(vivliostyleConfig.viewerParam, 'bookMode=true');
+  assert.equal(workshopVivliostyleConfig.viewerParam, 'bookMode=true');
   assert.equal(documentConfig.coverHtmlFilename, 'index.html');
   assert.notEqual(documentConfig.coverHtmlFilename, documentConfig.tocHtmlFilename);
   assert.doesNotMatch(`${cover}\n${source}`, /^## 目次\s*$/mu);
@@ -64,6 +72,28 @@ test('delegates the documentation table of contents to Vivliostyle', () => {
   assert.match(source, /^# C\. 付録3:/mu);
   assert.match(source, /^#### うまく動かないとき$/mu);
   assert.doesNotMatch(source, /^#{5,6}\s+/mu);
+});
+
+test('defines the general documents as the primary non-ruby publication', () => {
+  assert.equal(generalDocumentConfig.sourceDirectory, 'general');
+  assert.equal(generalDocumentConfig.outputDirectory, 'general');
+  assert.equal(generalDocumentConfig.documents.length, 5);
+  assert.equal(generalVivliostyleConfig.viewerParam, 'bookMode=true');
+  assert.deepEqual(
+    generalVivliostyleConfig.entry.map(({path, output}) => ({path, output})),
+    generalDocumentConfig.documents.map(({sourceFilename}) => ({
+      path: `${generalDocumentConfig.sourceDirectory}/${sourceFilename}`,
+      output: sourceFilename.replace(/\.md$/u, '.html'),
+    })),
+  );
+
+  for (const {sourceFilename, title} of generalDocumentConfig.documents) {
+    const source = readFileSync(
+      new URL(`../docs/${generalDocumentConfig.sourceDirectory}/${sourceFilename}`, import.meta.url),
+      'utf8',
+    );
+    assert.match(source, new RegExp(`^# ${title.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&')}$`, 'mu'));
+  }
 });
 
 test('starts each top-level body section on a new printed page', () => {

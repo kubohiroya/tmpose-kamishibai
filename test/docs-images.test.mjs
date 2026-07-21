@@ -5,12 +5,15 @@ import test from 'node:test';
 import {documentConfig} from '../docs/config.mjs';
 
 const sources = [documentConfig.coverFilename, documentConfig.sourceFilename]
-  .map((filename) => readFileSync(new URL(`../docs/${filename}`, import.meta.url), 'utf8'));
+  .map((filename) => readFileSync(
+    new URL(`../docs/${documentConfig.sourceDirectory}/${filename}`, import.meta.url),
+    'utf8',
+  ));
 const body = sources
   .map((source) => source.slice(0, source.search(/^\[image\d+\]:/mu)))
   .join('\n');
 const definitions = new Map(
-  [...sources.join('\n').matchAll(/^\[(image\d+)\]:\s*<images\/([^>]+)>/gmu)]
+  [...sources.join('\n').matchAll(/^\[(image\d+)\]:\s*<\.\.\/\.\.\/images\/([^>]+)>/gmu)]
     .map(([, reference, filename]) => [reference, filename]),
 );
 const placements = [...body.matchAll(

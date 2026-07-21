@@ -24,7 +24,7 @@ export default defineConfig({
   entry: [
     {
       rel: 'cover',
-      path: documentConfig.coverFilename,
+      path: `${documentConfig.sourceDirectory}/${documentConfig.coverFilename}`,
       output: documentConfig.coverHtmlFilename,
       imageSrc: 'images/image49.png',
       theme: [
@@ -35,17 +35,21 @@ export default defineConfig({
     {
       rel: 'contents',
     },
-    documentConfig.sourceFilename,
+    {
+      path: `${documentConfig.sourceDirectory}/${documentConfig.sourceFilename}`,
+      output: documentConfig.sourceFilename.replace(/\.md$/u, '.html'),
+    },
   ],
   theme: [
     'theme.css',
     'document-theme.css',
   ],
-  workspaceDir: '../tmp/docs-vivliostyle',
+  workspaceDir: '../tmp/docs-workshop-vivliostyle',
   copyAsset: {
     excludes: [
       'dist/**',
-      'docs/**',
+      'general/**',
+      'workshops/**',
       'tmp/**',
     ],
   },
