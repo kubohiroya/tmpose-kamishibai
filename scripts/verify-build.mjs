@@ -1,4 +1,5 @@
 import {access, readFile, readdir, stat} from 'node:fs/promises';
+import {createRequire} from 'node:module';
 import path from 'node:path';
 import {fileURLToPath, pathToFileURL} from 'node:url';
 
@@ -8,6 +9,14 @@ import {
 } from '../docs/config.mjs';
 
 const projectRoot = fileURLToPath(new URL('../', import.meta.url));
+const require = createRequire(import.meta.url);
+const vivliostyleRequire = createRequire(require.resolve('@vivliostyle/cli/package.json'));
+const {
+  PDFDict,
+  PDFDocument,
+  PDFName,
+  PDFNumber,
+} = vivliostyleRequire('pdf-lib');
 const docsDirectory = path.join(projectRoot, 'dist/docs');
 const tocPath = path.join(docsDirectory, documentConfig.tocHtmlFilename);
 const coverHtmlPath = path.join(docsDirectory, documentConfig.coverHtmlFilename);
@@ -88,6 +97,15 @@ async function verifySamples() {
   return sourceFilenames.length;
 }
 
+async function pdfBookmarkCount(pdfPath) {
+  const pdf = await PDFDocument.load(await readFile(pdfPath));
+  const outlines = pdf.catalog.lookupMaybe(PDFName.of('Outlines'), PDFDict);
+  if (!outlines) {
+    return 0;
+  }
+  return outlines.lookupMaybe(PDFName.of('Count'), PDFNumber)?.asNumber() ?? 0;
+}
+
 export async function verifyBuild() {
   const grade = resolveLearnedThroughGrade();
   const buildInfo = JSON.parse(await readFile(buildInfoPath, 'utf8'));
@@ -130,6 +148,10 @@ export async function verifyBuild() {
     'Build does not record all 1,026 elementary school kanji.');
   assert(buildInfo.publicationKind === 'documentation',
     'Build metadata does not identify the documentation publication.');
+  assert(buildInfo.navigation.viewerBookMode === true,
+    'Build metadata does not record Vivliostyle Viewer Book Mode.');
+  assert(buildInfo.navigation.pdfBookmarks === 'generatedTableOfContents',
+    'Build metadata does not identify the generated TOC as the PDF bookmark source.');
   assert(buildInfo.coverFilename === documentConfig.coverFilename,
     'Build metadata does not identify the configured Markdown cover.');
   assert(buildInfo.sourceFilename === documentConfig.sourceFilename,
@@ -175,6 +197,9 @@ export async function verifyBuild() {
     'Documentation cover does not contain the furigana build note.');
   assert(coverHtml.includes(`href="${documentConfig.tocHtmlFilename}"`),
     'Documentation cover does not link to the table of contents.');
+  assert(coverHtml.includes('vivliostyle.org/viewer/#src=')
+      && coverHtml.includes('bookMode=true'),
+    'Documentation cover does not link to Vivliostyle Viewer in Book Mode.');
   assert(!toc.includes('class="furigana-build-note"')
       && !html.includes('class="furigana-build-note"'),
     'Furigana build note appears outside the documentation cover.');
@@ -217,11 +242,15 @@ export async function verifyBuild() {
     const pdfStat = await stat(pdfPath);
     assert(pdf.subarray(0, 5).toString() === '%PDF-', `${pdfPath} is not a PDF.`);
     assert(pdfStat.size > 50_000, `${pdfPath} is unexpectedly small.`);
+    const bookmarkCount = await pdfBookmarkCount(pdfPath);
+    assert(bookmarkCount === tocLinks.length,
+      `Expected ${tocLinks.length} PDF bookmarks in ${pdfPath}, found ${bookmarkCount}.`);
   }
 
   console.log(
     `Verified ${tocLinks.length} documentation TOC links, ${images.length} images, `
-      + `${rubyCount} ruby elements, ${sampleCount} sample file(s), and both PDF copies.`,
+      + `${rubyCount} ruby elements, ${sampleCount} sample file(s), `
+      + `${tocLinks.length} PDF bookmarks, and both PDF copies.`,
   );
 }
 

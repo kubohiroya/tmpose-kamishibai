@@ -218,6 +218,10 @@ export async function buildDocs({distDirectory = path.join(projectRoot, 'dist')}
   await copyFile(pdfPath, path.join(docsDirectory, documentConfig.pdfFilename));
   await writeBuildInfo(docsDirectory, grade, {
     publicationKind: 'documentation',
+    navigation: {
+      viewerBookMode: true,
+      pdfBookmarks: 'generatedTableOfContents',
+    },
     coverFilename: documentConfig.coverFilename,
     sourceFilename: documentConfig.sourceFilename,
     generatedTableOfContents: {

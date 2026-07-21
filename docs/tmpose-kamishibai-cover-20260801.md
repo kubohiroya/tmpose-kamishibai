@@ -10,7 +10,7 @@
 
 ![][image2]{style="width: 129.00px;"}
 
-<nav class="cover-navigation" aria-label="文書ナビゲーション"><a href="toc.html">目次へ</a></nav>
+<nav class="cover-navigation" aria-label="文書ナビゲーション"><a href="toc.html">目次へ</a><a href="https://vivliostyle.org/viewer/#src=https://kubohiroya.github.io/tmpose-kamishibai/docs/publication.json&amp;bookMode=true" target="_blank" rel="noopener">Vivliostyle Viewerで読む（目次パネル）</a></nav>
 
 [image1]: <images/image49.png>
 

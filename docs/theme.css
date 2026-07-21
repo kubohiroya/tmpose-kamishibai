@@ -54,6 +54,9 @@ body[data-publication-section="cover"] {
 }
 
 .cover-navigation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
   margin-top: 2rem;
 }
 
@@ -216,6 +219,10 @@ img {
 
   .cover-navigation {
     display: none;
+  }
+
+  body[data-publication-section="body"] > section.level1 + section.level1 {
+    break-before: page;
   }
 
   :root {

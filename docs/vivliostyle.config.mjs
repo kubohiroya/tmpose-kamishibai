@@ -20,6 +20,7 @@ export default defineConfig({
   author: documentConfig.author,
   language: 'ja',
   size: 'A4',
+  viewerParam: 'bookMode=true',
   entry: [
     {
       rel: 'cover',

@@ -78,6 +78,8 @@ Vivliostyle Viewerで原稿を確認する場合:
 pnpm run preview:docs
 ```
 
+プレビューはBook Modeで開くため、生成目次を使った目次パネルが有効になります。公開版の表紙からも、Book Modeを指定したVivliostyle Viewerを開けます。
+
 ## テスト
 
 ```bash
@@ -85,7 +87,7 @@ pnpm test
 pnpm run build
 ```
 
-`pnpm run build`の最後に、学年メタデータ、ルビ数、コードブロック除外、固有名詞の読み、教材の自動目次リンク、画像参照、HTML/PDFの生成を検証します。PDFの見た目はPopplerでPNG化して確認できます。
+`pnpm run build`の最後に、学年メタデータ、ルビ数、コードブロック除外、固有名詞の読み、教材の自動目次リンク、PDFのしおり、画像参照、HTML/PDFの生成を検証します。PDFの見た目はPopplerでPNG化して確認できます。
 
 ```bash
 mkdir -p tmp/pdfs
