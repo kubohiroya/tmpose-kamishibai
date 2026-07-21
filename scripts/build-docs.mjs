@@ -9,6 +9,7 @@ import {
   documentConfig,
   generalDocumentConfig,
   resolveLearnedThroughGrade,
+  staffDocumentConfig,
 } from '../docs/config.mjs';
 
 const require = createRequire(import.meta.url);
@@ -212,15 +213,26 @@ async function buildPdf(htmlPath, pdfPath) {
   ], {cwd: path.dirname(htmlPath)});
 }
 
+async function normalizeGeneratedImagePaths(htmlPath) {
+  const source = await readFile(htmlPath, 'utf8');
+  await writeFile(htmlPath, source.replace(
+    /(<img\b[^>]*\bsrc=")\.\.\/\.\.\/images\//giu,
+    '$1images/',
+  ));
+}
+
 export async function buildDocs({distDirectory = path.join(projectRoot, 'dist')} = {}) {
   const grade = resolveLearnedThroughGrade();
   const docsDirectory = path.join(distDirectory, 'docs');
   const generalDirectory = path.join(docsDirectory, generalDocumentConfig.outputDirectory);
   const workshopDirectory = path.join(docsDirectory, documentConfig.outputDirectory);
+  const staffDirectory = path.join(docsDirectory, staffDocumentConfig.outputDirectory);
   const generalConfigPath = path.join(projectRoot, 'docs/vivliostyle.general.config.mjs');
   const workshopConfigPath = path.join(projectRoot, 'docs/vivliostyle.workshop.config.mjs');
+  const staffConfigPath = path.join(projectRoot, 'docs/vivliostyle.staff.config.mjs');
   const generalTempDirectory = path.join(projectRoot, 'tmp/docs-general-webpub');
   const workshopTempDirectory = path.join(projectRoot, 'tmp/docs-workshop-webpub');
+  const staffTempDirectory = path.join(projectRoot, 'tmp/docs-staff-webpub');
   const pdfDirectory = path.join(projectRoot, 'output/pdf');
 
   await rm(docsDirectory, {recursive: true, force: true});
@@ -284,11 +296,33 @@ export async function buildDocs({distDirectory = path.join(projectRoot, 'dist')}
     },
   }));
 
+  await buildWebPublication(staffConfigPath, staffTempDirectory);
+  await cp(staffTempDirectory, staffDirectory, {recursive: true});
+
+  const staffHtmlPath = path.join(staffDirectory, staffDocumentConfig.htmlFilename);
+  await normalizeGeneratedImagePaths(staffHtmlPath);
+  const staffPdfPath = path.join(
+    pdfDirectory,
+    staffDocumentConfig.outputDirectory,
+    staffDocumentConfig.pdfFilename,
+  );
+  await buildPdf(staffHtmlPath, staffPdfPath);
+  await copyFile(staffPdfPath, path.join(staffDirectory, staffDocumentConfig.pdfFilename));
+  await writeBuildInfo(staffDirectory, baseBuildInfo({
+    publicationKind: 'workshop-staff-documentation',
+    rubyApplied: false,
+    sourceDirectory: staffDocumentConfig.sourceDirectory,
+    sourceFilename: staffDocumentConfig.sourceFilename,
+    htmlFilename: staffDocumentConfig.htmlFilename,
+    pdfFilename: staffDocumentConfig.pdfFilename,
+  }));
+
   console.log(
     `Built ${generalDocumentConfig.documents.length} general HTML/PDF document pairs in `
       + `${path.relative(projectRoot, generalDirectory)}/`,
   );
   console.log(`Built grade ${grade} workshop publication in ${path.relative(projectRoot, workshopDirectory)}/`);
+  console.log(`Built non-ruby staff publication in ${path.relative(projectRoot, staffDirectory)}/`);
   console.log(`Built printable PDFs in ${path.relative(projectRoot, pdfDirectory)}/`);
 }
 

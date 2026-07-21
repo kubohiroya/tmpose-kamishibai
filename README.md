@@ -20,16 +20,20 @@ docs/
 │   ├── 02-dsl-manual.md
 │   ├── 03-command-reference.md
 │   ├── 04-executive-summary-adult.md
-│   └── 05-executive-summary-kids.md
+│   ├── 05-executive-summary-kids.md
+│   └── 06-developer-guide.md
 └── workshops/
     └── 2026-08-01/           # 日付付きの体験会資料
         ├── tmpose-kamishibai-cover-20260801.md
-        └── tmpose-kamishibai-20260801.md
+        ├── tmpose-kamishibai-20260801.md
+        └── tmpose-kamishibai-staff-20260801.md
 ```
 
-一般向け5文書は、それぞれをVivliostyleでHTML/PDF化します。これらにはrubyganaを適用せず、Markdown原稿どおりの本文を組版します。
+一般向け6文書は、`kamishibai=3.1` を前提として、それぞれをVivliostyleでHTML/PDF化します。旧付録B・Cから分離したソフトウェア開発者向け資料もここに含みます。これらにはrubyganaを適用せず、Markdown原稿どおりの本文を組版します。
 
-2026年8月1日版の体験会資料だけは、VivliostyleでWeb Publicationを生成した後にrubyganaを適用し、ルビ付きHTMLからPDFを組版します。既定では小学3年生までに学ぶ漢字を既習として扱います。コード、コマンド例、プログラム名はrubyganaの処理対象から除外し、固有名詞の読みは[`docs/config.mjs`](docs/config.mjs)の`rubyOverrides`で補正します。
+2026年8月1日版の参加者向け体験会資料だけは、VivliostyleでWeb Publicationを生成した後にrubyganaを適用し、ルビ付きHTMLからPDFを組版します。既定では小学3年生までに学ぶ漢字を既習として扱います。コード、コマンド例、プログラム名はrubyganaの処理対象から除外し、固有名詞の読みは[`docs/config.mjs`](docs/config.mjs)の`rubyOverrides`で補正します。
+
+同日版のスタッフ向け資料は、参加者向け資料の旧付録Aから運営・準備情報を分離した独立文書です。一般向け文書と同様に、rubyganaを適用せずHTML/PDF化します。
 
 公開時は、一般文書と体験会資料への導線を[`site/docs/index.html`](site/docs/index.html)に統合します。
 
@@ -55,7 +59,7 @@ rubyganaは保守フォーク[`kubohiroya/rubygana`](https://github.com/kubohiro
 pnpm run build
 ```
 
-体験会資料の対象学年は1から6まで指定できます。一般向け文書はこの値に関係なく、常にルビを追加せず生成します。
+参加者向け体験会資料の対象学年は1から6まで指定できます。一般向け文書とスタッフ向け資料はこの値に関係なく、常にルビを追加せず生成します。
 
 ```bash
 RUBYGANA_GRADE=4 pnpm run build
@@ -79,11 +83,16 @@ dist/
     │   ├── 04-executive-summary-adult.pdf
     │   ├── 05-executive-summary-kids.html
     │   ├── 05-executive-summary-kids.pdf
+    │   ├── 06-developer-guide.html
+    │   ├── 06-developer-guide.pdf
     │   └── publication.json
     └── workshops/
         └── 2026-08-01/
             ├── index.html
             ├── publication.json
+            ├── staff/
+            │   ├── index.html
+            │   └── tmpose-kamishibai-staff-20260801.pdf
             ├── tmpose-kamishibai-20260801.html
             └── tmpose-kamishibai-20260801.pdf
 
@@ -93,9 +102,12 @@ output/pdf/
 │   ├── 02-dsl-manual.pdf
 │   ├── 03-command-reference.pdf
 │   ├── 04-executive-summary-adult.pdf
-│   └── 05-executive-summary-kids.pdf
+│   ├── 05-executive-summary-kids.pdf
+│   └── 06-developer-guide.pdf
 └── workshops/
     └── 2026-08-01/
+        ├── staff/
+        │   └── tmpose-kamishibai-staff-20260801.pdf
         └── tmpose-kamishibai-20260801.pdf
 ```
 
@@ -117,7 +129,13 @@ pnpm run preview:docs
 pnpm run preview:workshop
 ```
 
-どちらもBook Modeで開くため、Vivliostyleが見出しから生成した目次パネルを利用できます。
+スタッフ向け資料を確認する場合:
+
+```bash
+pnpm run preview:staff
+```
+
+一般向け文書と参加者向け体験会資料はBook Modeで開き、Vivliostyleが見出しから生成した目次パネルを利用できます。
 
 ## テスト
 
@@ -128,10 +146,11 @@ pnpm run build
 
 `pnpm run build`の最後に、次の項目を検証します。
 
-- 一般向け5文書のHTML/PDFと統合入口からのリンク
+- 一般向け6文書（ソフトウェア開発者向け資料を含む）のHTML/PDFと統合入口からのリンク
 - 一般向けHTMLにrubygana由来のルビや学年属性がないこと
 - 体験会資料の学年メタデータ、ルビ数、コードブロック除外、固有名詞の読み
 - 体験会資料の自動目次、PDFしおり、画像参照と表示幅
+- スタッフ向け資料への旧付録Aの分離、ソフトウェア開発者向け資料への旧付録B・Cの分離、rubygana非適用、会場図、HTML/PDF導線
 - サンプル台本と公開ファイルの一致
 
 PDFの見た目はPopplerでPNG化して確認できます。
@@ -167,8 +186,10 @@ RUBYGANA_GRADE=4 pnpm run deploy
 │   ├── config.mjs
 │   ├── document-theme.css
 │   ├── general-theme.css
+│   ├── staff-theme.css
 │   ├── theme.css
 │   ├── vivliostyle.general.config.mjs
+│   ├── vivliostyle.staff.config.mjs
 │   └── vivliostyle.workshop.config.mjs
 ├── scripts/
 │   ├── build-docs.mjs
@@ -185,7 +206,7 @@ RUBYGANA_GRADE=4 pnpm run deploy
 ## 配置方針
 
 - `docs/general/`: 日付やイベントに依存しない一般向けMarkdown原稿
-- `docs/workshops/<日付>/`: 特定の体験会で利用するMarkdown原稿
+- `docs/workshops/<日付>/`: 特定の体験会で利用する参加者向け・スタッフ向けMarkdown原稿
 - `docs/images/`: 体験会資料から参照する元画像
 - `site/docs/`: 一般文書と体験会資料を統合する公開入口
 - `site/app/`: TurboWarpからエクスポートしたWebアプリ一式

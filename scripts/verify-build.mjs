@@ -7,6 +7,7 @@ import {
   documentConfig,
   generalDocumentConfig,
   resolveLearnedThroughGrade,
+  staffDocumentConfig,
 } from '../docs/config.mjs';
 
 const projectRoot = fileURLToPath(new URL('../', import.meta.url));
@@ -22,6 +23,7 @@ const docsDirectory = path.join(projectRoot, 'dist/docs');
 const docsIndexPath = path.join(docsDirectory, 'index.html');
 const generalDirectory = path.join(docsDirectory, generalDocumentConfig.outputDirectory);
 const workshopDirectory = path.join(docsDirectory, documentConfig.outputDirectory);
+const staffDirectory = path.join(docsDirectory, staffDocumentConfig.outputDirectory);
 const tocPath = path.join(workshopDirectory, documentConfig.tocHtmlFilename);
 const coverHtmlPath = path.join(workshopDirectory, documentConfig.coverHtmlFilename);
 const htmlPath = path.join(
@@ -202,6 +204,66 @@ async function verifyGeneralDocuments() {
   };
 }
 
+async function verifyStaffDocument() {
+  const sourcePath = path.join(
+    projectRoot,
+    'docs',
+    staffDocumentConfig.sourceDirectory,
+    staffDocumentConfig.sourceFilename,
+  );
+  const htmlPath = path.join(staffDirectory, staffDocumentConfig.htmlFilename);
+  const publishedPdfPath = path.join(staffDirectory, staffDocumentConfig.pdfFilename);
+  const outputPdfPath = path.join(
+    projectRoot,
+    'output/pdf',
+    staffDocumentConfig.outputDirectory,
+    staffDocumentConfig.pdfFilename,
+  );
+  const [source, html, buildInfo, publicationManifest, publishedPdf, outputPdf] = await Promise.all([
+    readFile(sourcePath, 'utf8'),
+    readFile(htmlPath, 'utf8'),
+    readFile(path.join(staffDirectory, 'build-info.json'), 'utf8').then(JSON.parse),
+    readFile(path.join(staffDirectory, 'publication.json'), 'utf8').then(JSON.parse),
+    readFile(publishedPdfPath),
+    readFile(outputPdfPath),
+  ]);
+  const docsIndexLinks = await verifyLocalReferences(docsIndexPath, 'a', 'href');
+  const images = await verifyLocalReferences(htmlPath, 'img', 'src');
+  const readingOrder = publicationManifest.readingOrder.map((entry) => entry.url ?? entry);
+
+  assert(source.startsWith(`# ${staffDocumentConfig.title}\n`),
+    'Staff Markdown does not start with the configured title.');
+  assert(/^## 1\. 体験会運営用資料$/mu.test(source),
+    'Staff Markdown does not contain the reorganized operations section.');
+  assert(!/^## 2\. アプリ$/mu.test(source)
+      && !/^## 3\. (?:関連)?ライブラリ(?:など)?$/mu.test(source),
+  'Staff Markdown still contains developer documentation.');
+  assert(!/^#{1,3} [ABC]\./mu.test(source),
+    'Staff Markdown still uses appendix-style headings.');
+  assert(html.includes(staffDocumentConfig.title),
+    'Staff HTML does not contain its configured title.');
+  assert(!html.includes('<ruby') && !html.includes('data-rubygana-grade='),
+    'Staff HTML was unexpectedly processed by rubygana.');
+  assert(images.length === 1 && images[0] === 'images/image14.jpg',
+    'Staff HTML does not contain the expected local venue map.');
+  assert(JSON.stringify(readingOrder) === JSON.stringify([staffDocumentConfig.htmlFilename]),
+    `Unexpected staff publication reading order: ${readingOrder.join(', ')}`);
+  assert(buildInfo.publicationKind === 'workshop-staff-documentation'
+      && buildInfo.rubyApplied === false,
+  'Staff build metadata does not identify a non-ruby staff publication.');
+  assert(docsIndexLinks.includes(`${staffDocumentConfig.outputDirectory}/`),
+    'Staff HTML is missing from the documentation entrance page.');
+  assert(docsIndexLinks.includes(
+    `${staffDocumentConfig.outputDirectory}/${staffDocumentConfig.pdfFilename}`,
+  ), 'Staff PDF is missing from the documentation entrance page.');
+  assert(publishedPdf.equals(outputPdf),
+    'Staff PDF differs between dist/docs and output/pdf.');
+
+  const pageCount = await verifyPdfFile(publishedPdfPath);
+  await verifyPdfFile(outputPdfPath);
+  return {imageCount: images.length, pageCount};
+}
+
 export async function verifyBuild() {
   const grade = resolveLearnedThroughGrade();
   const buildInfo = JSON.parse(await readFile(buildInfoPath, 'utf8'));
@@ -239,7 +301,9 @@ export async function verifyBuild() {
   ];
   const readingOrder = publicationManifest.readingOrder.map((entry) => entry.url ?? entry);
   const generalResults = await verifyGeneralDocuments();
+  const staffResults = await verifyStaffDocument();
   const sampleCount = await verifySamples();
+  const sourceHeadingCount = (source.match(/^#{1,4}\s+/gmu) ?? []).length;
 
   assert(buildInfo.rubyApplied === true,
     'Workshop build metadata does not record rubygana processing.');
@@ -267,6 +331,8 @@ export async function verifyBuild() {
     'Documentation source contains a manually maintained table of contents.');
   assert(!/^#{1,6}\s+!\[/mu.test(combinedSource),
     'Documentation source contains an image-only heading.');
+  assert(!/^# [ABC]\. 付録/mu.test(source),
+    'Participant documentation still contains staff appendices.');
   assert(JSON.stringify(readingOrder.slice(0, 3)) === JSON.stringify([
     documentConfig.coverHtmlFilename,
     documentConfig.tocHtmlFilename,
@@ -280,16 +346,18 @@ export async function verifyBuild() {
     'Documentation does not contain a generated doc-toc navigation.');
   assert(!/<body\b[^>]*>\s*<h1\b/iu.test(toc),
     'Documentation table of contents still contains a duplicate publication title.');
-  assert(tocLinks.length >= 80,
-    `Expected at least 80 generated TOC links, found ${tocLinks.length}.`);
+  assert(tocLinks.length === sourceHeadingCount - 1,
+    `Expected ${sourceHeadingCount - 1} generated TOC links, found ${tocLinks.length}.`);
   assert(tocLabelCount === tocLinks.length,
     `Expected every TOC link to contain one label, found ${tocLabelCount} labels.`);
   assert(toc.includes('data-section-level="4"'),
     'Documentation table of contents does not include fourth-level headings.');
   assert(!toc.includes('data-section-level="5"'),
     'Documentation table of contents includes headings deeper than configured.');
-  assert(html.includes('<h1 id="c-付録3-ライブラリなど">'),
-    'Documentation appendix C does not use the same heading level as appendices A and B.');
+  assert(!html.includes('付録1-体験会運営用資料')
+      && !html.includes('付録2-アプリ')
+      && !html.includes('付録3-ライブラリなど'),
+  'Participant HTML still contains staff appendices.');
   assert(coverHtml.includes('data-publication-section="cover"'),
     'Documentation cover is not identified as the cover section.');
   assert(toc.includes('data-publication-section="toc"'),
@@ -355,6 +423,7 @@ export async function verifyBuild() {
     `Verified ${generalResults.documentCount} general HTML/PDF pairs `
       + `(${generalResults.pageCount} PDF pages), ${tocLinks.length} workshop TOC links, `
       + `${images.length} workshop images, `
+      + `staff PDF ${staffResults.pageCount} pages/${staffResults.imageCount} image, `
       + `${rubyCount} ruby elements, ${sampleCount} sample file(s), `
       + `${tocLinks.length} PDF bookmarks, and both PDF copies.`,
   );
