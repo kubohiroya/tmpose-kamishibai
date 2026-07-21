@@ -4,11 +4,13 @@ import test from 'node:test';
 
 import {documentConfig} from '../docs/config.mjs';
 
-const sourceUrl = new URL(`../docs/${documentConfig.sourceFilename}`, import.meta.url);
-const source = readFileSync(sourceUrl, 'utf8');
-const body = source.slice(0, source.indexOf('\n[image1]:'));
+const sources = [documentConfig.coverFilename, documentConfig.sourceFilename]
+  .map((filename) => readFileSync(new URL(`../docs/${filename}`, import.meta.url), 'utf8'));
+const body = sources
+  .map((source) => source.slice(0, source.search(/^\[image\d+\]:/mu)))
+  .join('\n');
 const definitions = new Map(
-  [...source.matchAll(/^\[(image\d+)\]:\s*<images\/([^>]+)>/gmu)]
+  [...sources.join('\n').matchAll(/^\[(image\d+)\]:\s*<images\/([^>]+)>/gmu)]
     .map(([, reference, filename]) => [reference, filename]),
 );
 const placements = [...body.matchAll(

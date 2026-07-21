@@ -49,6 +49,22 @@ body {
   box-shadow: 0 12px 44px rgb(89 61 43 / 12%);
 }
 
+body[data-publication-section="cover"] {
+  page: cover;
+}
+
+.cover-navigation {
+  margin-top: 2rem;
+}
+
+.cover-navigation a {
+  display: inline-block;
+  padding: 0.55rem 1rem;
+  border: 1px solid var(--accent);
+  border-radius: 0.35rem;
+  text-decoration: none;
+}
+
 h1,
 h2,
 h3 {
@@ -188,6 +204,20 @@ img {
 }
 
 @media print {
+  @page cover {
+    @top-left {
+      content: none;
+    }
+
+    @bottom-right {
+      content: none;
+    }
+  }
+
+  .cover-navigation {
+    display: none;
+  }
+
   :root {
     font-size: 10.2pt;
   }

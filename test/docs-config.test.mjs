@@ -43,11 +43,22 @@ test('delegates the documentation table of contents to Vivliostyle', () => {
     new URL(`../docs/${documentConfig.sourceFilename}`, import.meta.url),
     'utf8',
   );
+  const cover = readFileSync(
+    new URL(`../docs/${documentConfig.coverFilename}`, import.meta.url),
+    'utf8',
+  );
 
   assert.equal(documentConfig.tocSectionDepth, 4);
-  assert.doesNotMatch(source, /^## 目次\s*$/mu);
-  assert.doesNotMatch(source, /^#{1,6}\s+!\[/mu);
-  assert.match(source, /^## A\. 付録1:/mu);
-  assert.match(source, /^## B\. 付録2:/mu);
-  assert.match(source, /^## C\. 付録3:/mu);
+  assert.equal(documentConfig.coverHtmlFilename, 'index.html');
+  assert.notEqual(documentConfig.coverHtmlFilename, documentConfig.tocHtmlFilename);
+  assert.doesNotMatch(`${cover}\n${source}`, /^## 目次\s*$/mu);
+  assert.doesNotMatch(`${cover}\n${source}`, /^#{1,6}\s+!\[/mu);
+  assert.equal((cover.match(/^#\s+/gmu) ?? []).length, 1);
+  assert.doesNotMatch(cover, /^#{2,6}\s+/mu);
+  assert.match(source, /^# 0\. この教材と体験会について$/mu);
+  assert.match(source, /^# A\. 付録1:/mu);
+  assert.match(source, /^# B\. 付録2:/mu);
+  assert.match(source, /^# C\. 付録3:/mu);
+  assert.match(source, /^#### うまく動かないとき$/mu);
+  assert.doesNotMatch(source, /^#{5,6}\s+/mu);
 });
