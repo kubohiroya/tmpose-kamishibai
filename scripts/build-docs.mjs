@@ -100,7 +100,7 @@ async function processHtmlFiles(directory, grade) {
   }
 
   for (const htmlFile of htmlFiles) {
-    await addBuildNote(htmlFile, grade);
+    await prepareHtml(htmlFile, grade);
     const rubyOutput = `${htmlFile}.rubygana`;
     await runRubygana(htmlFile, rubyOutput, grade);
     await rename(rubyOutput, htmlFile);
@@ -130,10 +130,20 @@ async function writeBuildInfo(directory, grade, details) {
   );
 }
 
-async function addBuildNote(htmlPath, grade) {
+async function prepareHtml(htmlPath, grade) {
   const source = await readFile(htmlPath, 'utf8');
   const note = `<p class="furigana-build-note">このHTMLとPDFは、小学${grade}年生までに学ぶ漢字を既習として、以後に学ぶ漢字へふりがなを付けています。</p>`;
-  const withGrade = source.replace(/<html(\s|>)/i, `<html data-rubygana-grade="${grade}"$1`);
+  const withTocLabels = source.replace(
+    /<nav\b[^>]*\bid="toc"[^>]*>[\s\S]*?<\/nav>/iu,
+    (tableOfContents) => tableOfContents.replace(
+      /(<a\b[^>]*>)([\s\S]*?)(<\/a>)/giu,
+      '$1<span class="toc-label">$2</span>$3',
+    ),
+  );
+  const withGrade = withTocLabels.replace(
+    /<html(\s|>)/i,
+    `<html data-rubygana-grade="${grade}"$1`,
+  );
   const withNote = withGrade.replace(/(<h1\b[^>]*>[\s\S]*?<\/h1>)/i, `$1\n${note}`);
   await writeFile(htmlPath, withNote);
 }

@@ -92,6 +92,7 @@ export async function verifyBuild() {
   const toc = await readFile(tocPath, 'utf8');
   const html = await readFile(htmlPath, 'utf8');
   const rubyCount = (html.match(/<ruby\b/gu) ?? []).length;
+  const tocLabelCount = (toc.match(/class="toc-label"/gu) ?? []).length;
   const codeBlocks = html.match(/<pre\b[\s\S]*?<\/pre>/gu) ?? [];
   const docsEntries = await readdir(docsDirectory, {withFileTypes: true});
   const tocLinks = await verifyLocalReferences(tocPath, 'a', 'href');
@@ -116,6 +117,8 @@ export async function verifyBuild() {
     'Documentation does not contain a generated doc-toc navigation.');
   assert(tocLinks.length >= 80,
     `Expected at least 80 generated TOC links, found ${tocLinks.length}.`);
+  assert(tocLabelCount === tocLinks.length,
+    `Expected every TOC link to contain one label, found ${tocLabelCount} labels.`);
   assert(toc.includes('data-section-level="4"'),
     'Documentation table of contents does not include fourth-level headings.');
   assert(!toc.includes('data-section-level="5"'),

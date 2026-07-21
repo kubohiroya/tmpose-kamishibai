@@ -30,11 +30,20 @@
 }
 
 #toc li a {
-  display: inline-flex;
+  display: flex;
   width: 100%;
   align-items: baseline;
   color: currentcolor;
   text-decoration: none;
+}
+
+#toc .toc-label {
+  min-width: 0;
+  text-wrap: pretty;
+}
+
+#toc li[data-section-level="1"] > a .toc-label > strong {
+  display: block;
 }
 
 #toc li a::before {
