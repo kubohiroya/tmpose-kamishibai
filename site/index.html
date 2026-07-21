@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="TMPose紙芝居 — ポーズで進めるAIインタラクティブ紙芝居">
+  <title>TMPose紙芝居</title>
+  <style>
+    :root { color-scheme: light; font-family: system-ui, sans-serif; }
+    body { margin: 0; background: #fff8ee; color: #3f302b; }
+    main { max-width: 880px; margin: auto; padding: 48px 24px 72px; }
+    h1 { font-size: clamp(2rem, 6vw, 4rem); margin-bottom: .25rem; }
+    .lead { font-size: 1.35rem; margin-top: 0; }
+    .actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 32px 0; }
+    .button { display: inline-block; padding: 12px 18px; border-radius: 8px; background: #963f2f; color: white; text-decoration: none; font-weight: 700; }
+    .button.secondary { background: white; color: #963f2f; border: 1px solid #963f2f; }
+    section { margin-top: 40px; }
+    li { margin: .5rem 0; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>TMPose紙芝居</h1>
+  <p class="lead">ポーズで進めるAIインタラクティブ紙芝居</p>
+  <p>TurboWarpとTMPoseを利用し、参加者がカメラの前でポーズを取ることで物語を進める紙芝居システムです。</p>
+
+  <div class="actions">
+    <a class="button" href="https://sqs.prof.cuc.ac.jp/kamishibai/">現在公開中のWeb版を開く</a>
+    <a class="button secondary" href="docs/">2026年8月1日版ドキュメント</a>
+    <a class="button secondary" href="docs/tmpose-kamishibai-20260801.pdf">PDF版</a>
+    <a class="button secondary" href="samples/">サンプル</a>
+    <a class="button secondary" href="downloads/">ダウンロード</a>
+  </div>
+
+  <section>
+    <h2>このサイトで提供するもの</h2>
+    <ul>
+      <li>PC・スマートフォンのブラウザで動作するWeb版</li>
+      <li>TurboWarpで編集できるSB3ファイル</li>
+      <li>浦島太郎などの紙芝居DSLサンプル</li>
+      <li>操作説明、DSL作成マニュアル、コマンドリファレンス</li>
+    </ul>
+  </section>
+</main>
+</body>
+</html>
