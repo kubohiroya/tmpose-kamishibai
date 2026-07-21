@@ -2,11 +2,15 @@
   "name": "tmpose-kamishibai",
   "version": "3.0.0",
   "private": true,
+  "type": "module",
   "description": "TMPose紙芝居 — ポーズで進めるAIインタラクティブ紙芝居",
   "homepage": "https://kubohiroya.github.io/tmpose-kamishibai/",
+  "packageManager": "pnpm@11.11.0",
   "scripts": {
     "build": "node scripts/build-site.mjs",
-    "predeploy": "npm run build",
+    "preview:docs": "vivliostyle preview docs/index.md --theme docs/theme.css",
+    "test": "node --test test/docs-config.test.mjs",
+    "predeploy": "pnpm run build",
     "deploy": "gh-pages -d dist"
   },
   "keywords": [
@@ -19,9 +23,11 @@
   "author": "Hiroya Kubo",
   "license": "MIT",
   "devDependencies": {
-    "gh-pages": "^6.3.0"
+    "@vivliostyle/cli": "11.1.0",
+    "gh-pages": "^6.3.0",
+    "rubygana": "github:kubohiroya/rubygana#ed4c272fa6db295de5f813058c1edebea4752259"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22.12.0"
   }
 }
