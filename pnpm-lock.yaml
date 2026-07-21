@@ -15,8 +15,8 @@ importers:
         specifier: ^6.3.0
         version: 6.3.0
       rubygana:
-        specifier: github:kubohiroya/rubygana#ed4c272fa6db295de5f813058c1edebea4752259
-        version: '@kubohiroya/rubygana@https://codeload.github.com/kubohiroya/rubygana/tar.gz/ed4c272fa6db295de5f813058c1edebea4752259'
+        specifier: github:kubohiroya/rubygana#a24b8a699a1b033546f4d1a47a63005f7af95735
+        version: '@kubohiroya/rubygana@https://codeload.github.com/kubohiroya/rubygana/tar.gz/a24b8a699a1b033546f4d1a47a63005f7af95735'
 
 packages:
 
@@ -101,8 +101,8 @@ packages:
   '@isaacs/string-locale-compare@1.1.0':
     resolution: {integrity: sha512-SQ7Kzhh9+D+ZW9MA0zkYv3VXhIDNx+LzM6EJ+/65I3QY+enU6Itte7E5XX7EWrqLW2FN4n06GWzBnPoC3th2aQ==}
 
-  '@kubohiroya/rubygana@https://codeload.github.com/kubohiroya/rubygana/tar.gz/ed4c272fa6db295de5f813058c1edebea4752259':
-    resolution: {gitHosted: true, integrity: sha512-IHzHr59pqiA8a2LRSQChYk3nZjXqzL2lJrDNZ3HF4/xO3p/+ZnbCcuNMNxvKn2/wVAKJ7qOb22/Q/f1BMH1mng==, tarball: https://codeload.github.com/kubohiroya/rubygana/tar.gz/ed4c272fa6db295de5f813058c1edebea4752259}
+  '@kubohiroya/rubygana@https://codeload.github.com/kubohiroya/rubygana/tar.gz/a24b8a699a1b033546f4d1a47a63005f7af95735':
+    resolution: {gitHosted: true, integrity: sha512-jG3LQHDlQMjTrp/UM3JmTln0eTk/cB1ykQHMAcXvlHdAcYSubmh+OZqaDtE5XHEyArT7WTAdVvQLqFJ0GRFRAQ==, tarball: https://codeload.github.com/kubohiroya/rubygana/tar.gz/a24b8a699a1b033546f4d1a47a63005f7af95735}
     version: 0.9.0
     engines: {node: '>=20.18.1'}
     hasBin: true
@@ -2747,7 +2747,7 @@ snapshots:
 
   '@isaacs/string-locale-compare@1.1.0': {}
 
-  '@kubohiroya/rubygana@https://codeload.github.com/kubohiroya/rubygana/tar.gz/ed4c272fa6db295de5f813058c1edebea4752259':
+  '@kubohiroya/rubygana@https://codeload.github.com/kubohiroya/rubygana/tar.gz/a24b8a699a1b033546f4d1a47a63005f7af95735':
     dependencies:
       cheerio: 1.2.0
       kuromoji: 0.1.2

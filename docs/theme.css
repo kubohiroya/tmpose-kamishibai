@@ -20,7 +20,7 @@
   margin: 18mm 17mm 20mm;
 
   @top-left {
-    content: "TMPose紙芝居 利用・台本作成ガイド";
+    content: "親子AIプログラミング体験会 2026/08/01";
     color: #756960;
     font-size: 8.5pt;
   }
@@ -181,6 +181,12 @@ hr {
   border-top: 1px solid var(--line);
 }
 
+img {
+  max-width: 100%;
+  height: auto;
+  vertical-align: middle;
+}
+
 @media print {
   :root {
     font-size: 10.2pt;
@@ -211,6 +217,11 @@ hr {
 
   a {
     color: inherit;
+  }
+
+  img {
+    max-height: 235mm;
+    object-fit: contain;
   }
 }
 

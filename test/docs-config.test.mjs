@@ -5,7 +5,6 @@ import test from 'node:test';
 import {
   documentConfig,
   resolveLearnedThroughGrade,
-  textbookConfig,
 } from '../docs/config.mjs';
 
 test('uses the configured grade when no environment override is present', () => {
@@ -34,13 +33,13 @@ test('rejects values outside elementary school grades', () => {
   }
 });
 
-test('delegates the textbook table of contents to Vivliostyle', () => {
+test('delegates the documentation table of contents to Vivliostyle', () => {
   const source = readFileSync(
-    new URL(`../docs/${textbookConfig.sourceFilename}`, import.meta.url),
+    new URL(`../docs/${documentConfig.sourceFilename}`, import.meta.url),
     'utf8',
   );
 
-  assert.equal(textbookConfig.tocSectionDepth, 4);
+  assert.equal(documentConfig.tocSectionDepth, 4);
   assert.doesNotMatch(source, /^## 目次\s*$/mu);
   assert.doesNotMatch(source, /^#{1,6}\s+!\[/mu);
   assert.match(source, /^## A\. 付録1:/mu);

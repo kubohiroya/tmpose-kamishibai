@@ -8,8 +8,7 @@
   "packageManager": "pnpm@11.11.0",
   "scripts": {
     "build": "node scripts/build-site.mjs",
-    "preview:docs": "vivliostyle preview docs/index.md --theme docs/theme.css",
-    "preview:textbook": "vivliostyle preview --config docs/vivliostyle.textbook.config.mjs",
+    "preview:docs": "vivliostyle preview --config docs/vivliostyle.config.mjs",
     "test": "node --test test/docs-config.test.mjs",
     "predeploy": "pnpm run build",
     "deploy": "gh-pages -d dist"
@@ -26,7 +25,7 @@
   "devDependencies": {
     "@vivliostyle/cli": "11.1.0",
     "gh-pages": "^6.3.0",
-    "rubygana": "github:kubohiroya/rubygana#ed4c272fa6db295de5f813058c1edebea4752259"
+    "rubygana": "github:kubohiroya/rubygana#a24b8a699a1b033546f4d1a47a63005f7af95735"
   },
   "engines": {
     "node": ">=22.12.0"

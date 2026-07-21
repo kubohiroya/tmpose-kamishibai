@@ -8,7 +8,6 @@ import {fileURLToPath, pathToFileURL} from 'node:url';
 import {
   documentConfig,
   resolveLearnedThroughGrade,
-  textbookConfig,
 } from '../docs/config.mjs';
 
 const require = createRequire(import.meta.url);
@@ -154,77 +153,16 @@ function browserArguments() {
 
 export async function buildDocs({distDirectory = path.join(projectRoot, 'dist')} = {}) {
   const grade = resolveLearnedThroughGrade();
-  const sourceDirectory = path.join(projectRoot, 'tmp/docs-source');
-  const source = path.join(sourceDirectory, 'index.md');
-  const theme = path.join(sourceDirectory, 'theme.css');
+  const configPath = path.join(projectRoot, 'docs/vivliostyle.config.mjs');
+  const workspaceDirectory = path.join(projectRoot, 'tmp/docs-vivliostyle');
   const tempDirectory = path.join(projectRoot, 'tmp/docs-webpub');
   const docsDirectory = path.join(distDirectory, 'docs');
   const pdfDirectory = path.join(projectRoot, 'output/pdf');
   const pdfPath = path.join(pdfDirectory, documentConfig.pdfFilename);
 
-  await rm(sourceDirectory, {recursive: true, force: true});
-  await rm(tempDirectory, {recursive: true, force: true});
-  await rm(docsDirectory, {recursive: true, force: true});
-  await mkdir(sourceDirectory, {recursive: true});
-  await mkdir(pdfDirectory, {recursive: true});
-  await copyFile(path.join(projectRoot, 'docs/index.md'), source);
-  await copyFile(path.join(projectRoot, 'docs/theme.css'), theme);
-
-  await runNode(vivliostyleBin, [
-    'build',
-    'index.md',
-    '--theme',
-    'theme.css',
-    '--title',
-    documentConfig.title,
-    '--author',
-    documentConfig.author,
-    '--language',
-    'ja',
-    '--output',
-    tempDirectory,
-    '--format',
-    'webpub',
-  ], {cwd: sourceDirectory});
-
-  await cp(tempDirectory, docsDirectory, {recursive: true});
-  const htmlFiles = await processHtmlFiles(docsDirectory, grade);
-
-  const indexHtml = htmlFiles.find((htmlFile) => path.basename(htmlFile) === 'index.html')
-    ?? htmlFiles[0];
-  await runNode(vivliostyleBin, [
-    'build',
-    indexHtml,
-    '--single-doc',
-    '--size',
-    'A4',
-    '--output',
-    pdfPath,
-    ...browserArguments(),
-  ]);
-  await copyFile(pdfPath, path.join(docsDirectory, documentConfig.pdfFilename));
-  await writeBuildInfo(docsDirectory, grade, {publicationKind: 'guide'});
-
-  console.log(`Built grade ${grade} furigana docs in ${path.relative(projectRoot, docsDirectory)}/`);
-  console.log(`Built PDF in ${path.relative(projectRoot, pdfPath)}`);
-}
-
-export async function buildTextbook({distDirectory = path.join(projectRoot, 'dist')} = {}) {
-  const grade = resolveLearnedThroughGrade();
-  const configPath = path.join(projectRoot, 'docs/vivliostyle.textbook.config.mjs');
-  const workspaceDirectory = path.join(projectRoot, 'tmp/textbook-vivliostyle');
-  const tempDirectory = path.join(projectRoot, 'tmp/textbook-webpub');
-  const textbookDirectory = path.join(
-    distDirectory,
-    'docs',
-    textbookConfig.outputDirectory,
-  );
-  const pdfDirectory = path.join(projectRoot, 'output/pdf');
-  const pdfPath = path.join(pdfDirectory, textbookConfig.pdfFilename);
-
   await rm(workspaceDirectory, {recursive: true, force: true});
   await rm(tempDirectory, {recursive: true, force: true});
-  await rm(textbookDirectory, {recursive: true, force: true});
+  await rm(docsDirectory, {recursive: true, force: true});
   await mkdir(pdfDirectory, {recursive: true});
 
   await runNode(vivliostyleBin, [
@@ -237,12 +175,12 @@ export async function buildTextbook({distDirectory = path.join(projectRoot, 'dis
     'webpub',
   ], {cwd: path.dirname(configPath)});
 
-  await cp(tempDirectory, textbookDirectory, {recursive: true});
-  await processHtmlFiles(textbookDirectory, grade);
+  await cp(tempDirectory, docsDirectory, {recursive: true});
+  await processHtmlFiles(docsDirectory, grade);
 
-  const publicationManifest = path.join(textbookDirectory, 'publication.json');
+  const publicationManifest = path.join(docsDirectory, 'publication.json');
   if (!existsSync(publicationManifest)) {
-    throw new Error('Textbook Web Publication does not contain publication.json.');
+    throw new Error('Documentation Web Publication does not contain publication.json.');
   }
 
   await runNode(vivliostyleBin, [
@@ -253,24 +191,21 @@ export async function buildTextbook({distDirectory = path.join(projectRoot, 'dis
     '--output',
     pdfPath,
     ...browserArguments(),
-  ], {cwd: textbookDirectory});
-  await copyFile(pdfPath, path.join(textbookDirectory, textbookConfig.pdfFilename));
-  await writeBuildInfo(textbookDirectory, grade, {
-    publicationKind: 'textbook',
-    sourceFilename: textbookConfig.sourceFilename,
+  ], {cwd: docsDirectory});
+  await copyFile(pdfPath, path.join(docsDirectory, documentConfig.pdfFilename));
+  await writeBuildInfo(docsDirectory, grade, {
+    publicationKind: 'documentation',
+    sourceFilename: documentConfig.sourceFilename,
     generatedTableOfContents: {
       title: '目次',
-      sectionDepth: textbookConfig.tocSectionDepth,
+      sectionDepth: documentConfig.tocSectionDepth,
     },
   });
 
-  console.log(
-    `Built textbook Web Publication in ${path.relative(projectRoot, textbookDirectory)}/`,
-  );
-  console.log(`Built textbook PDF in ${path.relative(projectRoot, pdfPath)}`);
+  console.log(`Built grade ${grade} documentation in ${path.relative(projectRoot, docsDirectory)}/`);
+  console.log(`Built documentation PDF in ${path.relative(projectRoot, pdfPath)}`);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   await buildDocs();
-  await buildTextbook();
 }

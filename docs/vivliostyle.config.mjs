@@ -1,18 +1,18 @@
 import {defineConfig} from '@vivliostyle/cli';
 
-import {textbookConfig} from './config.mjs';
+import {documentConfig} from './config.mjs';
 
 export default defineConfig({
-  title: textbookConfig.title,
-  author: textbookConfig.author,
+  title: documentConfig.title,
+  author: documentConfig.author,
   language: 'ja',
   size: 'A4',
-  entry: [textbookConfig.sourceFilename],
+  entry: [documentConfig.sourceFilename],
   theme: [
     'theme.css',
-    'textbook-theme.css',
+    'document-theme.css',
   ],
-  workspaceDir: '../tmp/textbook-vivliostyle',
+  workspaceDir: '../tmp/docs-vivliostyle',
   copyAsset: {
     excludes: [
       'dist/**',
@@ -23,6 +23,6 @@ export default defineConfig({
   toc: {
     title: '目次',
     htmlPath: 'index.html',
-    sectionDepth: textbookConfig.tocSectionDepth,
+    sectionDepth: documentConfig.tocSectionDepth,
   },
 });

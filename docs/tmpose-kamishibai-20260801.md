@@ -16,7 +16,7 @@
 
 ### 0.1 この教材の一次配布元 {#0.1-この教材の一次配布元}
 
-AI紙芝居アプリおよびこの教材は、久保裕也（千葉商科大学　総合政策学部　教授）による研究プロジェクトの成果物です。正式版の配布は、GitHub Pages [https://kubohiroya.github.io/tmpose-kamishibai/](https://kubohiroya.github.io/tmpose-kamishibai/) で行うものとします。
+AI紙芝居アプリおよびこの教材は、久保裕也（千葉商科大学　総合政策学部　教授）による研究プロジェクトの成果物です。正式版の配布は、[GitHub Pages](https://kubohiroya.github.io/tmpose-kamishibai/)で行うものとします。
 
 AI紙芝居アプリも、ここから遊べるようにします。(準備中）
 
