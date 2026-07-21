@@ -21,7 +21,8 @@ docs/
 │   ├── 03-command-reference.md
 │   ├── 04-executive-summary-adult.md
 │   ├── 05-executive-summary-kids.md
-│   └── 06-developer-guide.md
+│   ├── 06-developer-guide.md
+│   └── history.md
 └── workshops/
     └── 2026-08-01/           # 日付付きの体験会資料
         ├── tmpose-kamishibai-cover-20260801.md
@@ -29,7 +30,7 @@ docs/
         └── tmpose-kamishibai-staff-20260801.md
 ```
 
-一般向け6文書は、`kamishibai=3.1` を前提として、それぞれをVivliostyleでHTML/PDF化します。旧付録B・Cから分離したソフトウェア開発者向け資料もここに含みます。これらにはrubyganaを適用せず、Markdown原稿どおりの本文を組版します。
+一般向け7文書は、`kamishibai=3.1` を前提として、それぞれをVivliostyleでHTML/PDF化します。旧付録B・Cから分離したソフトウェア開発者向け資料と、2.0から3.1への変更履歴もここに含みます。これらにはrubyganaを適用せず、Markdown原稿どおりの本文を組版します。
 
 2026年8月1日版の参加者向け体験会資料だけは、VivliostyleでWeb Publicationを生成した後にrubyganaを適用し、ルビ付きHTMLからPDFを組版します。既定では小学3年生までに学ぶ漢字を既習として扱います。コード、コマンド例、プログラム名はrubyganaの処理対象から除外し、固有名詞の読みは[`docs/config.mjs`](docs/config.mjs)の`rubyOverrides`で補正します。
 
@@ -85,6 +86,8 @@ dist/
     │   ├── 05-executive-summary-kids.pdf
     │   ├── 06-developer-guide.html
     │   ├── 06-developer-guide.pdf
+    │   ├── history.html
+    │   ├── history.pdf
     │   └── publication.json
     └── workshops/
         └── 2026-08-01/
@@ -103,7 +106,8 @@ output/pdf/
 │   ├── 03-command-reference.pdf
 │   ├── 04-executive-summary-adult.pdf
 │   ├── 05-executive-summary-kids.pdf
-│   └── 06-developer-guide.pdf
+│   ├── 06-developer-guide.pdf
+│   └── history.pdf
 └── workshops/
     └── 2026-08-01/
         ├── staff/
@@ -146,7 +150,7 @@ pnpm run build
 
 `pnpm run build`の最後に、次の項目を検証します。
 
-- 一般向け6文書（ソフトウェア開発者向け資料を含む）のHTML/PDFと統合入口からのリンク
+- 一般向け7文書（ソフトウェア開発者向け資料と変更履歴を含む）のHTML/PDFと統合入口からのリンク
 - 一般向けHTMLにrubygana由来のルビや学年属性がないこと
 - 体験会資料の学年メタデータ、ルビ数、コードブロック除外、固有名詞の読み
 - 体験会資料の自動目次、PDFしおり、画像参照と表示幅

@@ -120,7 +120,7 @@ test('publishes appendices B and C as a general software developer document', ()
 test('defines the general documents as the primary non-ruby publication', () => {
   assert.equal(generalDocumentConfig.sourceDirectory, 'general');
   assert.equal(generalDocumentConfig.outputDirectory, 'general');
-  assert.equal(generalDocumentConfig.documents.length, 6);
+  assert.equal(generalDocumentConfig.documents.length, 7);
   assert.equal(generalVivliostyleConfig.viewerParam, 'bookMode=true');
   assert.deepEqual(
     generalVivliostyleConfig.entry.map(({path, output}) => ({path, output})),
@@ -139,7 +139,7 @@ test('defines the general documents as the primary non-ruby publication', () => 
   }
 });
 
-test('documents the kamishibai 3.1 DSL across every general document', () => {
+test('documents the kamishibai 3.1 DSL across the current general guides', () => {
   const sources = new Map(generalDocumentConfig.documents.map(({sourceFilename}) => [
     sourceFilename,
     readFileSync(
@@ -149,6 +149,9 @@ test('documents the kamishibai 3.1 DSL across every general document', () => {
   ]));
 
   for (const [sourceFilename, source] of sources) {
+    if (sourceFilename === 'history.md') {
+      continue;
+    }
     assert.match(source, /kamishibai=3\.1/u, `${sourceFilename} does not identify DSL 3.1.`);
     assert.doesNotMatch(source, /kamishibai=2\.0/u, `${sourceFilename} still targets DSL 2.0.`);
   }
@@ -169,6 +172,28 @@ test('documents the kamishibai 3.1 DSL across every general document', () => {
     ]) {
       assert(source.includes(feature), `${sourceFilename} does not document ${feature}.`);
     }
+  }
+
+  const history = sources.get('history.md');
+  assert.match(history, /kamishibai=2\.0/u);
+  assert.match(history, /kamishibai=3\.1/u);
+  for (const feature of [
+    'setRuntimeVariable',
+    'registerBranch',
+    'sceneLabel',
+    'text=',
+    'transition:fadeOut',
+    'branch:',
+    'keyInputToChangeScene',
+    'touchInputToChangeScene',
+    ':loop:',
+    ':sequence:',
+    'background:beach',
+    'backdrop:beach',
+    'setCostume',
+    'setSkin',
+  ]) {
+    assert(history.includes(feature), `history.md does not document the ${feature} migration.`);
   }
 });
 

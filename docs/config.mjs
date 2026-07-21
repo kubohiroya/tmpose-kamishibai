@@ -42,6 +42,12 @@ export const generalDocumentConfig = {
       audience: 'ソフトウェア開発者',
       description: 'アプリ本体と、開発に関連するプラグイン、テンプレート、機能拡張、ライブラリを案内します。',
     },
+    {
+      sourceFilename: 'history.md',
+      title: '紙芝居DSL 2.0から3.1への変更履歴',
+      audience: '2.0から移行する方',
+      description: '2.0から3.1で追加・変更・置換したDSL仕様と、台本の移行手順を差分形式でまとめています。',
+    },
   ],
 };
 
