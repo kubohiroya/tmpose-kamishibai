@@ -112,23 +112,27 @@ function browserArguments() {
 
 export async function buildDocs({distDirectory = path.join(projectRoot, 'dist')} = {}) {
   const grade = resolveLearnedThroughGrade();
-  const source = path.join(projectRoot, 'docs/index.md');
-  const theme = path.join(projectRoot, 'docs/theme.css');
+  const sourceDirectory = path.join(projectRoot, 'tmp/docs-source');
+  const source = path.join(sourceDirectory, 'index.md');
+  const theme = path.join(sourceDirectory, 'theme.css');
   const tempDirectory = path.join(projectRoot, 'tmp/docs-webpub');
   const docsDirectory = path.join(distDirectory, 'docs');
   const pdfDirectory = path.join(projectRoot, 'output/pdf');
   const pdfPath = path.join(pdfDirectory, documentConfig.pdfFilename);
 
+  await rm(sourceDirectory, {recursive: true, force: true});
   await rm(tempDirectory, {recursive: true, force: true});
   await rm(docsDirectory, {recursive: true, force: true});
-  await mkdir(path.dirname(tempDirectory), {recursive: true});
+  await mkdir(sourceDirectory, {recursive: true});
   await mkdir(pdfDirectory, {recursive: true});
+  await copyFile(path.join(projectRoot, 'docs/index.md'), source);
+  await copyFile(path.join(projectRoot, 'docs/theme.css'), theme);
 
   await runNode(vivliostyleBin, [
     'build',
-    source,
+    'index.md',
     '--theme',
-    theme,
+    'theme.css',
     '--title',
     documentConfig.title,
     '--author',
@@ -139,7 +143,7 @@ export async function buildDocs({distDirectory = path.join(projectRoot, 'dist')}
     tempDirectory,
     '--format',
     'webpub',
-  ]);
+  ], {cwd: sourceDirectory});
 
   await cp(tempDirectory, docsDirectory, {recursive: true});
   const htmlFiles = await findHtmlFiles(docsDirectory);

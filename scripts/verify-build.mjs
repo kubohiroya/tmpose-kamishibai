@@ -1,4 +1,4 @@
-import {readFile, stat} from 'node:fs/promises';
+import {readFile, readdir, stat} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 
@@ -9,6 +9,7 @@ const htmlPath = path.join(projectRoot, 'dist/docs/index.html');
 const publishedPdfPath = path.join(projectRoot, 'dist/docs', documentConfig.pdfFilename);
 const outputPdfPath = path.join(projectRoot, 'output/pdf', documentConfig.pdfFilename);
 const buildInfoPath = path.join(projectRoot, 'dist/docs/build-info.json');
+const docsDirectory = path.join(projectRoot, 'dist/docs');
 
 function assert(condition, message) {
   if (!condition) {
@@ -22,6 +23,7 @@ export async function verifyBuild() {
   const buildInfo = JSON.parse(await readFile(buildInfoPath, 'utf8'));
   const rubyCount = (html.match(/<ruby\b/g) ?? []).length;
   const codeBlocks = html.match(/<pre\b[\s\S]*?<\/pre>/g) ?? [];
+  const docsEntries = await readdir(docsDirectory, {withFileTypes: true});
 
   assert(html.includes(`data-rubygana-grade="${grade}"`), 'HTML does not record the configured grade.');
   assert(buildInfo.kanjiDataset.id === 'mext-h29', 'Build does not use the current MEXT kanji dataset.');
@@ -31,6 +33,8 @@ export async function verifyBuild() {
   assert(codeBlocks.length >= 5, 'Expected documentation code examples.');
   assert(codeBlocks.every((block) => !block.includes('<ruby')), 'rubygana changed a code block.');
   assert(html.includes('<rt>りゅうぐうじょう</rt>'), 'The 竜宮城 reading override was not applied.');
+  assert(docsEntries.every((entry) => !['dist', 'docs', 'tmp'].includes(entry.name)),
+    'Web Publication contains a copied build or temporary directory.');
 
   for (const pdfPath of [publishedPdfPath, outputPdfPath]) {
     const pdf = await readFile(pdfPath);
