@@ -49,11 +49,24 @@ asset=Crowd Gasp,sound
 asset=Ocean Wave,sound
 asset=Xylo2,sound
 asset=Goal Cheer,sound
+asset=Narration,text
 actor=Urashima,Urashima-walk-1
 actor=Turtle,Turtle
 actor=Princess,Princess
 actor=Fish,Fish1
+actor=Narration,Narration
 cover=Beach1,Ocean Wave
+---
+# scene 1
+sceneLabel=beach
+action=Prompt:show:Narration:0,0,100
+setRuntimeVariable=Narration:むかし
+action=wait:2
+setRuntimeVariable=Narration:むかし　むかし、
+action=wait:2
+setRuntimeVariable=Narration:むかし　むかし、あるところに...
+action=wait:2
+setRuntimeVariable=Narration:
 ---
 # scene 1
 sceneLabel=beach

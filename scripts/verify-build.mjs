@@ -18,6 +18,9 @@ const sourcePath = path.join(projectRoot, 'docs', documentConfig.sourceFilename)
 const publishedPdfPath = path.join(docsDirectory, documentConfig.pdfFilename);
 const outputPdfPath = path.join(projectRoot, 'output/pdf', documentConfig.pdfFilename);
 const buildInfoPath = path.join(docsDirectory, 'build-info.json');
+const samplesSourceDirectory = path.join(projectRoot, 'samples');
+const samplesDirectory = path.join(projectRoot, 'dist/samples');
+const samplesIndexPath = path.join(samplesDirectory, 'index.html');
 
 function assert(condition, message) {
   if (!condition) {
@@ -51,6 +54,37 @@ async function verifyLocalReferences(htmlPath, tagName, attributeName) {
   return references;
 }
 
+async function verifySamples() {
+  const sourceEntries = await readdir(samplesSourceDirectory, {withFileTypes: true});
+  const publishedEntries = await readdir(samplesDirectory, {withFileTypes: true});
+  const sourceFilenames = sourceEntries
+    .filter((entry) => entry.isFile() && entry.name.endsWith('.txt'))
+    .map((entry) => entry.name)
+    .sort();
+  const publishedFilenames = publishedEntries
+    .filter((entry) => entry.isFile() && entry.name.endsWith('.txt'))
+    .map((entry) => entry.name)
+    .sort();
+  const sampleLinks = (await verifyLocalReferences(samplesIndexPath, 'a', 'href'))
+    .map((reference) => decodeURIComponent(reference.replace(/^\.\//u, '')));
+
+  assert(sourceFilenames.length > 0, 'No samples/*.txt source files were found.');
+  assert(JSON.stringify(publishedFilenames) === JSON.stringify(sourceFilenames),
+    'Published sample files do not match samples/*.txt.');
+
+  for (const filename of sourceFilenames) {
+    assert(sampleLinks.includes(filename),
+      `${filename} is missing from the published sample index.`);
+    const [source, published] = await Promise.all([
+      readFile(path.join(samplesSourceDirectory, filename)),
+      readFile(path.join(samplesDirectory, filename)),
+    ]);
+    assert(source.equals(published), `${filename} changed while being published.`);
+  }
+
+  return sourceFilenames.length;
+}
+
 export async function verifyBuild() {
   const grade = resolveLearnedThroughGrade();
   const buildInfo = JSON.parse(await readFile(buildInfoPath, 'utf8'));
@@ -62,6 +96,7 @@ export async function verifyBuild() {
   const docsEntries = await readdir(docsDirectory, {withFileTypes: true});
   const tocLinks = await verifyLocalReferences(tocPath, 'a', 'href');
   const images = await verifyLocalReferences(htmlPath, 'img', 'src');
+  const sampleCount = await verifySamples();
 
   assert(buildInfo.kanjiDataset.id === 'mext-h29',
     'Build does not use the current MEXT kanji dataset.');
@@ -114,7 +149,7 @@ export async function verifyBuild() {
 
   console.log(
     `Verified ${tocLinks.length} documentation TOC links, ${images.length} images, `
-      + `${rubyCount} ruby elements, and both PDF copies.`,
+      + `${rubyCount} ruby elements, ${sampleCount} sample file(s), and both PDF copies.`,
   );
 }
 

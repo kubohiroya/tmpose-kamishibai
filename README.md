@@ -54,18 +54,23 @@ RUBYGANA_GRADE=4 pnpm run build
 ```text
 dist/
 ├── index.html
-└── docs/
+├── docs/
+│   ├── index.html
+│   ├── publication.json
+│   ├── build-info.json
+│   ├── tmpose-kamishibai-20260801.html
+│   └── tmpose-kamishibai-20260801.pdf
+└── samples/
     ├── index.html
-    ├── publication.json
-    ├── build-info.json
-    ├── tmpose-kamishibai-20260801.html
-    └── tmpose-kamishibai-20260801.pdf
+    └── urashima.txt
 
 output/pdf/
 └── tmpose-kamishibai-20260801.pdf
 ```
 
 `output/pdf/`は印刷用PDFの確認場所、`dist/`はGitHub Pagesへ公開する内容です。どちらも生成物のためGit管理から除外しています。
+
+`samples/`に追加したテキストファイルは、ビルド時に`dist/samples/`へコピーされ、サンプル一覧へ自動的に追加されます。
 
 Vivliostyle Viewerで原稿を確認する場合:
 
@@ -111,15 +116,18 @@ RUBYGANA_GRADE=4 pnpm run deploy
 │   └── vivliostyle.config.mjs
 ├── scripts/
 │   ├── build-docs.mjs
+│   ├── build-samples.mjs
 │   ├── build-site.mjs
 │   └── verify-build.mjs
+├── samples/
+│   └── urashima.txt
 ├── site/
 │   ├── index.html
 │   ├── app/
-│   ├── downloads/
-│   └── samples/
+│   └── downloads/
 ├── test/
-│   └── docs-config.test.mjs
+│   ├── docs-config.test.mjs
+│   └── samples.test.mjs
 ├── package.json
 └── pnpm-lock.yaml
 ```
@@ -128,7 +136,7 @@ RUBYGANA_GRADE=4 pnpm run deploy
 
 - `site/app/`: TurboWarpからエクスポートしたWebアプリ一式
 - `docs/`: Markdown原稿、学年・読み設定、Vivliostyle用テーマ
-- `site/samples/`: 作品単位のサンプル台本と関連情報
+- `samples/`: Git管理するテキスト形式のサンプル台本。ビルド時に一覧と配布ファイルを生成
 - `site/downloads/`: 最新版のSB3、台本、配布ZIP
 - `output/pdf/`: ローカル確認用の印刷PDF
 
