@@ -1,0 +1,42 @@
+{
+  "@context": [
+    "https://schema.org",
+    "https://www.w3.org/ns/pub-context"
+  ],
+  "type": "Book",
+  "conformsTo": "https://github.com/vivliostyle/vivliostyle-cli",
+  "name": "TMPose紙芝居 利用・台本作成ガイド",
+  "author": "Hiroya Kubo",
+  "inLanguage": "ja",
+  "dateModified": "2026-07-21T01:43:56.997Z",
+  "readingOrder": [
+    {
+      "url": "index.html",
+      "name": "TMPose紙芝居 利用・台本作成ガイド"
+    }
+  ],
+  "resources": [
+    "docs/theme.css",
+    "theme.css",
+    "tmp/pdfs/final-page-4.png",
+    "tmp/pdfs/final-page-5.png",
+    "tmp/pdfs/final-page-6.png",
+    "tmp/pdfs/final-page-7.png",
+    "tmp/pdfs/final-page-8.png",
+    "tmp/pdfs/qa-page-4.png",
+    "tmp/pdfs/qa-page-5.png",
+    "tmp/pdfs/qa-page-6.png",
+    "tmp/pdfs/qa-page-7.png",
+    "tmp/pdfs/qa-page-8.png",
+    "tmp/pdfs/tmpose-kamishibai-guide-1.png",
+    "tmp/pdfs/tmpose-kamishibai-guide-2.png",
+    "tmp/pdfs/tmpose-kamishibai-guide-3.png",
+    "tmp/pdfs/tmpose-kamishibai-guide-4.png",
+    "tmp/pdfs/tmpose-kamishibai-guide-5.png",
+    "tmp/pdfs/tmpose-kamishibai-guide-6.png",
+    "tmp/pdfs/tmpose-kamishibai-guide-7.png",
+    "tmp/pdfs/tmpose-kamishibai-guide-8.png",
+    "tmp/pdfs/tmpose-kamishibai-guide-9.png"
+  ],
+  "links": []
+}
