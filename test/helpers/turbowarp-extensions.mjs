@@ -192,6 +192,7 @@ export function registerKamishibaiTestExtensions(vm, clock) {
         block('startActorLoop', BlockType.COMMAND, ['ACTOR', 'ASSETS', 'DURATIONS']),
         block('startActorSequence', BlockType.COMMAND, ['ACTOR', 'ASSETS', 'DURATIONS']),
         block('finishAllActorSequences'),
+        block('stopSound', BlockType.COMMAND, ['NAME']),
         block('stopAllSounds'),
       ]);
     }
@@ -233,6 +234,9 @@ export function registerKamishibaiTestExtensions(vm, clock) {
     }
     stopAllSounds() {
       state.playingSounds.clear();
+    }
+    stopSound(args) {
+      state.playingSounds.delete(Cast.toString(args.NAME));
     }
     startActorLoop() {}
     startActorSequence(args) {

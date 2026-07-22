@@ -138,9 +138,11 @@ importまたはbuildの途中で `.app.rollback-*` や `.kamishibai.sb3.rollback
 | `transition:fadeOut` | 明るさを `-100` にする |
 | `transition:fadeUp` | 明るさを `0` にする |
 | バックグラウンド実行中の`sequence` | 最後の画像を適用して一回再生を終了 |
-| `sound` | Asset Managerが追跡する外部音声とプロジェクト音声を停止 |
+| `sound` | `actionParam` が示す対象音声だけを停止 |
 
 `sequence` は開始後すぐ次のアクションへ進むため、その後のアクション中に右矢印または下矢印が受理された場合も、実行中の一回再生を最終画像へ確定します。`loop` は継続演出なので、この確定処理の対象外です。
+
+右矢印は現在の `sound` だけを停止します。`bgm` やほかの音声は、別のアクションを右矢印で完了しても停止しません。下矢印でシーンを終了する場合は、そのシーンで再生中の音声をすべて停止します。
 
 緑の旗、停止、表紙開始、ストーリー開始、シーン開始・終了では、前の `skipMode` を残しません。表紙、タイトル、シーン終了時には `skipContext` も削除します。
 
@@ -158,7 +160,7 @@ importまたはbuildの途中で `.app.rollback-*` や `.kamishibai.sb3.rollback
 
 `test/skip-mode.test.mjs` は生成SB3のScratchブロックグラフを検査し、許可値、存在判定、要求の削除などの構造上の不変条件を確認します。ブロックIDは固定せず、オペコード、入力値、カスタムブロック名、親子関係を使います。
 
-`test/turbowarp-vm.test.mjs` は `pretest` が `app/` から生成した `tmp/kamishibai.sb3` を、固定コミット `c4823421cb7c17d8d8a89878851ce1668c26a21f` のTurboWarp VMへ読み込みます。緑の旗とキー入力をVMへ送り、入力文脈、最初の要求の保持、ポーズからの伝播、シーン境界、待機、吹き出し、移動先、フェード最終値、画像列、音声停止を実行結果から検証します。
+`test/turbowarp-vm.test.mjs` は `pretest` が `app/` から生成した `tmp/kamishibai.sb3` を、固定コミット `c4823421cb7c17d8d8a89878851ce1668c26a21f` のTurboWarp VMへ読み込みます。緑の旗とキー入力をVMへ送り、入力文脈、最初の要求の保持、ポーズからの伝播、シーン境界、待機、吹き出し、移動先、フェード最終値、画像列、対象音声の停止、BGMの継続を実行結果から検証します。
 
 外部URLの機能拡張、カメラ、ネットワーク、音声出力は決定的なテストダブルへ置き換えます。テスト中に外部通信は行いません。VM内部APIへの依存は `test/helpers/turbowarp-vm.mjs` に隔離します。
 
