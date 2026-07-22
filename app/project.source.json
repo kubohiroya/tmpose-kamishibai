@@ -18831,35 +18831,10 @@
           "shadow": true,
           "topLevel": false
         },
-        "ck": {
-          "opcode": "lmsTimers_setTimer",
-          "next": "hA",
-          "parent": "cj",
-          "inputs": {
-            "TIMER": [
-              1,
-              [
-                10,
-                "timer"
-              ]
-            ],
-            "NUM": [
-              3,
-              "nA",
-              [
-                4,
-                "10"
-              ]
-            ]
-          },
-          "fields": {},
-          "shadow": false,
-          "topLevel": false
-        },
         "nA": {
           "opcode": "argument_reporter_string_number",
           "next": null,
-          "parent": "ck",
+          "parent": "hB",
           "inputs": {},
           "fields": {
             "VALUE": [
@@ -18873,7 +18848,7 @@
         "hA": {
           "opcode": "lmsTimers_startResetTimer",
           "next": "-",
-          "parent": "ck",
+          "parent": "cj",
           "inputs": {
             "TIMER": [
               1,
@@ -18924,7 +18899,7 @@
           "topLevel": false
         },
         "hB": {
-          "opcode": "operator_gt",
+          "opcode": "operator_lt",
           "next": null,
           "parent": "cm",
           "inputs": {
@@ -18937,10 +18912,11 @@
               ]
             ],
             "OPERAND2": [
-              1,
+              3,
+              "nA",
               [
-                10,
-                "0"
+                4,
+                "10"
               ]
             ]
           },
@@ -20185,7 +20161,7 @@
         },
         "cj": {
           "opcode": "sipcconsole_Journal",
-          "next": "ck",
+          "next": "hA",
           "parent": "hy",
           "inputs": {
             "string": [
