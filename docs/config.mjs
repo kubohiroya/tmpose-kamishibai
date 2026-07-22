@@ -2,7 +2,10 @@ export const documentConfig = {
   title: 'AIを使って「紙芝居の物語に参加する仕組み」を作ろう！',
   author: 'Hiroya Kubo',
   learnedThroughGrade: 3,
+  coverFilename: 'tmpose-kamishibai-cover-20260801.md',
+  coverHtmlFilename: 'index.html',
   sourceFilename: 'tmpose-kamishibai-20260801.md',
+  tocHtmlFilename: 'toc.html',
   pdfFilename: 'tmpose-kamishibai-20260801.pdf',
   tocSectionDepth: 4,
   rubyOverrides: [

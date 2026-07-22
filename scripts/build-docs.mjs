@@ -132,8 +132,15 @@ async function writeBuildInfo(directory, grade, details) {
 
 async function prepareHtml(htmlPath, grade) {
   const source = await readFile(htmlPath, 'utf8');
+  const isTableOfContents = /<nav\b[^>]*\bid="toc"[^>]*>/iu.test(source);
+  const section = path.basename(htmlPath) === documentConfig.coverHtmlFilename
+    ? 'cover'
+    : isTableOfContents ? 'toc' : 'body';
   const note = `<p class="furigana-build-note">このHTMLとPDFは、小学${grade}年生までに学ぶ漢字を既習として、以後に学ぶ漢字へふりがなを付けています。</p>`;
-  const withTocLabels = source.replace(
+  const withoutGeneratedTitle = isTableOfContents
+    ? source.replace(/(<body\b[^>]*>)\s*<h1\b[^>]*>[\s\S]*?<\/h1>/iu, '$1')
+    : source;
+  const withTocLabels = withoutGeneratedTitle.replace(
     /<nav\b[^>]*\bid="toc"[^>]*>[\s\S]*?<\/nav>/iu,
     (tableOfContents) => tableOfContents.replace(
       /(<a\b[^>]*>)([\s\S]*?)(<\/a>)/giu,
@@ -144,7 +151,13 @@ async function prepareHtml(htmlPath, grade) {
     /<html(\s|>)/i,
     `<html data-rubygana-grade="${grade}"$1`,
   );
-  const withNote = withGrade.replace(/(<h1\b[^>]*>[\s\S]*?<\/h1>)/i, `$1\n${note}`);
+  const withSection = withGrade.replace(
+    /<body(\s|>)/i,
+    `<body data-publication-section="${section}"$1`,
+  );
+  const withNote = section === 'cover'
+    ? withSection.replace(/(<h1\b[^>]*>[\s\S]*?<\/h1>)/i, `$1\n${note}`)
+    : withSection;
   await writeFile(htmlPath, withNote);
 }
 
@@ -205,9 +218,15 @@ export async function buildDocs({distDirectory = path.join(projectRoot, 'dist')}
   await copyFile(pdfPath, path.join(docsDirectory, documentConfig.pdfFilename));
   await writeBuildInfo(docsDirectory, grade, {
     publicationKind: 'documentation',
+    navigation: {
+      viewerBookMode: true,
+      pdfBookmarks: 'generatedTableOfContents',
+    },
+    coverFilename: documentConfig.coverFilename,
     sourceFilename: documentConfig.sourceFilename,
     generatedTableOfContents: {
       title: '目次',
+      htmlFilename: documentConfig.tocHtmlFilename,
       sectionDepth: documentConfig.tocSectionDepth,
     },
   });
