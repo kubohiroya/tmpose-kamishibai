@@ -40,7 +40,7 @@ export const generalDocumentConfig = {
       sourceFilename: '06-developer-guide.md',
       title: '紙芝居アプリ ソフトウェア開発者向け資料',
       audience: 'ソフトウェア開発者',
-      description: 'アプリ本体と、開発に関連するプラグイン、テンプレート、機能拡張、ライブラリを案内します。',
+      description: 'アプリ本体、skipModeの内部仕様とテスト方針、開発に関連する機能拡張やライブラリを案内します。',
     },
     {
       sourceFilename: 'history.md',
