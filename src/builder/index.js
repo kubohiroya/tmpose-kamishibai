@@ -3,7 +3,14 @@ import path from 'node:path';
 
 import {installBundleTransactionally} from './atomic-output.js';
 import {resolveAssets} from './assets.js';
-import {bundleManifestFormatVersion, packageName, packageVersion} from './constants.js';
+import {
+  builderProfiles,
+  bundleManifestFormatVersion,
+  defaultMaxEmbeddedScriptBytes,
+  embeddedScriptVariableId,
+  packageName,
+  packageVersion,
+} from './constants.js';
 import {Sb3BuilderError} from './errors.js';
 import {sha256} from './hash.js';
 import {loadAssetManifest, validateOutputName} from './manifest.js';
@@ -40,7 +47,7 @@ function inputName(input) {
 /**
  * Build a deterministic SB3, transformed DSL script, and provenance manifest as one transaction.
  *
- * @param {{baseSb3: string | URL, sourceScript: string | URL, assetManifest: string | URL | Record<string, unknown>, outputDirectory: string, outputName: string, manifestBaseDirectory?: string, allowedFileRoots?: string[], allowHttp?: boolean, fetchImplementation?: typeof fetch, maxAssetBytes?: number, maxRedirects?: number, requestTimeoutMs?: number}} options
+ * @param {{baseSb3: string | URL, sourceScript: string | URL, assetManifest: string | URL | Record<string, unknown>, outputDirectory: string, outputName: string, profile: 'editor' | 'player', manifestBaseDirectory?: string, allowedFileRoots?: string[], allowHttp?: boolean, fetchImplementation?: typeof fetch, maxAssetBytes?: number, maxEmbeddedScriptBytes?: number, maxRedirects?: number, requestTimeoutMs?: number}} options
  */
 export async function buildSb3Bundle(options) {
   if (!options || typeof options !== 'object') {
@@ -48,6 +55,15 @@ export async function buildSb3Bundle(options) {
   }
   if (typeof options.outputDirectory !== 'string' || options.outputDirectory.length === 0) {
     throw new Sb3BuilderError('outputDirectory must be a non-empty string.', {stage: 'options'});
+  }
+  if (!builderProfiles.includes(options.profile)) {
+    throw new Sb3BuilderError('profile must be either editor or player.', {stage: 'options'});
+  }
+  const maxEmbeddedScriptBytes = options.maxEmbeddedScriptBytes ?? defaultMaxEmbeddedScriptBytes;
+  if (!Number.isInteger(maxEmbeddedScriptBytes) || maxEmbeddedScriptBytes < 1) {
+    throw new Sb3BuilderError('maxEmbeddedScriptBytes must be an integer >= 1.', {
+      stage: 'options',
+    });
   }
   const outputName = validateOutputName(options.outputName);
   const outputDirectory = path.resolve(options.outputDirectory);
@@ -69,7 +85,11 @@ export async function buildSb3Bundle(options) {
     },
   );
   const transformedScript = transformScript(sourceScriptBytes, loadedManifest.manifest);
-  const builtSb3 = buildSb3Archive(baseSb3Bytes, resolvedAssets);
+  const builtSb3 = buildSb3Archive(baseSb3Bytes, resolvedAssets, {
+    profile: options.profile,
+    scriptBytes: transformedScript.bytes,
+    maxEmbeddedScriptBytes,
+  });
   const sb3Filename = `${outputName}.sb3`;
   const scriptFilename = `${outputName}.txt`;
   const manifestFilename = `${outputName}.manifest.json`;
@@ -80,12 +100,19 @@ export async function buildSb3Bundle(options) {
   const manifest = {
     formatVersion: bundleManifestFormatVersion,
     builder: {package: packageName, version: packageVersion},
+    profile: options.profile,
     inputs: {
       assetManifest: {filename: loadedManifest.sourceName, sha256: sha256(loadedManifest.bytes)},
       baseSb3: {filename: inputName(options.baseSb3), sha256: sha256(baseSb3Bytes)},
       sourceScript: {filename: inputName(options.sourceScript), sha256: sha256(sourceScriptBytes)},
     },
     outputName,
+    script: {
+      mode: options.profile === 'player' ? 'embedded' : 'external',
+      embeddedVariableId: options.profile === 'player' ? embeddedScriptVariableId : null,
+      size: transformedScript.bytes.length,
+      sha256: sha256(transformedScript.bytes),
+    },
     assets: loadedManifest.manifest.assets.map((entry) => {
       const sb3Mapping = sb3Mappings.get(entry.name);
       const scriptMapping = scriptMappings.get(entry.name);

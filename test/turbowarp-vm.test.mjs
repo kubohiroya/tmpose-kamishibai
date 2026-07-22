@@ -196,6 +196,19 @@ test('accepts only Space while the title is active', async (context) => {
   assert.equal(harness.getBackdropName(), 'Stars');
 });
 
+test('keeps the external script flow when the embedded script slot is empty', async (context) => {
+  const harness = await loadKamishibaiVm();
+  context.after(() => harness.quit());
+
+  harness.greenFlag();
+  harness.runUntil(() => harness.getRuntimeVariable('skipMode') === 'title');
+  assert.equal(harness.getStageVariable('__tmpose_embedded_script'), '');
+
+  harness.clickStage();
+  harness.runUntil(() => !harness.hasRuntimeVariable('skipMode'));
+  assert.equal(harness.hasRuntimeVariable('script'), false);
+});
+
 test('ignores rehearsal keys while the project is stopped', async (context) => {
   const harness = await loadKamishibaiVm();
   context.after(() => harness.quit());
