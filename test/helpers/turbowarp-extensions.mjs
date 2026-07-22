@@ -30,6 +30,7 @@ export function registerKamishibaiTestExtensions(vm, clock) {
     actorSkins: new Map(),
     asyncInput: null,
     assets: new Map(),
+    consoleErrors: [],
     filePickerRequests: 0,
     keyInputBindings: new Map(),
     localStorage: new Map(),
@@ -49,7 +50,9 @@ export function registerKamishibaiTestExtensions(vm, clock) {
       ]);
     }
     Emptying() {}
-    Error() {}
+    Error(args) {
+      state.consoleErrors.push(Cast.toString(args.string));
+    }
     Journal() {}
     debug() {}
   }
@@ -191,6 +194,7 @@ export function registerKamishibaiTestExtensions(vm, clock) {
         block('playSound', BlockType.COMMAND, ['NAME']),
         block('playSoundUntilDone', BlockType.COMMAND, ['NAME']),
         block('registerAsset', BlockType.COMMAND, ['RESOURCE_ID', 'NAME']),
+        block('setTextValue', BlockType.COMMAND, ['NAME', 'VALUE']),
         block('setStageSkin', BlockType.COMMAND, ['NAME']),
         block('setThisSpriteSkin', BlockType.COMMAND, ['NAME']),
         block('startActorLoop', BlockType.COMMAND, ['ACTOR', 'ASSETS', 'DURATIONS']),
@@ -202,6 +206,20 @@ export function registerKamishibaiTestExtensions(vm, clock) {
     }
     registerAsset(args) {
       state.assets.set(Cast.toString(args.NAME), Cast.toString(args.RESOURCE_ID));
+    }
+    setTextValue(args) {
+      const name = Cast.toString(args.NAME);
+      const resource = state.assets.get(name);
+      if (resource !== 'text' && !resource?.startsWith('text:')) {
+        throw new Error(`Asset is not text: ${name}`);
+      }
+      const explicitName = resource.startsWith('text:')
+        ? resource.slice('text:'.length).trim()
+        : '';
+      state.tempVariables.setRuntimeVariable({
+        VAR: `text:${explicitName || name}`,
+        STRING: Cast.toString(args.VALUE),
+      });
     }
     isLoaded(args) {
       return state.assets.has(Cast.toString(args.NAME));
