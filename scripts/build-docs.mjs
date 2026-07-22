@@ -7,7 +7,9 @@ import {fileURLToPath, pathToFileURL} from 'node:url';
 
 import {
   documentConfig,
+  generalDocumentConfig,
   resolveLearnedThroughGrade,
+  staffDocumentConfig,
 } from '../docs/config.mjs';
 
 const require = createRequire(import.meta.url);
@@ -93,14 +95,14 @@ async function findHtmlFiles(directory) {
   return nested.flat();
 }
 
-async function processHtmlFiles(directory, grade) {
+async function processWorkshopHtmlFiles(directory, grade) {
   const htmlFiles = await findHtmlFiles(directory);
   if (htmlFiles.length === 0) {
-    throw new Error('Vivliostyle did not generate an HTML document.');
+    throw new Error('Vivliostyle did not generate workshop HTML documents.');
   }
 
   for (const htmlFile of htmlFiles) {
-    await prepareHtml(htmlFile, grade);
+    await prepareWorkshopHtml(htmlFile, grade);
     const rubyOutput = `${htmlFile}.rubygana`;
     await runRubygana(htmlFile, rubyOutput, grade);
     await rename(rubyOutput, htmlFile);
@@ -109,8 +111,16 @@ async function processHtmlFiles(directory, grade) {
   return htmlFiles;
 }
 
-function createBuildInfo(grade, details = {}) {
+function baseBuildInfo(details = {}) {
   return {
+    htmlAndPdfGenerator: 'Vivliostyle CLI 11.1.0',
+    ...details,
+  };
+}
+
+function workshopBuildInfo(grade, details = {}) {
+  return baseBuildInfo({
+    rubyApplied: true,
     learnedThroughGrade: grade,
     rubyGenerator: `${rubyganaPackage.name} ${rubyganaPackage.version}`,
     kanjiDataset: {
@@ -118,19 +128,18 @@ function createBuildInfo(grade, details = {}) {
       sourceUrl: rubyganaGradeData.sourceUrl,
       gradeCounts: rubyganaGradeData.expectedGradeCounts,
     },
-    htmlAndPdfGenerator: 'Vivliostyle CLI 11.1.0',
     ...details,
-  };
+  });
 }
 
-async function writeBuildInfo(directory, grade, details) {
+async function writeBuildInfo(directory, buildInfo) {
   await writeFile(
     path.join(directory, 'build-info.json'),
-    `${JSON.stringify(createBuildInfo(grade, details), null, 2)}\n`,
+    `${JSON.stringify(buildInfo, null, 2)}\n`,
   );
 }
 
-async function prepareHtml(htmlPath, grade) {
+async function prepareWorkshopHtml(htmlPath, grade) {
   const source = await readFile(htmlPath, 'utf8');
   const isTableOfContents = /<nav\b[^>]*\bid="toc"[^>]*>/iu.test(source);
   const section = path.basename(htmlPath) === documentConfig.coverHtmlFilename
@@ -147,7 +156,11 @@ async function prepareHtml(htmlPath, grade) {
       '$1<span class="toc-label">$2</span>$3',
     ),
   );
-  const withGrade = withTocLabels.replace(
+  const withLocalImages = withTocLabels.replace(
+    /(<img\b[^>]*\bsrc=")\.\.\/\.\.\/images\//giu,
+    '$1images/',
+  );
+  const withGrade = withLocalImages.replace(
     /<html(\s|>)/i,
     `<html data-rubygana-grade="${grade}"$1`,
   );
@@ -174,54 +187,106 @@ function browserArguments() {
   return [];
 }
 
-export async function buildDocs({distDirectory = path.join(projectRoot, 'dist')} = {}) {
-  const grade = resolveLearnedThroughGrade();
-  const configPath = path.join(projectRoot, 'docs/vivliostyle.config.mjs');
-  const workspaceDirectory = path.join(projectRoot, 'tmp/docs-vivliostyle');
-  const tempDirectory = path.join(projectRoot, 'tmp/docs-webpub');
-  const docsDirectory = path.join(distDirectory, 'docs');
-  const pdfDirectory = path.join(projectRoot, 'output/pdf');
-  const pdfPath = path.join(pdfDirectory, documentConfig.pdfFilename);
-
-  await rm(workspaceDirectory, {recursive: true, force: true});
-  await rm(tempDirectory, {recursive: true, force: true});
-  await rm(docsDirectory, {recursive: true, force: true});
-  await mkdir(pdfDirectory, {recursive: true});
-
+async function buildWebPublication(configPath, outputDirectory) {
+  await rm(outputDirectory, {recursive: true, force: true});
   await runNode(vivliostyleBin, [
     'build',
     '--config',
     configPath,
     '--output',
-    tempDirectory,
+    outputDirectory,
     '--format',
     'webpub',
   ], {cwd: path.dirname(configPath)});
+}
 
-  await cp(tempDirectory, docsDirectory, {recursive: true});
-  await processHtmlFiles(docsDirectory, grade);
-
-  const publicationManifest = path.join(docsDirectory, 'publication.json');
-  if (!existsSync(publicationManifest)) {
-    throw new Error('Documentation Web Publication does not contain publication.json.');
-  }
-
+async function buildPdf(htmlPath, pdfPath) {
+  await mkdir(path.dirname(pdfPath), {recursive: true});
   await runNode(vivliostyleBin, [
     'build',
-    'publication.json',
+    path.basename(htmlPath),
     '--size',
     'A4',
     '--output',
     pdfPath,
     ...browserArguments(),
-  ], {cwd: docsDirectory});
-  await copyFile(pdfPath, path.join(docsDirectory, documentConfig.pdfFilename));
-  await writeBuildInfo(docsDirectory, grade, {
-    publicationKind: 'documentation',
+  ], {cwd: path.dirname(htmlPath)});
+}
+
+async function normalizeGeneratedImagePaths(htmlPath) {
+  const source = await readFile(htmlPath, 'utf8');
+  await writeFile(htmlPath, source.replace(
+    /(<img\b[^>]*\bsrc=")\.\.\/\.\.\/images\//giu,
+    '$1images/',
+  ));
+}
+
+export async function buildDocs({distDirectory = path.join(projectRoot, 'dist')} = {}) {
+  const grade = resolveLearnedThroughGrade();
+  const docsDirectory = path.join(distDirectory, 'docs');
+  const generalDirectory = path.join(docsDirectory, generalDocumentConfig.outputDirectory);
+  const workshopDirectory = path.join(docsDirectory, documentConfig.outputDirectory);
+  const staffDirectory = path.join(docsDirectory, staffDocumentConfig.outputDirectory);
+  const generalConfigPath = path.join(projectRoot, 'docs/vivliostyle.general.config.mjs');
+  const workshopConfigPath = path.join(projectRoot, 'docs/vivliostyle.workshop.config.mjs');
+  const staffConfigPath = path.join(projectRoot, 'docs/vivliostyle.staff.config.mjs');
+  const generalTempDirectory = path.join(projectRoot, 'tmp/docs-general-webpub');
+  const workshopTempDirectory = path.join(projectRoot, 'tmp/docs-workshop-webpub');
+  const staffTempDirectory = path.join(projectRoot, 'tmp/docs-staff-webpub');
+  const pdfDirectory = path.join(projectRoot, 'output/pdf');
+
+  await rm(docsDirectory, {recursive: true, force: true});
+  await rm(pdfDirectory, {recursive: true, force: true});
+  await mkdir(docsDirectory, {recursive: true});
+  await copyFile(path.join(projectRoot, 'site/docs/index.html'), path.join(docsDirectory, 'index.html'));
+
+  await buildWebPublication(generalConfigPath, generalTempDirectory);
+  await cp(generalTempDirectory, generalDirectory, {recursive: true});
+
+  for (const generalDocument of generalDocumentConfig.documents) {
+    const htmlFilename = generalDocument.sourceFilename.replace(/\.md$/u, '.html');
+    const pdfFilename = generalDocument.sourceFilename.replace(/\.md$/u, '.pdf');
+    const htmlPath = path.join(generalDirectory, htmlFilename);
+    const pdfPath = path.join(pdfDirectory, generalDocumentConfig.outputDirectory, pdfFilename);
+    await buildPdf(htmlPath, pdfPath);
+    await copyFile(pdfPath, path.join(generalDirectory, pdfFilename));
+  }
+
+  await writeBuildInfo(generalDirectory, baseBuildInfo({
+    publicationKind: 'general-documentation',
+    rubyApplied: false,
+    sourceDirectory: generalDocumentConfig.sourceDirectory,
+    documents: generalDocumentConfig.documents.map(({sourceFilename, title}) => ({
+      sourceFilename,
+      title,
+      htmlFilename: sourceFilename.replace(/\.md$/u, '.html'),
+      pdfFilename: sourceFilename.replace(/\.md$/u, '.pdf'),
+    })),
+  }));
+
+  await buildWebPublication(workshopConfigPath, workshopTempDirectory);
+  await cp(workshopTempDirectory, workshopDirectory, {recursive: true});
+  await processWorkshopHtmlFiles(workshopDirectory, grade);
+
+  const workshopManifest = path.join(workshopDirectory, 'publication.json');
+  if (!existsSync(workshopManifest)) {
+    throw new Error('Workshop Web Publication does not contain publication.json.');
+  }
+
+  const workshopPdfPath = path.join(
+    pdfDirectory,
+    documentConfig.outputDirectory,
+    documentConfig.pdfFilename,
+  );
+  await buildPdf(workshopManifest, workshopPdfPath);
+  await copyFile(workshopPdfPath, path.join(workshopDirectory, documentConfig.pdfFilename));
+  await writeBuildInfo(workshopDirectory, workshopBuildInfo(grade, {
+    publicationKind: 'workshop-documentation',
     navigation: {
       viewerBookMode: true,
       pdfBookmarks: 'generatedTableOfContents',
     },
+    sourceDirectory: documentConfig.sourceDirectory,
     coverFilename: documentConfig.coverFilename,
     sourceFilename: documentConfig.sourceFilename,
     generatedTableOfContents: {
@@ -229,10 +294,36 @@ export async function buildDocs({distDirectory = path.join(projectRoot, 'dist')}
       htmlFilename: documentConfig.tocHtmlFilename,
       sectionDepth: documentConfig.tocSectionDepth,
     },
-  });
+  }));
 
-  console.log(`Built grade ${grade} documentation in ${path.relative(projectRoot, docsDirectory)}/`);
-  console.log(`Built documentation PDF in ${path.relative(projectRoot, pdfPath)}`);
+  await buildWebPublication(staffConfigPath, staffTempDirectory);
+  await cp(staffTempDirectory, staffDirectory, {recursive: true});
+
+  const staffHtmlPath = path.join(staffDirectory, staffDocumentConfig.htmlFilename);
+  await normalizeGeneratedImagePaths(staffHtmlPath);
+  const staffPdfPath = path.join(
+    pdfDirectory,
+    staffDocumentConfig.outputDirectory,
+    staffDocumentConfig.pdfFilename,
+  );
+  await buildPdf(staffHtmlPath, staffPdfPath);
+  await copyFile(staffPdfPath, path.join(staffDirectory, staffDocumentConfig.pdfFilename));
+  await writeBuildInfo(staffDirectory, baseBuildInfo({
+    publicationKind: 'workshop-staff-documentation',
+    rubyApplied: false,
+    sourceDirectory: staffDocumentConfig.sourceDirectory,
+    sourceFilename: staffDocumentConfig.sourceFilename,
+    htmlFilename: staffDocumentConfig.htmlFilename,
+    pdfFilename: staffDocumentConfig.pdfFilename,
+  }));
+
+  console.log(
+    `Built ${generalDocumentConfig.documents.length} general HTML/PDF document pairs in `
+      + `${path.relative(projectRoot, generalDirectory)}/`,
+  );
+  console.log(`Built grade ${grade} workshop publication in ${path.relative(projectRoot, workshopDirectory)}/`);
+  console.log(`Built non-ruby staff publication in ${path.relative(projectRoot, staffDirectory)}/`);
+  console.log(`Built printable PDFs in ${path.relative(projectRoot, pdfDirectory)}/`);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

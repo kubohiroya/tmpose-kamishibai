@@ -19,12 +19,6 @@
   size: A4;
   margin: 18mm 17mm 20mm;
 
-  @top-left {
-    content: "親子AIプログラミング体験会 2026/08/01";
-    color: #756960;
-    font-size: 8.5pt;
-  }
-
   @bottom-right {
     content: counter(page);
     color: #756960;

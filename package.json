@@ -8,7 +8,9 @@
   "packageManager": "pnpm@11.11.0",
   "scripts": {
     "build": "node scripts/build-site.mjs",
-    "preview:docs": "vivliostyle preview --config docs/vivliostyle.config.mjs",
+    "preview:docs": "vivliostyle preview --config docs/vivliostyle.general.config.mjs",
+    "preview:staff": "vivliostyle preview --config docs/vivliostyle.staff.config.mjs",
+    "preview:workshop": "vivliostyle preview --config docs/vivliostyle.workshop.config.mjs",
     "test": "node --test test/*.test.mjs",
     "predeploy": "pnpm run build",
     "deploy": "gh-pages -d dist"
@@ -24,6 +26,7 @@
   "license": "MIT",
   "devDependencies": {
     "@vivliostyle/cli": "11.1.0",
+    "fflate": "0.8.3",
     "gh-pages": "^6.3.0",
     "rubygana": "github:kubohiroya/rubygana#a24b8a699a1b033546f4d1a47a63005f7af95735"
   },
