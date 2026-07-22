@@ -4,9 +4,13 @@ import test from 'node:test';
 
 import {
   documentConfig,
+  generalDocumentConfig,
   resolveLearnedThroughGrade,
+  staffDocumentConfig,
 } from '../docs/config.mjs';
-import vivliostyleConfig from '../docs/vivliostyle.config.mjs';
+import generalVivliostyleConfig from '../docs/vivliostyle.general.config.mjs';
+import staffVivliostyleConfig from '../docs/vivliostyle.staff.config.mjs';
+import workshopVivliostyleConfig from '../docs/vivliostyle.workshop.config.mjs';
 
 test('uses the configured grade when no environment override is present', () => {
   const originalGrade = process.env.RUBYGANA_GRADE;
@@ -39,18 +43,24 @@ test('scopes the Hiroya name reading to the full name', () => {
   assert(!documentConfig.rubyOverrides.includes('裕也:ひろや'));
 });
 
-test('delegates the documentation table of contents to Vivliostyle', () => {
+test('delegates the workshop table of contents to Vivliostyle', () => {
   const source = readFileSync(
-    new URL(`../docs/${documentConfig.sourceFilename}`, import.meta.url),
+    new URL(
+      `../docs/${documentConfig.sourceDirectory}/${documentConfig.sourceFilename}`,
+      import.meta.url,
+    ),
     'utf8',
   );
   const cover = readFileSync(
-    new URL(`../docs/${documentConfig.coverFilename}`, import.meta.url),
+    new URL(
+      `../docs/${documentConfig.sourceDirectory}/${documentConfig.coverFilename}`,
+      import.meta.url,
+    ),
     'utf8',
   );
 
   assert.equal(documentConfig.tocSectionDepth, 4);
-  assert.equal(vivliostyleConfig.viewerParam, 'bookMode=true');
+  assert.equal(workshopVivliostyleConfig.viewerParam, 'bookMode=true');
   assert.equal(documentConfig.coverHtmlFilename, 'index.html');
   assert.notEqual(documentConfig.coverHtmlFilename, documentConfig.tocHtmlFilename);
   assert.doesNotMatch(`${cover}\n${source}`, /^## 目次\s*$/mu);
@@ -59,11 +69,133 @@ test('delegates the documentation table of contents to Vivliostyle', () => {
   assert.doesNotMatch(cover, /^#{2,6}\s+/mu);
   assert.match(cover, /vivliostyle\.org\/viewer\/#src=.*&amp;bookMode=true/u);
   assert.match(source, /^# 0\. この教材と体験会について$/mu);
-  assert.match(source, /^# A\. 付録1:/mu);
-  assert.match(source, /^# B\. 付録2:/mu);
-  assert.match(source, /^# C\. 付録3:/mu);
+  assert.doesNotMatch(source, /^# [ABC]\. 付録/mu);
   assert.match(source, /^#### うまく動かないとき$/mu);
   assert.doesNotMatch(source, /^#{5,6}\s+/mu);
+});
+
+test('publishes appendix A as a standalone non-ruby staff document', () => {
+  const source = readFileSync(
+    new URL(
+      `../docs/${staffDocumentConfig.sourceDirectory}/${staffDocumentConfig.sourceFilename}`,
+      import.meta.url,
+    ),
+    'utf8',
+  );
+
+  assert.equal(
+    staffDocumentConfig.title,
+    '親子AIプログラミング体験会スタッフ向け資料2026年8月1日版',
+  );
+  assert.deepEqual(
+    staffVivliostyleConfig.entry.map(({path, output}) => ({path, output})),
+    [{
+      path: `${staffDocumentConfig.sourceDirectory}/${staffDocumentConfig.sourceFilename}`,
+      output: staffDocumentConfig.htmlFilename,
+    }],
+  );
+  assert.match(source, new RegExp(`^# ${staffDocumentConfig.title}$`, 'mu'));
+  assert.match(source, /^## 1\. 体験会運営用資料$/mu);
+  assert.doesNotMatch(source, /^## 2\. アプリ$/mu);
+  assert.doesNotMatch(source, /^## 3\. (?:関連)?ライブラリ(?:など)?$/mu);
+  assert.doesNotMatch(source, /^#{1,3} [ABC]\./mu);
+});
+
+test('publishes appendices B and C as a general software developer document', () => {
+  const developerDocument = generalDocumentConfig.documents.find(
+    ({sourceFilename}) => sourceFilename === '06-developer-guide.md',
+  );
+  assert(developerDocument, 'Developer document is missing from the general document config.');
+
+  const source = readFileSync(
+    new URL(`../docs/${generalDocumentConfig.sourceDirectory}/${developerDocument.sourceFilename}`, import.meta.url),
+    'utf8',
+  );
+  assert.match(source, /^# 紙芝居アプリ ソフトウェア開発者向け資料$/mu);
+  assert.match(source, /^## 1\. アプリ$/mu);
+  assert.match(source, /^## 2\. 内部仕様: `skipMode` の状態遷移$/mu);
+  assert.match(source, /^## 3\. 関連ライブラリ$/mu);
+  assert.doesNotMatch(source, /^#{1,3} [BC]\./mu);
+});
+
+test('defines the general documents as the primary non-ruby publication', () => {
+  assert.equal(generalDocumentConfig.sourceDirectory, 'general');
+  assert.equal(generalDocumentConfig.outputDirectory, 'general');
+  assert.equal(generalDocumentConfig.documents.length, 7);
+  assert.equal(generalVivliostyleConfig.viewerParam, 'bookMode=true');
+  assert.deepEqual(
+    generalVivliostyleConfig.entry.map(({path, output}) => ({path, output})),
+    generalDocumentConfig.documents.map(({sourceFilename}) => ({
+      path: `${generalDocumentConfig.sourceDirectory}/${sourceFilename}`,
+      output: sourceFilename.replace(/\.md$/u, '.html'),
+    })),
+  );
+
+  for (const {sourceFilename, title} of generalDocumentConfig.documents) {
+    const source = readFileSync(
+      new URL(`../docs/${generalDocumentConfig.sourceDirectory}/${sourceFilename}`, import.meta.url),
+      'utf8',
+    );
+    assert.match(source, new RegExp(`^# ${title.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&')}$`, 'mu'));
+  }
+});
+
+test('documents the kamishibai 3.1 DSL across the current general guides', () => {
+  const sources = new Map(generalDocumentConfig.documents.map(({sourceFilename}) => [
+    sourceFilename,
+    readFileSync(
+      new URL(`../docs/${generalDocumentConfig.sourceDirectory}/${sourceFilename}`, import.meta.url),
+      'utf8',
+    ),
+  ]));
+
+  for (const [sourceFilename, source] of sources) {
+    if (sourceFilename === 'history.md') {
+      continue;
+    }
+    assert.match(source, /kamishibai=3\.1/u, `${sourceFilename} does not identify DSL 3.1.`);
+    assert.doesNotMatch(source, /kamishibai=2\.0/u, `${sourceFilename} still targets DSL 2.0.`);
+  }
+
+  for (const sourceFilename of ['02-dsl-manual.md', '03-command-reference.md']) {
+    const source = sources.get(sourceFilename);
+    for (const feature of [
+      'setRuntimeVariable',
+      'registerBranch',
+      'sceneLabel',
+      'text=',
+      'transition:fadeOut',
+      'branch:',
+      'keyInputToChangeScene',
+      'touchInputToChangeScene',
+      ':loop:',
+      ':sequence:',
+    ]) {
+      assert(source.includes(feature), `${sourceFilename} does not document ${feature}.`);
+    }
+  }
+
+  const history = sources.get('history.md');
+  assert.match(history, /kamishibai=2\.0/u);
+  assert.match(history, /kamishibai=3\.1/u);
+  for (const feature of [
+    'setRuntimeVariable',
+    'registerBranch',
+    'sceneLabel',
+    'text=',
+    'transition:fadeOut',
+    'branch:',
+    'keyInputToChangeScene',
+    'touchInputToChangeScene',
+    ':loop:',
+    ':sequence:',
+    'background:beach',
+    'backdrop:beach',
+    'setCostume',
+    'setSkin',
+  ]) {
+    assert(history.includes(feature), `history.md does not document the ${feature} migration.`);
+  }
 });
 
 test('starts each top-level body section on a new printed page', () => {

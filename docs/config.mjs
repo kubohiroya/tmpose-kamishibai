@@ -1,6 +1,61 @@
+export const generalDocumentConfig = {
+  title: 'TMPose紙芝居 一般ドキュメント',
+  author: 'Hiroya Kubo',
+  sourceDirectory: 'general',
+  outputDirectory: 'general',
+  tocHtmlFilename: 'toc.html',
+  tocSectionDepth: 3,
+  documents: [
+    {
+      sourceFilename: '01-user-guide.md',
+      title: '紙芝居アプリ 操作説明書',
+      audience: 'アプリを使う方',
+      description: '台本の読み込み、再生、ポーズ認識、本番前の確認方法を説明します。',
+    },
+    {
+      sourceFilename: '02-dsl-manual.md',
+      title: '紙芝居DSLファイル作成マニュアル',
+      audience: '作品を作る方',
+      description: '3.1の台本を設計し、シーンラベル、分岐、入力、アニメーションを含めて作成・テストする手順を説明します。',
+    },
+    {
+      sourceFilename: '03-command-reference.md',
+      title: '紙芝居DSL コマンドリファレンス',
+      audience: '台本文法を調べる方',
+      description: 'kamishibai 3.1で利用できるコマンド、アクション、引数、注意事項を一覧化しています。',
+    },
+    {
+      sourceFilename: '04-executive-summary-adult.md',
+      title: '紙芝居アプリ 概要説明書 大人向け',
+      audience: '保護者・教員・運営者',
+      description: 'アプリの価値、仕組み、利用場面、教育的な意義を簡潔にまとめています。',
+    },
+    {
+      sourceFilename: '05-executive-summary-kids.md',
+      title: '紙芝居アプリ 概要説明書 子供向け',
+      audience: '子供・初めての方',
+      description: '紙芝居でできることや安全な使い方を、やさしい言葉で紹介します。',
+    },
+    {
+      sourceFilename: '06-developer-guide.md',
+      title: '紙芝居アプリ ソフトウェア開発者向け資料',
+      audience: 'ソフトウェア開発者',
+      description: 'アプリ本体、skipModeの内部仕様とテスト方針、開発に関連する機能拡張やライブラリを案内します。',
+    },
+    {
+      sourceFilename: 'history.md',
+      title: '紙芝居DSL 2.0から3.1への変更履歴',
+      audience: '2.0から移行する方',
+      description: '2.0から3.1で追加・変更・置換したDSL仕様と、台本の移行手順を差分形式でまとめています。',
+    },
+  ],
+};
+
 export const documentConfig = {
   title: 'AIを使って「紙芝居の物語に参加する仕組み」を作ろう！',
   author: 'Hiroya Kubo',
+  sourceDirectory: 'workshops/2026-08-01',
+  outputDirectory: 'workshops/2026-08-01',
   learnedThroughGrade: 3,
   coverFilename: 'tmpose-kamishibai-cover-20260801.md',
   coverHtmlFilename: 'index.html',
@@ -15,6 +70,16 @@ export const documentConfig = {
     '浦島太郎:うらしまたろう',
     '未習漢字:みしゅうかんじ',
   ],
+};
+
+export const staffDocumentConfig = {
+  title: '親子AIプログラミング体験会スタッフ向け資料2026年8月1日版',
+  author: 'Hiroya Kubo',
+  sourceDirectory: 'workshops/2026-08-01',
+  outputDirectory: 'workshops/2026-08-01/staff',
+  sourceFilename: 'tmpose-kamishibai-staff-20260801.md',
+  htmlFilename: 'index.html',
+  pdfFilename: 'tmpose-kamishibai-staff-20260801.pdf',
 };
 
 export function resolveLearnedThroughGrade(value = process.env.RUBYGANA_GRADE) {
