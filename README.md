@@ -120,7 +120,7 @@ output/pdf/
 
 `output/pdf/`は印刷用PDFの確認場所、`dist/`はGitHub Pagesへ公開する内容です。どちらも生成物のためGit管理から除外しています。
 
-`samples/`に追加したテキストファイルは、ビルド時に`dist/samples/`へコピーされ、サンプル一覧へ自動的に追加されます。
+公開用の台本とサンプル固有アセットは、別リポジトリ [`kubohiroya/tmpose-kamishibai-samples`](https://github.com/kubohiroya/tmpose-kamishibai-samples) で管理します。本リポジトには `test/fixtures/` の最小検証台本だけを置きます。
 
 ## プレビュー
 
@@ -158,7 +158,7 @@ pnpm run build
 - 体験会資料の学年メタデータ、ルビ数、コードブロック除外、固有名詞の読み
 - 体験会資料の自動目次、PDFしおり、画像参照と表示幅
 - スタッフ向け資料への旧付録Aの分離、ソフトウェア開発者向け資料への旧付録B・Cの分離、rubygana非適用、会場図、HTML/PDF導線
-- サンプル台本と公開ファイルの一致
+- 公開サンプルリポジトリへの導線
 - `app/` から生成した `dist/downloads/kamishibai.sb3` とダウンロードリンク
 
 PDFの見た目はPopplerでPNG化して確認できます。
@@ -207,10 +207,8 @@ RUBYGANA_GRADE=4 pnpm run deploy
 │   └── vivliostyle.workshop.config.mjs
 ├── scripts/
 │   ├── build-docs.mjs
-│   ├── build-samples.mjs
 │   ├── build-site.mjs
 │   └── verify-build.mjs
-├── samples/
 ├── site/
 │   ├── docs/
 │   └── downloads/
@@ -226,7 +224,7 @@ RUBYGANA_GRADE=4 pnpm run deploy
 - `app/`: 整形済みproject、アセット、埋め込み拡張を含むSB3のGit管理上の正本
 - `site/docs/`: 一般文書と体験会資料を統合する公開入口
 - `site/app/`: TurboWarpからエクスポートしたWebアプリ一式
-- `samples/`: Git管理するテキスト形式のサンプル台本
+- `test/fixtures/`: 汎用実行環境の自動・手動検証に必要な最小台本
 - `site/downloads/`: SB3ダウンロードページ。配布SB3自体はビルド時に `dist/downloads/` へ生成
 - `output/pdf/`: ローカル確認用の印刷PDF
 
@@ -249,7 +247,7 @@ pnpm run build
 
 `pnpm run build` は配布用 `dist/downloads/kamishibai.sb3` を同じ正本から生成します。通常手順、置換時の安全判定、手動確認、ロールバックについては [`docs/general/06-developer-guide.md`](docs/general/06-developer-guide.md) を参照してください。
 
-浦島太郎の台本、専用スプライト、背景、画像、音声を組み込んだ `samples/urashima/urashima.sb3` は、別リポジトリ [`kubohiroya/tmpose-kamishibai-samples`](https://github.com/kubohiroya/tmpose-kamishibai-samples) で管理します。本体リポジトリの `pnpm run build` では、浦島太郎固有のSB3を生成・公開しません。
+浦島太郎の台本、専用スプライト、背景、画像、音声、組み込み済みSB3は、別リポジトリ [`kubohiroya/tmpose-kamishibai-samples`](https://github.com/kubohiroya/tmpose-kamishibai-samples) で管理します。本体リポジトリの `pnpm run build` では、浦島太郎固有コンテンツを生成・公開しません。
 
 ## バージョン
 

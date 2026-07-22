@@ -48,8 +48,30 @@ test('links and documents the generated downloadable SB3', async () => {
   assert.match(developerGuide, /`app\/`[^\n]*正本/u);
   assert.match(readme, /`dist\/downloads\/kamishibai\.sb3`/u);
   for (const document of [developerGuide, readme]) {
-    assert.match(document, /tmpose-kamishibai-samples/u);
-    assert.match(document, /samples\/urashima\/urashima\.sb3/u);
+    assert.match(document, /github\.com\/kubohiroya\/tmpose-kamishibai-samples/u);
+  }
+});
+
+test('keeps only minimal validation scripts in the application repository', async () => {
+  const sampleEntries = await readdir(path.join(projectRoot, 'samples')).catch((error) => {
+    if (error.code === 'ENOENT') return [];
+    throw error;
+  });
+  assert.deepEqual(sampleEntries, []);
+
+  const fixtureDirectories = ['manual', 'runtime'];
+  const fixtureFiles = [];
+  for (const directory of fixtureDirectories) {
+    const directoryPath = path.join(projectRoot, 'test/fixtures', directory);
+    for (const filename of await readdir(directoryPath)) {
+      if (filename.endsWith('.txt')) fixtureFiles.push(path.join(directoryPath, filename));
+    }
+  }
+
+  assert(fixtureFiles.length > 0, 'No validation scripts were found.');
+  for (const fixtureFile of fixtureFiles) {
+    const fixture = await readFile(fixtureFile, 'utf8');
+    assert(fixture.length < 1_000, `Validation script is not minimal: ${fixtureFile}`);
   }
 });
 

@@ -12,8 +12,10 @@
 
 3.1では、Asset Managerによるプロジェクト内／外部アセットとテキストアセットの統合、Temporary Variablesによる状態管理、Runtime Expressionによる条件評価、Async Inputによる入力待ち、TMPoseによるポーズ認識を組み合わせてDSLを実行します。
 
-* tmpose-kamishibai: アプリ本体・ドキュメント・サンプル
+* tmpose-kamishibai: アプリ本体・ドキュメント・汎用ビルドツール
   * [https://github.com/kubohiroya/tmpose-kamishibai](https://github.com/kubohiroya/tmpose-kamishibai)
+* tmpose-kamishibai-samples: 公開用台本・サンプル固有アセット
+  * [https://github.com/kubohiroya/tmpose-kamishibai-samples](https://github.com/kubohiroya/tmpose-kamishibai-samples)
 
 ### 1.2 `kamishibai.sb3` の依存物管理方針
 
