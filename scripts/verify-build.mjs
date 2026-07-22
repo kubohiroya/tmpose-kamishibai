@@ -55,7 +55,7 @@ const outputPdfPath = path.join(
   documentConfig.pdfFilename,
 );
 const buildInfoPath = path.join(workshopDirectory, 'build-info.json');
-const sampleRepositoryUrl = 'https://github.com/kubohiroya/tmpose-kamishibai-samples/';
+const sampleSiteUrl = 'https://kubohiroya.github.io/tmpose-kamishibai-samples/';
 const documentationCardIcons = [
   ['🕹️', '紙芝居アプリ 操作説明書'],
   ['✍️', '紙芝居DSLファイル作成マニュアル'],
@@ -168,8 +168,8 @@ async function verifySiteIndex() {
   for (const link of ['docs/', 'downloads/']) {
     assert(localLinks.includes(link), `The top-page card link ${link} is missing.`);
   }
-  assert(allLinks.includes(sampleRepositoryUrl),
-    'The top page does not link to the external sample repository.');
+  assert(allLinks.includes(sampleSiteUrl),
+    'The top page does not link to the external sample site.');
   for (const icon of ['▶️', '📕', '🎭', '📁']) {
     assert(html.includes(`<span class="card-icon" aria-hidden="true">${icon}</span>`),
       `The top-page card icon ${icon} is missing.`);
@@ -453,12 +453,19 @@ export async function verifyBuild() {
     ...attributeValues(html, 'img', 'style'),
   ];
   const readingOrder = publicationManifest.readingOrder.map((entry) => entry.url ?? entry);
+  const legacySamplesExists = await access(path.join(outputDirectory, 'samples')).then(
+    () => true,
+    () => false,
+  );
   await verifySiteIndex();
   const downloadResults = await verifyDownloads();
   const generalResults = await verifyGeneralDocuments(grade);
   const staffResults = await verifyStaffDocument();
   const faviconHtmlCount = await verifyFavicon();
   const sourceHeadingCount = (source.match(/^#{1,4}\s+/gmu) ?? []).length;
+
+  assert(!legacySamplesExists,
+    'The retired /samples/ page is still present in the published site.');
 
   assert(buildInfo.rubyApplied === true,
     'Workshop build metadata does not record rubygana processing.');

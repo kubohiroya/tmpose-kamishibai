@@ -120,7 +120,7 @@ output/pdf/
 
 `output/pdf/`は印刷用PDFの確認場所、`dist/`はGitHub Pagesへ公開する内容です。どちらも生成物のためGit管理から除外しています。
 
-公開用の台本とサンプル固有アセットは、別リポジトリ [`kubohiroya/tmpose-kamishibai-samples`](https://github.com/kubohiroya/tmpose-kamishibai-samples) で管理します。本リポジトには `test/fixtures/` の最小検証台本だけを置きます。
+公開用の台本とサンプル固有アセットは、[サンプルサイト](https://kubohiroya.github.io/tmpose-kamishibai-samples/) で MPL-2.0 により配信し、別リポジトリ [`kubohiroya/tmpose-kamishibai-samples`](https://github.com/kubohiroya/tmpose-kamishibai-samples) で管理します。本リポジトには `test/fixtures/` の最小検証台本だけを置きます。
 
 ## プレビュー
 
@@ -158,7 +158,7 @@ pnpm run build
 - 体験会資料の学年メタデータ、ルビ数、コードブロック除外、固有名詞の読み
 - 体験会資料の自動目次、PDFしおり、画像参照と表示幅
 - スタッフ向け資料への旧付録Aの分離、ソフトウェア開発者向け資料への旧付録B・Cの分離、rubygana非適用、会場図、HTML/PDF導線
-- 公開サンプルリポジトリへの導線
+- 公開サンプルサイトへの導線
 - `app/` から生成した `dist/downloads/kamishibai.sb3` とダウンロードリンク
 
 PDFの見た目はPopplerでPNG化して確認できます。
@@ -247,7 +247,7 @@ pnpm run build
 
 `pnpm run build` は配布用 `dist/downloads/kamishibai.sb3` を同じ正本から生成します。通常手順、置換時の安全判定、手動確認、ロールバックについては [`docs/general/06-developer-guide.md`](docs/general/06-developer-guide.md) を参照してください。
 
-浦島太郎の台本、専用スプライト、背景、画像、音声、組み込み済みSB3は、別リポジトリ [`kubohiroya/tmpose-kamishibai-samples`](https://github.com/kubohiroya/tmpose-kamishibai-samples) で管理します。本体リポジトリの `pnpm run build` では、浦島太郎固有コンテンツを生成・公開しません。
+浦島太郎の台本、専用スプライト、背景、画像、音声、組み込み済みSB3は、[サンプルサイト](https://kubohiroya.github.io/tmpose-kamishibai-samples/) で配信し、別リポジトリ [`kubohiroya/tmpose-kamishibai-samples`](https://github.com/kubohiroya/tmpose-kamishibai-samples) で管理します。本体リポジトリの `pnpm run build` では、浦島太郎固有コンテンツを生成・公開しません。
 
 ## 汎用SB3・台本変換ビルダー
 
