@@ -3,4 +3,5 @@ dist/
 output/
 tmp/
 .vivliostyle/
+.idea/
 .DS_Store
