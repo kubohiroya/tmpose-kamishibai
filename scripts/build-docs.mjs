@@ -103,12 +103,16 @@ async function processWorkshopHtmlFiles(directory, grade) {
 
   for (const htmlFile of htmlFiles) {
     await prepareWorkshopHtml(htmlFile, grade);
-    const rubyOutput = `${htmlFile}.rubygana`;
-    await runRubygana(htmlFile, rubyOutput, grade);
-    await rename(rubyOutput, htmlFile);
+    await applyRubygana(htmlFile, grade);
   }
 
   return htmlFiles;
+}
+
+async function applyRubygana(htmlFile, grade) {
+  const rubyOutput = `${htmlFile}.rubygana`;
+  await runRubygana(htmlFile, rubyOutput, grade);
+  await rename(rubyOutput, htmlFile);
 }
 
 function baseBuildInfo(details = {}) {
@@ -118,9 +122,8 @@ function baseBuildInfo(details = {}) {
   };
 }
 
-function workshopBuildInfo(grade, details = {}) {
-  return baseBuildInfo({
-    rubyApplied: true,
+function rubyganaBuildDetails(grade) {
+  return {
     learnedThroughGrade: grade,
     rubyGenerator: `${rubyganaPackage.name} ${rubyganaPackage.version}`,
     kanjiDataset: {
@@ -128,6 +131,13 @@ function workshopBuildInfo(grade, details = {}) {
       sourceUrl: rubyganaGradeData.sourceUrl,
       gradeCounts: rubyganaGradeData.expectedGradeCounts,
     },
+  };
+}
+
+function workshopBuildInfo(grade, details = {}) {
+  return baseBuildInfo({
+    rubyApplied: true,
+    ...rubyganaBuildDetails(grade),
     ...details,
   });
 }
@@ -221,6 +231,14 @@ async function normalizeGeneratedImagePaths(htmlPath) {
   ));
 }
 
+async function prepareGeneralFuriganaHtml(htmlPath, grade) {
+  const source = await readFile(htmlPath, 'utf8');
+  await writeFile(htmlPath, source.replace(
+    /<html(\s|>)/i,
+    `<html data-rubygana-grade="${grade}"$1`,
+  ));
+}
+
 export async function buildDocs({distDirectory = path.join(projectRoot, 'dist')} = {}) {
   const grade = resolveLearnedThroughGrade();
   const docsDirectory = path.join(distDirectory, 'docs');
@@ -248,19 +266,27 @@ export async function buildDocs({distDirectory = path.join(projectRoot, 'dist')}
     const pdfFilename = generalDocument.sourceFilename.replace(/\.md$/u, '.pdf');
     const htmlPath = path.join(generalDirectory, htmlFilename);
     const pdfPath = path.join(pdfDirectory, generalDocumentConfig.outputDirectory, pdfFilename);
+    if (generalDocument.addFurigana === true) {
+      await prepareGeneralFuriganaHtml(htmlPath, grade);
+      await applyRubygana(htmlPath, grade);
+    }
     await buildPdf(htmlPath, pdfPath);
     await copyFile(pdfPath, path.join(generalDirectory, pdfFilename));
   }
 
   await writeBuildInfo(generalDirectory, baseBuildInfo({
     publicationKind: 'general-documentation',
-    rubyApplied: false,
+    rubyApplied: true,
+    rubyPolicy: 'selected-documents',
+    ...rubyganaBuildDetails(grade),
     sourceDirectory: generalDocumentConfig.sourceDirectory,
-    documents: generalDocumentConfig.documents.map(({sourceFilename, title}) => ({
+    documents: generalDocumentConfig.documents.map(({sourceFilename, title, addFurigana}) => ({
       sourceFilename,
       title,
       htmlFilename: sourceFilename.replace(/\.md$/u, '.html'),
       pdfFilename: sourceFilename.replace(/\.md$/u, '.pdf'),
+      rubyApplied: addFurigana === true,
+      ...(addFurigana === true ? {learnedThroughGrade: grade} : {}),
     })),
   }));
 

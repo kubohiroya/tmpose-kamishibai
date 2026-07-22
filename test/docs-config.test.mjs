@@ -118,10 +118,16 @@ test('publishes appendices B and C as a general software developer document', ()
   assert.doesNotMatch(source, /^#{1,3} [BC]\./mu);
 });
 
-test('defines the general documents as the primary non-ruby publication', () => {
+test('defines the general documents with furigana only for the kids summary', () => {
   assert.equal(generalDocumentConfig.sourceDirectory, 'general');
   assert.equal(generalDocumentConfig.outputDirectory, 'general');
   assert.equal(generalDocumentConfig.documents.length, 7);
+  assert.deepEqual(
+    generalDocumentConfig.documents
+      .filter(({addFurigana}) => addFurigana === true)
+      .map(({sourceFilename}) => sourceFilename),
+    ['05-executive-summary-kids.md'],
+  );
   assert.equal(generalVivliostyleConfig.viewerParam, 'bookMode=true');
   assert.deepEqual(
     generalVivliostyleConfig.entry.map(({path, output}) => ({path, output})),

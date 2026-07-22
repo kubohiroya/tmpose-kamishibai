@@ -30,9 +30,9 @@ docs/
         └── tmpose-kamishibai-staff-20260801.md
 ```
 
-一般向け7文書は、`kamishibai=3.1` を前提として、それぞれをVivliostyleでHTML/PDF化します。旧付録B・Cから分離したソフトウェア開発者向け資料と、2.0から3.1への変更履歴もここに含みます。これらにはrubyganaを適用せず、Markdown原稿どおりの本文を組版します。
+一般向け7文書は、`kamishibai=3.1` を前提として、それぞれをVivliostyleでHTML/PDF化します。旧付録B・Cから分離したソフトウェア開発者向け資料と、2.0から3.1への変更履歴もここに含みます。子供向け概要書だけはrubyganaでふりがなを追加し、他の6文書はMarkdown原稿どおりの本文を組版します。
 
-2026年8月1日版の参加者向け体験会資料だけは、VivliostyleでWeb Publicationを生成した後にrubyganaを適用し、ルビ付きHTMLからPDFを組版します。既定では小学3年生までに学ぶ漢字を既習として扱います。コード、コマンド例、プログラム名はrubyganaの処理対象から除外し、固有名詞の読みは[`docs/config.mjs`](docs/config.mjs)の`rubyOverrides`で補正します。
+子供向け概要書と2026年8月1日版の参加者向け体験会資料は、VivliostyleでHTMLを生成した後にrubyganaを適用し、ルビ付きHTMLからPDFを組版します。既定では小学3年生までに学ぶ漢字を既習として扱います。コード、コマンド例、プログラム名はrubyganaの処理対象から除外し、固有名詞の読みは[`docs/config.mjs`](docs/config.mjs)の`rubyOverrides`で補正します。
 
 同日版のスタッフ向け資料は、参加者向け資料の旧付録Aから運営・準備情報を分離した独立文書です。一般向け文書と同様に、rubyganaを適用せずHTML/PDF化します。
 
@@ -60,7 +60,7 @@ rubyganaは保守フォーク[`kubohiroya/rubygana`](https://github.com/kubohiro
 pnpm run build
 ```
 
-参加者向け体験会資料の対象学年は1から6まで指定できます。一般向け文書とスタッフ向け資料はこの値に関係なく、常にルビを追加せず生成します。
+子供向け概要書と参加者向け体験会資料の対象学年は1から6まで指定できます。他の一般向け文書とスタッフ向け資料はこの値に関係なく、ルビを追加せず生成します。
 
 ```bash
 RUBYGANA_GRADE=4 pnpm run build
@@ -151,7 +151,7 @@ pnpm run build
 `pnpm run build`の最後に、次の項目を検証します。
 
 - 一般向け7文書（ソフトウェア開発者向け資料と変更履歴を含む）のHTML/PDFと統合入口からのリンク
-- 一般向けHTMLにrubygana由来のルビや学年属性がないこと
+- 子供向け概要書だけにrubygana由来のルビと学年属性があり、他の一般向けHTMLにはないこと
 - 体験会資料の学年メタデータ、ルビ数、コードブロック除外、固有名詞の読み
 - 体験会資料の自動目次、PDFしおり、画像参照と表示幅
 - スタッフ向け資料への旧付録Aの分離、ソフトウェア開発者向け資料への旧付録B・Cの分離、rubygana非適用、会場図、HTML/PDF導線

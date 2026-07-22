@@ -35,6 +35,7 @@ export const generalDocumentConfig = {
       title: '紙芝居アプリ 概要説明書 子供向け',
       audience: '子供・初めての方',
       description: '紙芝居でできることや安全な使い方を、やさしい言葉で紹介します。',
+      addFurigana: true,
     },
     {
       sourceFilename: '06-developer-guide.md',
