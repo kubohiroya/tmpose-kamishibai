@@ -1,0 +1,17 @@
+kamishibai=3.1
+# Runtime fixture for skipMode context and propagation tests.
+asset=Title,backdrop
+asset=Stars,backdrop
+cover=Title,
+---
+sceneLabel=first
+action=stage:Stars
+action=wait:30
+action=stage:Title
+action=wait:30
+action=stage:Stars
+action=wait:30
+---
+sceneLabel=second
+action=stage:Stars
+action=wait:30

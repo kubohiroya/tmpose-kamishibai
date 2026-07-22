@@ -29,10 +29,14 @@
   "author": "Hiroya Kubo",
   "license": "MIT",
   "devDependencies": {
+    "@turbowarp/scratch-svg-renderer": "1.1.0",
     "@vivliostyle/cli": "11.1.0",
     "fflate": "0.8.3",
     "gh-pages": "^6.3.0",
-    "rubygana": "github:kubohiroya/rubygana#a24b8a699a1b033546f4d1a47a63005f7af95735"
+    "rubygana": "github:kubohiroya/rubygana#a24b8a699a1b033546f4d1a47a63005f7af95735",
+    "scratch-parser": "6.0.0",
+    "scratch-render-fonts": "github:TurboWarp/scratch-render-fonts#7b6768fc6dfef6b343a06f992587b74807043961",
+    "scratch-vm": "github:TurboWarp/scratch-vm#c4823421cb7c17d8d8a89878851ce1668c26a21f"
   },
   "engines": {
     "node": ">=22.12.0"

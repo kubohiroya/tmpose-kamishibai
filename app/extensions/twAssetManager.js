@@ -234,7 +234,23 @@
         color1: "#5b7cfa",
         color2: "#425ed8",
         color3: "#2f46aa",
-        blocks: blockDefinitions.map((block) => this.toScratchBlock(block))
+        blocks: [
+          ...blockDefinitions,
+          {
+            opcode: "stopAllSounds",
+            blockType: "COMMAND",
+            text: "stop all asset sounds",
+            description: "Stops all external and project sounds currently tracked by Asset Manager.",
+            arguments: {}
+          },
+          {
+            opcode: "finishAllActorSequences",
+            blockType: "COMMAND",
+            text: "finish all actor sequences",
+            description: "Finishes every one-shot actor sequence on its final image.",
+            arguments: {}
+          }
+        ].map((block) => this.toScratchBlock(block))
       };
     }
     async registerAsset(args) {
@@ -353,6 +369,21 @@
     }
     async playSoundUntilDone(args) {
       await this.playResolvedSound(args.NAME, true);
+    }
+    stopAllSounds() {
+      for (const audio of [...this.playingAudio]) {
+        try {
+          audio.pause();
+          audio.currentTime = 0;
+          audio.dispatchEvent(new Event("ended"));
+        } catch {
+        }
+      }
+      this.playingAudio.clear();
+      for (const target of this.runtime.targets) {
+        const soundBank = target.sprite?.soundBank;
+        soundBank?.stopAllSounds(target);
+      }
     }
     getAssetMimeType(args) {
       const name = normalizeName(args.NAME);
@@ -774,9 +805,14 @@
       const objectUrl = URL.createObjectURL(new Blob([asset.data], { type: asset.mimeType }));
       const audio = new Audio(objectUrl);
       this.playingAudio.add(audio);
+      let resolvePlayback;
+      const playbackFinished = new Promise((resolve) => {
+        resolvePlayback = resolve;
+      });
       const cleanup = () => {
         this.playingAudio.delete(audio);
         URL.revokeObjectURL(objectUrl);
+        resolvePlayback();
       };
       audio.addEventListener("ended", cleanup, { once: true });
       audio.addEventListener("error", cleanup, { once: true });
@@ -794,10 +830,7 @@
         cleanup();
         throw error;
       }
-      await new Promise((resolve) => {
-        audio.addEventListener("ended", () => resolve(), { once: true });
-        audio.addEventListener("error", () => resolve(), { once: true });
-      });
+      await playbackFinished;
     }
     async playProjectSound(name, waitUntilDone) {
       const { target, sound } = this.resolveSoundReference(name);
@@ -874,6 +907,21 @@
       this.resolveActorTarget(actor, util);
       this.stopActor(actor);
     }
+    async finishAllActorSequences() {
+      const pending = [];
+      for (const [actor, state] of [...this.actorAnimations]) {
+        if (state.mode !== "sequence") continue;
+        const finalImage = [...state.actions].reverse().find((action) => action.kind === "image");
+        this.stopActor(actor);
+        if (!finalImage || !this.runtime.targets.includes(state.target)) continue;
+        pending.push(
+          this.resolveSkin(finalImage.assetName).then((skin) => {
+            if (this.runtime.targets.includes(state.target)) this.applySkinToTarget(state.target, skin);
+          })
+        );
+      }
+      await Promise.all(pending);
+    }
     deleteAllMemoryAssets() {
       this.stopAllActorAnimations();
       super.deleteAllMemoryAssets();
@@ -932,7 +980,8 @@
       }
       return {
         actions: assetNames.map((assetName) => this.createAnimationAction(assetName)),
-        intervalsMs
+        intervalsMs,
+        mode
       };
     }
     startActorAnimation(actor, target, definition) {

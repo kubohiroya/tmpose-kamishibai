@@ -113,7 +113,7 @@ test('publishes appendices B and C as a general software developer document', ()
   );
   assert.match(source, /^# 紙芝居アプリ ソフトウェア開発者向け資料$/mu);
   assert.match(source, /^## 1\. アプリ$/mu);
-  assert.match(source, /^## 2\. 内部仕様: `skipMode` の状態遷移$/mu);
+  assert.match(source, /^## 2\. 内部仕様: `skipMode` と `skipContext`$/mu);
   assert.match(source, /^## 3\. 関連ライブラリ$/mu);
   assert.doesNotMatch(source, /^#{1,3} [BC]\./mu);
 });
