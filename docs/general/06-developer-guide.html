@@ -1,0 +1,250 @@
+<!DOCTYPE html><html lang="ja"><head>
+    <meta charset="utf-8">
+    <title>紙芝居アプリ ソフトウェア開発者向け資料</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="theme.css">
+    <link rel="stylesheet" type="text/css" href="general-theme.css">
+  </head>
+  <body>
+    <section class="level1">
+      <h1 id="紙芝居アプリ-ソフトウェア開発者向け資料">紙芝居アプリ ソフトウェア開発者向け資料</h1>
+      <p>この資料は、TMPose紙芝居を構成するアプリと、開発に関連するライブラリをソフトウェア開発者向けにまとめたものです。</p>
+      <p>対象アプリ／DSL: <code>kamishibai=3.1</code></p>
+      <section class="level2">
+        <h2 id="1-アプリ">1. アプリ</h2>
+        <section class="level3">
+          <h3 id="11-参加型ai紙芝居アプリ">1.1 「参加型」AI紙芝居アプリ</h3>
+          <p>「参加型」AI紙芝居アプリは、オープンソースライセンス(MPL2.0)で公開しています。</p>
+          <p>3.1では、Asset Managerによるプロジェクト内／外部アセットとテキストアセットの統合、Temporary Variablesによる状態管理、Runtime Expressionによる条件評価、Async Inputによる入力待ち、TMPoseによるポーズ認識を組み合わせてDSLを実行します。</p>
+          <ul>
+            <li>tmpose-kamishibai: アプリ本体・ドキュメント・サンプル
+              <ul>
+                <li><a href="https://github.com/kubohiroya/tmpose-kamishibai">https://github.com/kubohiroya/tmpose-kamishibai</a></li>
+              </ul>
+            </li>
+          </ul>
+        </section>
+      </section>
+      <section class="level2">
+        <h2 id="2-内部仕様-skipmode-の状態遷移">2. 内部仕様: <code>skipMode</code> の状態遷移</h2>
+        <p><code>skipMode</code> は、タイトル画面の表示中であること、または実行中の処理をどの単位まで進めるかという要求を、Temporary Variables拡張のランタイム変数で共有するための内部変数です。</p>
+        <section class="level3">
+          <h3 id="21-状態の表現">2.1 状態の表現</h3>
+          <p>通常状態は、<code>skipMode</code> というランタイム変数が<strong>存在しない状態</strong>で表します。通常状態を示すための文字列値は使用しません。以前使われていた <code>none</code> は廃止済みの値であり、設定も比較もしてはいけません。</p>
+          <p><code>skipMode</code> が存在する場合に許可する値は、次の4つです。</p>
+          <table>
+            <thead>
+              <tr>
+                <th>状態</th>
+                <th>意味</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>変数なし</td>
+                <td>通常状態。現在の処理を継続する</td>
+              </tr>
+              <tr>
+                <td><code>title</code></td>
+                <td>タイトル画面を表示している</td>
+              </tr>
+              <tr>
+                <td><code>pose</code></td>
+                <td>次のポーズまで進める要求</td>
+              </tr>
+              <tr>
+                <td><code>action</code></td>
+                <td>次のアクションまで進める要求</td>
+              </tr>
+              <tr>
+                <td><code>scene</code></td>
+                <td>次のシーンまで進める要求</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>通常状態へ戻すときは、Temporary Variablesの「ランタイム変数を削除する」ブロックを使用します。値を空文字列にしたり、通常状態用の文字列を代入したりしません。通常状態かどうかは、「ランタイム変数 <code>skipMode</code> が存在する」の否定で判定します。</p>
+        </section>
+        <section class="level3">
+          <h3 id="22-遷移">2.2 遷移</h3>
+          <section class="level4">
+            <h4 id="要求の生成">要求の生成</h4>
+            <table>
+              <thead>
+                <tr>
+                  <th>遷移元</th>
+                  <th>契機</th>
+                  <th>遷移先</th>
+                  <th>処理</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>変数なし</td>
+                  <td>タイトルを表示する</td>
+                  <td><code>title</code></td>
+                  <td><code>skipMode</code> に <code>title</code> を設定する</td>
+                </tr>
+                <tr>
+                  <td><code>title</code></td>
+                  <td>舞台をクリックする、またはスペースキーを押す</td>
+                  <td>変数なし</td>
+                  <td><code>skipMode</code> を削除して表紙へ進む</td>
+                </tr>
+                <tr>
+                  <td>変数なし</td>
+                  <td>スペースキーを押す</td>
+                  <td><code>pose</code></td>
+                  <td>次のポーズへの移動を要求する</td>
+                </tr>
+                <tr>
+                  <td>変数なし</td>
+                  <td>右矢印キーを押す</td>
+                  <td><code>action</code></td>
+                  <td>次のアクションへの移動を要求する</td>
+                </tr>
+                <tr>
+                  <td>変数なし</td>
+                  <td>下矢印キーを押す</td>
+                  <td><code>scene</code></td>
+                  <td>次のシーンへの移動を要求する</td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+          <section class="level4">
+            <h4 id="要求の消費">要求の消費</h4>
+            <table>
+              <thead>
+                <tr>
+                  <th>遷移元</th>
+                  <th>契機</th>
+                  <th>遷移先</th>
+                  <th>処理</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>pose</code></td>
+                  <td>ポーズ処理が要求を消費する</td>
+                  <td>変数なし</td>
+                  <td><code>skipMode</code> を削除する</td>
+                </tr>
+                <tr>
+                  <td><code>action</code></td>
+                  <td>アクション列が要求を消費する</td>
+                  <td>変数なし</td>
+                  <td><code>skipMode</code> を削除して次のアクションを実行する</td>
+                </tr>
+                <tr>
+                  <td><code>scene</code></td>
+                  <td>シーン処理が要求を消費する</td>
+                  <td>変数なし</td>
+                  <td>現在のシーンを抜け、境界で <code>skipMode</code> を削除する</td>
+                </tr>
+                <tr>
+                  <td>任意</td>
+                  <td>表紙またはシーンの初期境界へ移る</td>
+                  <td>変数なし</td>
+                  <td>前の処理の要求を持ち越さないよう <code>skipMode</code> を削除する</td>
+                </tr>
+              </tbody>
+            </table>
+            <p>入力ハンドラは、原則として <code>skipMode</code> が存在しないときだけ要求を設定します。これにより、未処理の要求を別のキー入力で上書きしません。Temporary Variablesのランタイム変数自体は、プロジェクトの開始時と停止時にも初期化されます。</p>
+          </section>
+        </section>
+        <section class="level3">
+          <h3 id="23-実装上の不変条件">2.3 実装上の不変条件</h3>
+          <p>実装は、次の条件を常に満たす必要があります。</p>
+          <ol>
+            <li>通常状態は <code>skipMode</code> が存在しない状態だけで表す。</li>
+            <li>通常状態へ戻す処理は <code>skipMode</code> を削除する。</li>
+            <li>設定する値は <code>title</code>、<code>pose</code>、<code>action</code>、<code>scene</code> だけにする。</li>
+            <li>通常状態であることは、値の比較ではなく存在判定の否定で確認する。</li>
+            <li>値の比較は、存在中の要求を <code>title</code> や <code>action</code> として振り分ける場合だけに使用する。</li>
+            <li>表紙、シーン、ポーズなどの処理境界で、消費済みの要求を残さない。</li>
+          </ol>
+        </section>
+        <section class="level3">
+          <h3 id="24-テスト方針">2.4 テスト方針</h3>
+          <p><code>test/skip-mode.test.mjs</code> は、<code>.sb3</code> をZIPとして展開し、<code>project.json</code> のScratchブロックグラフを検査します。ブロックIDは編集時に変わり得るため、固定IDではなく、オペコード、カスタムブロック名、入力値、親子関係を使って次の事項を確認します。</p>
+          <ul>
+            <li>廃止値が残っておらず、設定値が許可された4値だけであること</li>
+            <li>スペース、右矢印、下矢印がそれぞれ <code>pose</code>、<code>action</code>、<code>scene</code> に対応し、存在判定で上書きを防いでいること</li>
+            <li>ポーズ処理の継続条件が <code>skipMode</code> の不在であること</li>
+            <li>ポーズ、シーン、表紙の境界で <code>skipMode</code> を削除していること</li>
+          </ul>
+          <p>通常のテストは、次のコマンドで実行します。</p>
+          <pre class="language-sh"><code class="language-sh">pnpm test</code></pre>
+          <p>別の <code>.sb3</code> を検査するときは、対象を環境変数で指定できます。</p>
+          <pre class="language-sh"><code class="language-sh">KAMISHIBAI_SB3_PATH=/path/to/project.sb3 node --test test/skip-mode.test.mjs</code></pre>
+          <p>この構造テストは、ブロックの配置と不変条件を検査するもので、実行タイミングまでは検査しません。動作レベルでは、TurboWarp VM上で <code>set</code>、<code>delete</code>、<code>exists</code> と処理境界を記録し、上の遷移表をケース化するテストを追加するのが次の段階です。特に、ポーズ以外の処理中にスペースキーを押した場合や、ポーズ待ち中に右矢印／下矢印を押した場合は、要求を内側の処理で消費するのか外側へ伝播するのかを先に仕様決定する必要があります。</p>
+        </section>
+      </section>
+      <section class="level2">
+        <h2 id="3-関連ライブラリ">3. 関連ライブラリ</h2>
+        <p>tmpose-kamishibaiの動作基盤として開発したもののうち、他のプロジェクトでも使えるものとして抽出し、オープンソースライセンス(MPL2.0)で公開しているライブラリを以下に列挙します。</p>
+        <section class="level3">
+          <h3 id="31-viteプラグイン">3.1 Viteプラグイン</h3>
+          <ul>
+            <li>vite-plugin-turbowarp-extension: A Vite plugin for building TypeScript projects as single-file TurboWarp extensions.
+              <ul>
+                <li><a href="https://github.com/kubohiroya/vite-plugin-turbowarp-extension">https://github.com/kubohiroya/vite-plugin-turbowarp-extension</a></li>
+              </ul>
+            </li>
+          </ul>
+        </section>
+        <section class="level3">
+          <h3 id="32-turbowarp-機能拡張開発用テンプレート">3.2 TurboWarp 機能拡張開発用テンプレート</h3>
+          <ul>
+            <li>turbowarp-extension-template: A reusable TypeScript template for developing, testing, building, and releasing TurboWarp extensions with Vite.
+              <ul>
+                <li><a href="https://github.com/kubohiroya/turbowarp-extension-template">https://github.com/kubohiroya/turbowarp-extension-template</a></li>
+              </ul>
+            </li>
+          </ul>
+        </section>
+        <section class="level3">
+          <h3 id="33-turbowarp-機能拡張">3.3 TurboWarp 機能拡張</h3>
+          <ul>
+            <li>tmpose.js: A TurboWarp extension for camera-based pose recognition using Teachable Machine Pose models.
+              <ul>
+                <li><a href="https://github.com/kubohiroya/turbowarp-tmpose">https://github.com/kubohiroya/turbowarp-tmpose</a></li>
+              </ul>
+            </li>
+            <li>text-lines.js: A TurboWarp extension for counting, reading, and splitting text by lines.
+              <ul>
+                <li><a href="https://github.com/kubohiroya/turbowarp-text-lines">https://github.com/kubohiroya/turbowarp-text-lines</a></li>
+              </ul>
+            </li>
+            <li>asset-manager.js: An IndexedDB-backed image and audio asset manager for TurboWarp projects. It can also register costumes, stage backdrops, and sounds already stored in the current .sb3 project.
+              <ul>
+                <li><a href="https://github.com/kubohiroya/turbowarp-asset-manager">https://github.com/kubohiroya/turbowarp-asset-manager</a></li>
+              </ul>
+            </li>
+            <li>async-input.js: A target-scoped asynchronous keyboard, pointer, and accumulated pose input extension for TurboWarp Temporary Variables.
+              <ul>
+                <li><a href="https://github.com/kubohiroya/turbowarp-async-input">https://github.com/kubohiroya/turbowarp-async-input</a></li>
+              </ul>
+            </li>
+            <li>runtime-expression.js: A safe JavaScript-like condition evaluator and conditional broadcast monitor for TurboWarp Temporary Variables runtime variables.
+              <ul>
+                <li><a href="https://github.com/kubohiroya/turbowarp-runtime-expression">https://github.com/kubohiroya/turbowarp-runtime-expression</a></li>
+              </ul>
+            </li>
+          </ul>
+        </section>
+        <section class="level3">
+          <h3 id="34-その他のライブラリ">3.4 その他のライブラリ</h3>
+          <ul>
+            <li>rubygana.js: A node.js library for converting Japanese text to kana.
+              <ul>
+                <li><a href="https://github.com/kubohiroya/rubygana">https://github.com/kubohiroya/rubygana</a></li>
+              </ul>
+            </li>
+          </ul>
+        </section>
+      </section>
+    </section>
+  
+
+</body></html>

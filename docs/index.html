@@ -1,25 +1,117 @@
-<!DOCTYPE html><html data-rubygana-grade="3" lang="ja"><head>
-    <meta charset="utf-8">
-    <title>AIを使って「紙芝居の物語に参加する仕組み」を作ろう！ 「親子AIプログラミング体験会」@千葉商科大学 (2026/08/01)</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" type="text/css" href="theme.css">
-    <link rel="stylesheet" type="text/css" href="document-theme.css">
-  </head>
-  <body data-publication-section="cover">
-    <section class="level1">
-      <h1 id="aiを使って紙芝居の物語に参加する仕組みを作ろう-親子aiプログラミング体験会千葉商科大学-20260801"><strong>AIを使って「<ruby><rb>紙芝居</rb><rp>(</rp><rt>かみしばい</rt><rp>)</rp></ruby>の物語に<ruby><rb>参加</rb><rp>(</rp><rt>さんか</rt><rp>)</rp></ruby>する仕組み」を作ろう！</strong> 「親子AIプログラミング<ruby><rb>体験</rb><rp>(</rp><rt>たいけん</rt><rp>)</rp></ruby>会」@千葉商科大学 (2026/08/01)</h1>
-<p class="furigana-build-note">このHTMLとPDFは、小学3年生までに学ぶ漢字を<ruby><rb>既習</rb><rp>(</rp><rt>きしゅう</rt><rp>)</rp></ruby>として、<ruby><rb>以後</rb><rp>(</rp><rt>いご</rt><rp>)</rp></ruby>に学ぶ漢字へふりがなを<ruby><rb>付</rb><rp>(</rp><rt>つ</rt><rp>)</rp></ruby>けています。</p>
-      <p>千葉商科大学 <ruby><rb>総合</rb><rp>(</rp><rt>そうごう</rt><rp>)</rp></ruby><ruby><rb>政策</rb><rp>(</rp><rt>せいさく</rt><rp>)</rp></ruby>学部 <ruby><rb>教授</rb><rp>(</rp><rt>きょうじゅ</rt><rp>)</rp></ruby> <ruby><rb>久保</rb><rp>(</rp><rt>くぼ</rt><rp>)</rp></ruby><ruby><rb>裕也</rb><rp>(</rp><rt>ひろや</rt><rp>)</rp></ruby></p>
-      <p>2026/07/21 <ruby><rb>更新</rb><rp>(</rp><rt>こうしん</rt><rp>)</rp></ruby></p>
-      <p>
-        <img src="images/image49.png" style="width: 601.70px;">
-      </p>
-      <p>この<ruby><rb>教材</rb><rp>(</rp><rt>きょうざい</rt><rp>)</rp></ruby>はCreative Commons CC-BY-SA 4.0で<ruby><rb>利用</rb><rp>(</rp><rt>りよう</rt><rp>)</rp></ruby><ruby><rb>可能</rb><rp>(</rp><rt>かのう</rt><rp>)</rp></ruby>です。</p>
-      <p>
-        <img src="images/image42.png" style="width: 129.00px;">
-      </p>
-      <nav class="cover-navigation" aria-label="文書ナビゲーション"><a href="toc.html">目次へ</a><a href="https://vivliostyle.org/viewer/#src=https://kubohiroya.github.io/tmpose-kamishibai/docs/publication.json&amp;bookMode=true" target="_blank" rel="noopener">Vivliostyle Viewerで読む（目次パネル）</a></nav>
-    </section>
-  
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="TMPose紙芝居の一般ドキュメントと体験会資料">
+  <title>ドキュメント | TMPose紙芝居</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: system-ui, sans-serif;
+      --ink: #3f302b;
+      --muted: #756960;
+      --paper: #fffdf8;
+      --canvas: #fff8ee;
+      --accent: #963f2f;
+      --line: #dbc9bb;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--canvas); color: var(--ink); }
+    main { max-width: 1080px; margin: auto; padding: 40px 24px 72px; }
+    nav { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 40px; }
+    nav a { color: var(--accent); }
+    h1 { margin-bottom: .35rem; font-size: clamp(2rem, 6vw, 3.5rem); }
+    h2 { margin-top: 3rem; font-size: 1.65rem; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
+    article { padding: 22px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); box-shadow: 0 5px 18px rgb(89 61 43 / 8%); }
+    article h3 { margin: 0 0 .45rem; font-size: 1.15rem; }
+    article p { line-height: 1.65; }
+    .audience { margin: 0 0 .8rem; color: var(--muted); font-size: .92rem; }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 1rem; }
+    .button { display: inline-block; padding: 8px 12px; border-radius: 7px; background: var(--accent); color: white; text-decoration: none; font-weight: 700; }
+    .button.secondary { border: 1px solid var(--accent); background: white; color: var(--accent); }
+    .note { margin-top: 18px; padding: 14px 18px; border-left: 5px solid var(--accent); background: #f5dfd4; line-height: 1.7; }
+  </style>
+</head>
+<body>
+<main>
+  <nav aria-label="サイトナビゲーション">
+    <a href="../">トップ</a>
+    <a href="../samples/">サンプル</a>
+    <a href="../downloads/">ダウンロード</a>
+  </nav>
 
-</body></html>
+  <header>
+    <h1>ドキュメント</h1>
+  </header>
+
+  <section aria-labelledby="general-documents">
+    <h2 id="general-documents">一般ドキュメント</h2>
+    <div class="cards">
+      <article>
+        <h3>紙芝居アプリ 操作説明書</h3>
+        <p class="audience">アプリを使う方</p>
+        <p>台本の読み込み、再生、ポーズ認識、本番前の確認方法を説明します。</p>
+        <div class="actions"><a class="button" href="general/01-user-guide.html">HTMLで読む</a><a class="button secondary" href="general/01-user-guide.pdf">PDF</a></div>
+      </article>
+      <article>
+        <h3>紙芝居DSLファイル作成マニュアル</h3>
+        <p class="audience">作品を作る方</p>
+        <p>3.1の台本を設計し、シーンラベル、分岐、入力、アニメーションを含めて作成・テストする手順を説明します。</p>
+        <div class="actions"><a class="button" href="general/02-dsl-manual.html">HTMLで読む</a><a class="button secondary" href="general/02-dsl-manual.pdf">PDF</a></div>
+      </article>
+      <article>
+        <h3>紙芝居DSL コマンドリファレンス</h3>
+        <p class="audience">台本文法を調べる方</p>
+        <p>kamishibai 3.1で利用できるコマンド、アクション、引数、注意事項を一覧化しています。</p>
+        <div class="actions"><a class="button" href="general/03-command-reference.html">HTMLで読む</a><a class="button secondary" href="general/03-command-reference.pdf">PDF</a></div>
+      </article>
+      <article>
+        <h3>紙芝居アプリ 概要説明書 大人向け</h3>
+        <p class="audience">保護者・教員・運営者</p>
+        <p>アプリの価値、仕組み、利用場面、教育的な意義を簡潔にまとめています。</p>
+        <div class="actions"><a class="button" href="general/04-executive-summary-adult.html">HTMLで読む</a><a class="button secondary" href="general/04-executive-summary-adult.pdf">PDF</a></div>
+      </article>
+      <article>
+        <h3>紙芝居アプリ 概要説明書 子供向け</h3>
+        <p class="audience">子供・初めての方</p>
+        <p>紙芝居でできることや安全な使い方を、やさしい言葉で紹介します。</p>
+        <div class="actions"><a class="button" href="general/05-executive-summary-kids.html">HTMLで読む</a><a class="button secondary" href="general/05-executive-summary-kids.pdf">PDF</a></div>
+      </article>
+      <article>
+        <h3>紙芝居アプリ ソフトウェア開発者向け資料</h3>
+        <p class="audience">ソフトウェア開発者</p>
+        <p>アプリ本体と、開発に関連するプラグイン、テンプレート、機能拡張、ライブラリを案内します。</p>
+        <div class="actions"><a class="button" href="general/06-developer-guide.html">HTMLで読む</a><a class="button secondary" href="general/06-developer-guide.pdf">PDF</a></div>
+      </article>
+      <article>
+        <h3>紙芝居DSL 2.0から3.1への変更履歴</h3>
+        <p class="audience">2.0から移行する方</p>
+        <p>2.0から3.1で追加・変更・置換したDSL仕様と、台本の移行手順を差分形式でまとめています。</p>
+        <div class="actions"><a class="button" href="general/history.html">HTMLで読む</a><a class="button secondary" href="general/history.pdf">PDF</a></div>
+      </article>
+    </div>
+    <p class="note">一般ドキュメントは原文どおりに組版し、rubyganaによるふりがな追加は行っていません。</p>
+  </section>
+
+  <section aria-labelledby="workshop-documents">
+    <h2 id="workshop-documents">体験会資料</h2>
+    <div class="cards">
+      <article>
+        <h3>親子AIプログラミング体験会 2026年8月1日版</h3>
+        <p class="audience">体験会の参加者</p>
+        <p>画像づくりAI、ポーズ認識AI、紙芝居プログラミングを組み合わせる体験会教材です。この資料だけ、小学3年生までの配当漢字を基準にふりがなを追加しています。</p>
+        <div class="actions"><a class="button" href="workshops/2026-08-01/">HTMLで読む</a><a class="button secondary" href="workshops/2026-08-01/tmpose-kamishibai-20260801.pdf">PDF</a></div>
+      </article>
+      <article>
+        <h3>親子AIプログラミング体験会スタッフ向け資料2026年8月1日版</h3>
+        <p class="audience">体験会のスタッフ・運営者</p>
+        <p>必要機材、会場見取り図、事前準備、タイムテーブル、トラブル対応をまとめています。ふりがなの自動追加は行っていません。</p>
+        <div class="actions"><a class="button" href="workshops/2026-08-01/staff/">HTMLで読む</a><a class="button secondary" href="workshops/2026-08-01/staff/tmpose-kamishibai-staff-20260801.pdf">PDF</a></div>
+      </article>
+    </div>
+  </section>
+</main>
+</body>
+</html>

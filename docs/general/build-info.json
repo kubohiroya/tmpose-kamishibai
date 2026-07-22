@@ -1,0 +1,50 @@
+{
+  "htmlAndPdfGenerator": "Vivliostyle CLI 11.1.0",
+  "publicationKind": "general-documentation",
+  "rubyApplied": false,
+  "sourceDirectory": "general",
+  "documents": [
+    {
+      "sourceFilename": "01-user-guide.md",
+      "title": "紙芝居アプリ 操作説明書",
+      "htmlFilename": "01-user-guide.html",
+      "pdfFilename": "01-user-guide.pdf"
+    },
+    {
+      "sourceFilename": "02-dsl-manual.md",
+      "title": "紙芝居DSLファイル作成マニュアル",
+      "htmlFilename": "02-dsl-manual.html",
+      "pdfFilename": "02-dsl-manual.pdf"
+    },
+    {
+      "sourceFilename": "03-command-reference.md",
+      "title": "紙芝居DSL コマンドリファレンス",
+      "htmlFilename": "03-command-reference.html",
+      "pdfFilename": "03-command-reference.pdf"
+    },
+    {
+      "sourceFilename": "04-executive-summary-adult.md",
+      "title": "紙芝居アプリ 概要説明書 大人向け",
+      "htmlFilename": "04-executive-summary-adult.html",
+      "pdfFilename": "04-executive-summary-adult.pdf"
+    },
+    {
+      "sourceFilename": "05-executive-summary-kids.md",
+      "title": "紙芝居アプリ 概要説明書 子供向け",
+      "htmlFilename": "05-executive-summary-kids.html",
+      "pdfFilename": "05-executive-summary-kids.pdf"
+    },
+    {
+      "sourceFilename": "06-developer-guide.md",
+      "title": "紙芝居アプリ ソフトウェア開発者向け資料",
+      "htmlFilename": "06-developer-guide.html",
+      "pdfFilename": "06-developer-guide.pdf"
+    },
+    {
+      "sourceFilename": "history.md",
+      "title": "紙芝居DSL 2.0から3.1への変更履歴",
+      "htmlFilename": "history.html",
+      "pdfFilename": "history.pdf"
+    }
+  ]
+}

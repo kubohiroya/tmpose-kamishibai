@@ -1,0 +1,21 @@
+@charset "UTF-8";
+
+@page {
+  @top-left {
+    content: string(document-title);
+    color: #756960;
+    font-size: 8.5pt;
+  }
+}
+
+body > section.level1:first-child > h1:first-child,
+body > h1:first-child {
+  string-set: document-title content();
+}
+
+@media print {
+  body > section.level1:first-child > h1:first-child,
+  body > h1:first-child {
+    margin-top: 0;
+  }
+}

@@ -1,0 +1,368 @@
+<!DOCTYPE html><html lang="ja"><head>
+    <meta charset="utf-8">
+    <title>紙芝居DSL 2.0から3.1への変更履歴</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="theme.css">
+    <link rel="stylesheet" type="text/css" href="general-theme.css">
+  </head>
+  <body>
+    <section class="level1">
+      <h1 id="紙芝居dsl-20から31への変更履歴">紙芝居DSL 2.0から3.1への変更履歴</h1>
+      <p>対象DSL: <code>kamishibai=2.0</code> → <code>kamishibai=3.1</code><br>文書化日: 2026年7月22日</p>
+      <p>この文書は、2.0向けの旧ドキュメントと3.1の現行仕様を比較し、台本作者・教材作成者・開発者が把握すべき差分をまとめたものです。中間バージョンごとの導入時期は区別せず、2.0から3.1までの累積差分として記載します。</p>
+      <section class="level2">
+        <h2 id="1-変更の概要">1. 変更の概要</h2>
+        <p>2.0は、シーンを先頭から順番に再生し、背景、登場人物、セリフ、音、移動、ポーズ認識を組み合わせる構成でした。</p>
+        <p>3.1では、この基本機能を維持しながら、次の機能を追加・拡張しました。</p>
+        <table>
+          <thead>
+            <tr>
+              <th>分類</th>
+              <th>2.0</th>
+              <th>3.1</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>バージョン宣言</td>
+              <td><code>kamishibai=2.0</code></td>
+              <td><code>kamishibai=3.1</code></td>
+            </tr>
+            <tr>
+              <td>アセット</td>
+              <td>外部URLと明示的なプロジェクト内アセット</td>
+              <td>短縮指定、<code>backdrop</code>、テキストアセットを追加</td>
+            </tr>
+            <tr>
+              <td>シーン進行</td>
+              <td>原則として記述順</td>
+              <td>ラベル、条件、キー入力、タッチ入力による遷移を追加</td>
+            </tr>
+            <tr>
+              <td>状態管理</td>
+              <td>DSLから利用する明示的な仕組みなし</td>
+              <td>ランタイム変数を追加</td>
+            </tr>
+            <tr>
+              <td>画面効果</td>
+              <td>背景の即時切り替え</td>
+              <td>フェードアウト／フェードアップを追加</td>
+            </tr>
+            <tr>
+              <td>アニメーション</td>
+              <td>スキンの個別切り替え</td>
+              <td>画像・音のループ／一回再生を追加</td>
+            </tr>
+            <tr>
+              <td>画面上の文字</td>
+              <td>吹き出し中心</td>
+              <td>テキストアセットの表示・更新を追加</td>
+            </tr>
+            <tr>
+              <td>アクター表示</td>
+              <td>スキン、位置、サイズをすべて指定</td>
+              <td>スキン省略形、スキンとサイズの同時変更を追加</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+      <section class="level2">
+        <h2 id="2-追加したトップレベルコマンド">2. 追加したトップレベルコマンド</h2>
+        <section class="level3">
+          <h3 id="21-setruntimevariable">2.1 <code>setRuntimeVariable</code></h3>
+          <pre class="language-text"><code class="language-text">setRuntimeVariable=変数名:値</code></pre>
+          <p>Temporary Variablesのランタイム変数を台本から設定できるようにしました。開始シーンを指定する予約変数 <code>startSceneIndex</code> や、条件分岐で参照する状態の初期化に使います。</p>
+          <pre class="language-text"><code class="language-text">setRuntimeVariable=startSceneIndex:1
+setRuntimeVariable=takeSeaRoute:true</code></pre>
+        </section>
+        <section class="level3">
+          <h3 id="22-registerbranch">2.2 <code>registerBranch</code></h3>
+          <pre class="language-text"><code class="language-text">registerBranch=分岐名:条件1,条件2,...:シーンラベル1,シーンラベル2,...</code></pre>
+          <p>Runtime Expressionで評価する条件と移動先を登録できるようにしました。条件は左から順に評価され、最初に真になった条件と同じ位置のシーンラベルが選ばれます。</p>
+          <pre class="language-text"><code class="language-text">registerBranch=chooseRoute:takeSeaRoute,true:ocean,home</code></pre>
+        </section>
+        <section class="level3">
+          <h3 id="23-scenelabel">2.3 <code>sceneLabel</code></h3>
+          <pre class="language-text"><code class="language-text">sceneLabel=シーンラベル</code></pre>
+          <p>シーンへ一意の名前を付けられるようにしました。条件分岐、キー入力、タッチ入力の移動先として使います。</p>
+        </section>
+        <section class="level3">
+          <h3 id="24-text">2.4 <code>text</code></h3>
+          <pre class="language-text"><code class="language-text">text=テキストアセット名:文字列</code></pre>
+          <p>画面上のテキスト内容を台本から更新できるようにしました。空文字列を指定すると内容を消せます。</p>
+        </section>
+      </section>
+      <section class="level2">
+        <h2 id="3-追加したアクション">3. 追加したアクション</h2>
+        <section class="level3">
+          <h3 id="31-グローバルアクション">3.1 グローバルアクション</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>アクション</th>
+                <th>用途</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>action=transition:fadeOut</code></td>
+                <td>ステージを段階的に暗くする</td>
+              </tr>
+              <tr>
+                <td><code>action=transition:fadeUp</code></td>
+                <td>ステージを段階的に明るくする</td>
+              </tr>
+              <tr>
+                <td><code>action=transition:reset</code></td>
+                <td>ステージの明るさ効果を標準値へ戻す</td>
+              </tr>
+              <tr>
+                <td><code>action=branch:分岐名</code></td>
+                <td>登録済みの条件を評価して別シーンへ移動する</td>
+              </tr>
+              <tr>
+                <td><code>action=keyInputToChangeScene:キー一覧:ラベル一覧</code></td>
+                <td>物理キーの入力先に応じて別シーンへ移動する</td>
+              </tr>
+              <tr>
+                <td><code>action=touchInputToChangeScene:アクター一覧:ラベル一覧</code></td>
+                <td>アクターへのポインター／タッチ入力に応じて別シーンへ移動する</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>キー入力とタッチ入力はバックグラウンドで待機します。入力項目と移動先ラベルは、同じ個数を同じ順番で指定します。</p>
+        </section>
+        <section class="level3">
+          <h3 id="32-アクターアクション">3.2 アクターアクション</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>アクション</th>
+                <th>用途</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>action=アクター名:loop:アセット一覧:秒数一覧</code></td>
+                <td>画像・音声アセットをバックグラウンドで繰り返す</td>
+              </tr>
+              <tr>
+                <td><code>action=アクター名:sequence:アセット一覧:秒数一覧</code></td>
+                <td>画像・音声アセットをバックグラウンドで一回だけ順番に再生する</td>
+              </tr>
+            </tbody>
+          </table>
+          <p><code>loop</code>はアセット数と秒数の個数をそろえます。<code>sequence</code>の秒数はアセット数より1つ少なくします。どちらも待ち時間に <code>0</code> を使うことで、画像と音などを同時に開始できます。</p>
+        </section>
+      </section>
+      <section class="level2">
+        <h2 id="4-変更拡張した既存仕様">4. 変更・拡張した既存仕様</h2>
+        <section class="level3">
+          <h3 id="41-アセット識別子">4.1 アセット識別子</h3>
+          <p>3.1では、プロジェクト内アセットを短く指定できるようにし、ステージ背景の識別子を <code>backdrop</code> に統一しました。また、ランタイムテキストをアセットとして扱えるようにしました。</p>
+          <table>
+            <thead>
+              <tr>
+                <th>種類</th>
+                <th>2.0の代表的な書式</th>
+                <th>3.1の書式</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>外部画像・外部音声</td>
+                <td><code>asset=名前,https://...</code></td>
+                <td>変更なし</td>
+              </tr>
+              <tr>
+                <td>コスチューム</td>
+                <td><code>asset=名前,costume:スプライト:コスチューム</code></td>
+                <td>従来形に加え、<code>costume</code>、<code>costume:スプライト</code> を追加</td>
+              </tr>
+              <tr>
+                <td>ステージ背景</td>
+                <td><code>asset=名前,background:背景</code></td>
+                <td><code>backdrop</code> または <code>backdrop:背景</code></td>
+              </tr>
+              <tr>
+                <td>スプライトの音</td>
+                <td><code>asset=名前,sound:スプライト:音</code></td>
+                <td>従来形を継続</td>
+              </tr>
+              <tr>
+                <td>ステージの音</td>
+                <td><code>asset=名前,sound:@stage:音</code></td>
+                <td>従来形に加え、<code>sound</code> を追加</td>
+              </tr>
+              <tr>
+                <td>テキスト</td>
+                <td>なし</td>
+                <td><code>text</code> または <code>text:テキスト名</code></td>
+              </tr>
+            </tbody>
+          </table>
+          <p>短縮指定では、アセット名と同名のコスチューム、背景、音、テキストを参照します。</p>
+        </section>
+        <section class="level3">
+          <h3 id="42-show">4.2 <code>show</code></h3>
+          <p>従来の書式に加え、スキン名を省略して初期スキンまたは現在のスキンを使えるようにしました。</p>
+          <pre class="language-text"><code class="language-text"># 2.0から継続する書式
+action=Hero:show:Hero-normal:0,-60,30
+
+# 3.1で追加した省略形
+action=Hero:show:0,-60,30</code></pre>
+        </section>
+        <section class="level3">
+          <h3 id="43-setskin">4.3 <code>setSkin</code></h3>
+          <p>スキン切り替えと同時にサイズを変更できる書式を追加しました。</p>
+          <pre class="language-text"><code class="language-text">action=Hero:setSkin:Hero-surprised:45</code></pre>
+        </section>
+        <section class="level3">
+          <h3 id="44-シーンの実行モデル">4.4 シーンの実行モデル</h3>
+          <p>2.0の記述順による進行を維持しつつ、3.1では次の仕組みで任意のシーンへ移動できるようにしました。</p>
+          <ul>
+            <li><code>startSceneIndex</code>による開始シーン指定</li>
+            <li><code>sceneLabel</code>による移動先の命名</li>
+            <li><code>registerBranch</code>と<code>branch</code>による条件分岐</li>
+            <li><code>keyInputToChangeScene</code>によるキー入力分岐</li>
+            <li><code>touchInputToChangeScene</code>によるタッチ入力分岐</li>
+          </ul>
+        </section>
+      </section>
+      <section class="level2">
+        <h2 id="5-廃止置換した記法">5. 廃止・置換した記法</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>2.0の記法</th>
+              <th>3.1での扱い</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>kamishibai=2.0</code></td>
+              <td><code>kamishibai=3.1</code>へ変更する</td>
+            </tr>
+            <tr>
+              <td><code>asset=Beach,background:beach</code></td>
+              <td><code>asset=Beach,backdrop:beach</code>へ変更する</td>
+            </tr>
+            <tr>
+              <td><code>action=Actor:setCostume:costume1</code></td>
+              <td>3.1のリファレンス対象外。コスチュームを<code>asset</code>で登録し、<code>setSkin</code>で切り替える</td>
+            </tr>
+            <tr>
+              <td>コメントだけで表したシーン名</td>
+              <td>遷移先にする場合は<code>sceneLabel</code>を追加する</td>
+            </tr>
+          </tbody>
+        </table>
+        <p><code>actor</code>、<code>cover</code>、<code>TMPoseURL</code>、<code>stage</code>、<code>wait</code>、<code>bgm</code>、<code>sound</code>、<code>hide</code>、<code>say</code>、<code>think</code>、<code>setScale</code>、<code>setPosition</code>、<code>moveTo</code>、<code>setLayer</code>、<code>pose</code>の基本的な役割は3.1でも継続しています。</p>
+      </section>
+      <section class="level2">
+        <h2 id="6-移行例">6. 移行例</h2>
+        <section class="level3">
+          <h3 id="61-20">6.1 2.0</h3>
+          <pre class="language-text"><code class="language-text">kamishibai=2.0
+asset=Beach,background:beach
+asset=Hero,costume:Hero:normal
+asset=Opening,sound:@stage:opening
+actor=Hero,Hero
+cover=Beach,Opening
+---
+# scene 1
+action=stage:Beach
+action=Hero:show:Hero:0,-60,30
+action=Hero:say:こんにちは！:2</code></pre>
+        </section>
+        <section class="level3">
+          <h3 id="62-31">6.2 3.1</h3>
+          <pre class="language-text"><code class="language-text">kamishibai=3.1
+setRuntimeVariable=startSceneIndex:1
+setRuntimeVariable=takeSeaRoute:true
+registerBranch=chooseRoute:takeSeaRoute,true:ocean,home
+asset=Beach,backdrop
+asset=Ocean,backdrop
+asset=Home,backdrop
+asset=Hero,costume
+asset=Opening,sound
+asset=Narration,text
+actor=Hero,Hero
+actor=Narration,Narration
+cover=Beach,Opening
+---
+sceneLabel=opening
+action=transition:fadeOut
+action=stage:Beach
+action=transition:fadeUp
+action=Hero:show:0,-60,30
+action=Narration:show:Narration:0,120,100
+text=Narration:どちらへ進みますか？
+action=Hero:say:こんにちは！:2
+action=branch:chooseRoute
+---
+sceneLabel=ocean
+action=stage:Ocean
+---
+sceneLabel=home
+action=stage:Home</code></pre>
+        </section>
+      </section>
+      <section class="level2">
+        <h2 id="7-20台本の移行チェックリスト">7. 2.0台本の移行チェックリスト</h2>
+        <ul class="contains-task-list">
+          <li class="task-list-item"><input type="checkbox" disabled=""> 先頭を<code>kamishibai=3.1</code>へ変更した</li>
+          <li class="task-list-item"><input type="checkbox" disabled=""> <code>background:</code>を<code>backdrop:</code>へ変更した</li>
+          <li class="task-list-item"><input type="checkbox" disabled=""> プロジェクト内アセットの参照先が存在することを確認した</li>
+          <li class="task-list-item"><input type="checkbox" disabled=""> <code>setCostume</code>を使っている箇所を<code>asset</code>と<code>setSkin</code>へ置き換えた</li>
+          <li class="task-list-item"><input type="checkbox" disabled=""> 必要なシーンへ重複しない<code>sceneLabel</code>を付けた</li>
+          <li class="task-list-item"><input type="checkbox" disabled=""> <code>startSceneIndex</code>を設定した</li>
+          <li class="task-list-item"><input type="checkbox" disabled=""> 分岐の条件数と移動先ラベル数をそろえた</li>
+          <li class="task-list-item"><input type="checkbox" disabled=""> キー／タッチ入力の項目数と移動先ラベル数をそろえた</li>
+          <li class="task-list-item"><input type="checkbox" disabled=""> すべての分岐先ラベルが存在することを確認した</li>
+          <li class="task-list-item"><input type="checkbox" disabled=""> 3.1対応アプリで先頭から全経路を再生確認した</li>
+        </ul>
+      </section>
+      <section class="level2">
+        <h2 id="8-一般ドキュメントで修正した範囲">8. 一般ドキュメントで修正した範囲</h2>
+        <p>3.1への更新では、DSL仕様だけでなく、一般ドキュメント全体の説明も次のように修正しました。</p>
+        <table>
+          <thead>
+            <tr>
+              <th>文書</th>
+              <th>主な修正内容</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>01-user-guide.md</code></td>
+              <td>3.1の分岐、入力、フェード、アニメーション、テキスト機能と確認項目を追加</td>
+            </tr>
+            <tr>
+              <td><code>02-dsl-manual.md</code></td>
+              <td>3.1のファイル構造、全追加コマンド、移行上の注意、作成・テスト手順を追加</td>
+            </tr>
+            <tr>
+              <td><code>03-command-reference.md</code></td>
+              <td>アセット識別子、トップレベルコマンド、グローバル／アクターアクション、エラー例を更新</td>
+            </tr>
+            <tr>
+              <td><code>04-executive-summary-adult.md</code></td>
+              <td>3.1の機能、状態管理、分岐を利用者向けの説明へ反映</td>
+            </tr>
+            <tr>
+              <td><code>05-executive-summary-kids.md</code></td>
+              <td>アニメーション、文字表示、分かれ道をやさしい説明で追加</td>
+            </tr>
+            <tr>
+              <td><code>06-developer-guide.md</code></td>
+              <td>Asset Manager、Temporary Variables、Runtime Expression、Async Inputなど3.1の構成要素を整理</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>詳細な書式は<code>02-dsl-manual.md</code>と<code>03-command-reference.md</code>を参照してください。</p>
+      </section>
+    </section>
+  
+
+</body></html>
