@@ -14,6 +14,7 @@
     "preview:docs": "vivliostyle preview --config docs/vivliostyle.general.config.mjs",
     "preview:staff": "vivliostyle preview --config docs/vivliostyle.staff.config.mjs",
     "preview:workshop": "vivliostyle preview --config docs/vivliostyle.workshop.config.mjs",
+    "pretest": "node scripts/sb3/prepare-test.mjs",
     "test": "node --test test/*.test.mjs",
     "predeploy": "pnpm run build",
     "deploy": "gh-pages -d dist"

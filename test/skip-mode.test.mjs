@@ -1,13 +1,9 @@
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
 import test from 'node:test';
 
-import {strFromU8, unzipSync} from 'fflate';
+import {loadKamishibaiProject} from './helpers/sb3-project.mjs';
 
-const sb3Path = process.env.KAMISHIBAI_SB3_PATH
-  ?? new URL('../site/downloads/kamishibai-3_1a1.sb3', import.meta.url);
-const archive = unzipSync(new Uint8Array(readFileSync(sb3Path)));
-const project = JSON.parse(strFromU8(archive['project.json']));
+const project = loadKamishibaiProject();
 
 function literalString(input) {
   const value = input?.[1];
