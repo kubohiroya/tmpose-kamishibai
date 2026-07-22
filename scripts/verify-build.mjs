@@ -12,6 +12,7 @@ import {
 import {createDeterministicSb3} from './sb3/source.mjs';
 
 const projectRoot = fileURLToPath(new URL('../', import.meta.url));
+const outputDirectory = path.join(projectRoot, 'dist');
 const require = createRequire(import.meta.url);
 const vivliostyleRequire = createRequire(require.resolve('@vivliostyle/cli/package.json'));
 const {
@@ -22,6 +23,8 @@ const {
 } = vivliostyleRequire('pdf-lib');
 const docsDirectory = path.join(projectRoot, 'dist/docs');
 const siteIndexPath = path.join(projectRoot, 'dist/index.html');
+const faviconSourcePath = path.join(projectRoot, 'site/favicon.png');
+const faviconPath = path.join(outputDirectory, 'favicon.png');
 const heroImageSourcePath = path.join(projectRoot, 'docs/images/image49.png');
 const heroImagePath = path.join(projectRoot, 'dist/images/image49.png');
 const downloadFilename = 'kamishibai.sb3';
@@ -76,6 +79,50 @@ function assert(condition, message) {
 function attributeValues(html, tagName, attributeName) {
   const tagPattern = new RegExp(`<${tagName}\\b[^>]*\\b${attributeName}="([^"]+)"`, 'gu');
   return [...html.matchAll(tagPattern)].map((match) => match[1]);
+}
+
+async function findHtmlFiles(directory) {
+  const entries = await readdir(directory, {withFileTypes: true});
+  const nestedFiles = await Promise.all(entries.map(async (entry) => {
+    const entryPath = path.join(directory, entry.name);
+    if (entry.isDirectory()) {
+      return findHtmlFiles(entryPath);
+    }
+    return entry.isFile() && entry.name.endsWith('.html') ? [entryPath] : [];
+  }));
+  return nestedFiles.flat();
+}
+
+async function verifyFavicon() {
+  const [sourceFavicon, publishedFavicon, htmlFiles] = await Promise.all([
+    readFile(faviconSourcePath),
+    readFile(faviconPath),
+    findHtmlFiles(outputDirectory),
+  ]);
+  const pngSignature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+
+  assert(sourceFavicon.equals(publishedFavicon),
+    'The published favicon differs from site/favicon.png.');
+  assert(publishedFavicon.subarray(0, 8).equals(pngSignature),
+    'The favicon is not a PNG file.');
+  assert(publishedFavicon.readUInt32BE(16) === 256 && publishedFavicon.readUInt32BE(20) === 256,
+    'The favicon must be 256 by 256 pixels.');
+  assert(publishedFavicon[24] === 8 && publishedFavicon[25] === 6,
+    'The favicon must use 8-bit RGBA pixels.');
+  assert(htmlFiles.length > 0, 'The generated site does not contain any HTML files.');
+
+  for (const htmlFile of htmlFiles) {
+    const html = await readFile(htmlFile, 'utf8');
+    const expectedHref = path.relative(path.dirname(htmlFile), faviconPath).split(path.sep).join('/');
+    const expectedLink = `<link rel="icon" type="image/png" sizes="256x256" href="${expectedHref}">`;
+    const linkCount = html.split(expectedLink).length - 1;
+
+    assert(linkCount === 1,
+      `${path.relative(outputDirectory, htmlFile)} must contain exactly one favicon link.`);
+    await access(path.resolve(path.dirname(htmlFile), expectedHref));
+  }
+
+  return htmlFiles.length;
 }
 
 async function verifyLocalReferences(htmlPath, tagName, attributeName) {
@@ -442,6 +489,7 @@ export async function verifyBuild() {
   const generalResults = await verifyGeneralDocuments(grade);
   const staffResults = await verifyStaffDocument();
   const sampleCount = await verifySamples();
+  const faviconHtmlCount = await verifyFavicon();
   const sourceHeadingCount = (source.match(/^#{1,4}\s+/gmu) ?? []).length;
 
   assert(buildInfo.rubyApplied === true,
@@ -565,6 +613,7 @@ export async function verifyBuild() {
       + `${images.length} workshop images, `
       + `staff PDF ${staffResults.pageCount} pages/${staffResults.imageCount} image, `
       + `${rubyCount} ruby elements, ${sampleCount} sample file(s), `
+      + `favicon links in ${faviconHtmlCount} HTML file(s), `
       + `${tocLinks.length} PDF bookmarks, ${downloadResults.filename} `
       + `(${downloadResults.size} bytes), and both PDF copies.`,
   );
