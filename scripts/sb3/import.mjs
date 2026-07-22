@@ -25,7 +25,7 @@ import {
 export {validateOutputDirectoryPath} from './output-safety.mjs';
 
 const projectRoot = fileURLToPath(new URL('../../', import.meta.url));
-const defaultInputPath = path.join(projectRoot, 'kamishibai.sb3');
+const defaultInputPath = path.join(projectRoot, 'tmp', 'kamishibai.sb3');
 const defaultOutputDirectory = path.join(projectRoot, 'app');
 const sourceFormatVersion = 1;
 

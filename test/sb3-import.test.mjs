@@ -361,6 +361,7 @@ test('rejects unsafe archive paths and preserves the existing output', async () 
 });
 
 test('validates archive names, extension data URLs, and CLI arguments', () => {
+  assert.equal(parseCliArguments([]).inputPath, path.resolve('tmp/kamishibai.sb3'));
   assert.equal(validateArchiveEntryName('nested/asset.svg'), 'nested/asset.svg');
   for (const unsafeName of ['', '/absolute', 'C:/absolute', './asset', 'a/../asset', 'a\\asset']) {
     assert.throws(() => validateArchiveEntryName(unsafeName));
