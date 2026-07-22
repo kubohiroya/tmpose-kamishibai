@@ -1,10 +1,7 @@
 import {
-  access,
-  lstat,
   mkdir,
   mkdtemp,
   readFile,
-  rename,
   rm,
   writeFile,
 } from 'node:fs/promises';
@@ -14,6 +11,18 @@ import {createInterface} from 'node:readline/promises';
 import {fileURLToPath, pathToFileURL} from 'node:url';
 
 import {strFromU8, unzipSync} from 'fflate';
+
+import {
+  assertNoInterruptedRollback,
+  assertRecognizedOutputDirectory,
+  compareDirectories,
+  inspectGitOutputState,
+  pathExists,
+  replaceDirectoryTransactionally,
+  validateOutputDirectoryPath,
+} from './output-safety.mjs';
+
+export {validateOutputDirectoryPath} from './output-safety.mjs';
 
 const projectRoot = fileURLToPath(new URL('../../', import.meta.url));
 const defaultInputPath = path.join(projectRoot, 'kamishibai.sb3');
@@ -26,81 +35,85 @@ function assert(condition, message) {
   }
 }
 
-async function pathExists(targetPath) {
-  try {
-    await access(targetPath);
-    return true;
-  } catch (error) {
-    if (error?.code === 'ENOENT') {
-      return false;
-    }
-    throw error;
-  }
+function summarizeGitChanges(gitState) {
+  const entries = [
+    ...gitState.statusEntries,
+    ...gitState.untrackedContent.map((entry) => `not tracked: ${entry}`),
+  ];
+  const visibleEntries = entries.slice(0, 8).join(', ');
+  const remainder = entries.length > 8 ? `, and ${entries.length - 8} more` : '';
+  return `${visibleEntries}${remainder}`;
 }
 
-function isSamePathOrAncestor(candidatePath, targetPath) {
-  const relativePath = path.relative(candidatePath, targetPath);
-  return relativePath === '' || (
-    relativePath !== '..'
-    && !relativePath.startsWith(`..${path.sep}`)
-    && !path.isAbsolute(relativePath)
-  );
-}
-
-export function validateOutputDirectoryPath(outputDirectory, protectedRoot = projectRoot) {
-  const resolvedOutputDirectory = path.resolve(outputDirectory);
-  const resolvedProtectedRoot = path.resolve(protectedRoot);
-  assert(resolvedOutputDirectory !== path.parse(resolvedOutputDirectory).root,
-    'Refusing to replace a filesystem root with imported SB3 sources.');
-  assert(!isSamePathOrAncestor(resolvedOutputDirectory, resolvedProtectedRoot),
-    'Refusing to replace the repository root or one of its ancestors.');
-  assert(!resolvedOutputDirectory.split(path.sep).includes('.git'),
-    'Refusing to write imported SB3 sources into a .git directory.');
-  return resolvedOutputDirectory;
-}
-
-async function assertRecognizedOutputDirectory(outputDirectory) {
-  const stats = await lstat(outputDirectory);
-  assert(stats.isDirectory() && !stats.isSymbolicLink(),
-    `Refusing to replace a non-directory or symbolic link: ${outputDirectory}`);
-
-  let manifest;
-  try {
-    manifest = JSON.parse(await readFile(path.join(outputDirectory, 'sb3-source.json'), 'utf8'));
-  } catch (error) {
-    if (error?.code !== 'ENOENT' && !(error instanceof SyntaxError)) {
-      throw error;
-    }
-    throw new Error(
-      `Refusing to replace an unrecognized directory without a valid sb3-source.json: ${outputDirectory}`,
-      {cause: error},
-    );
-  }
-
-  assert(
-    manifest?.formatVersion === sourceFormatVersion
-      && manifest.project === 'project.source.json'
-      && manifest.embeddedExtensions === 'embedded-extensions.json'
-      && manifest.assetsDirectory === 'assets'
-      && Array.isArray(manifest.archiveEntries),
-    `Refusing to replace an unrecognized directory without a valid sb3-source.json: ${outputDirectory}`,
-  );
-}
-
-async function authorizeOutputReplacement({outputDirectory, force, confirmReplace}) {
+async function authorizeOutputReplacement({
+  candidateDirectory,
+  confirmReplace,
+  discardLocalChanges,
+  outputDirectory,
+  yes,
+}) {
+  await assertNoInterruptedRollback(outputDirectory);
   if (!await pathExists(outputDirectory)) {
-    return;
+    return {action: 'create', comparison: null, gitState: null};
   }
 
-  await assertRecognizedOutputDirectory(outputDirectory);
-  if (force) {
-    return;
+  await assertRecognizedOutputDirectory(outputDirectory, sourceFormatVersion);
+  const comparison = await compareDirectories(outputDirectory, candidateDirectory);
+  if (comparison.identical) {
+    return {action: 'unchanged', comparison, gitState: null};
+  }
+
+  const gitState = await inspectGitOutputState(
+    outputDirectory,
+    comparison.existingFilePaths,
+  );
+  assert(gitState.managed,
+    `Existing output differs from the SB3 candidate but is not tracked by Git: ${outputDirectory}. `
+    + 'Import to a new output directory instead of replacing unrecoverable content.');
+  assert(gitState.clean || discardLocalChanges,
+    `Existing output differs from the SB3 candidate and has uncommitted Git changes: `
+    + `${summarizeGitChanges(gitState)}. Commit or stash them first, or explicitly use `
+    + '--discard-local-changes.');
+
+  const context = {
+    comparison,
+    discardLocalChanges,
+    gitState,
+    outputDirectory,
+  };
+  if (yes) {
+    return {action: 'replace', ...context};
   }
   assert(typeof confirmReplace === 'function',
     `Output directory already exists: ${outputDirectory}. `
-    + 'Refusing to replace it without interactive confirmation or --force.');
-  assert(await confirmReplace(outputDirectory),
+    + 'Refusing to replace differing content without interactive confirmation or --yes.');
+  assert(await confirmReplace(context),
     'SB3 import cancelled; the existing output was not changed.');
+  return {action: 'replace', ...context};
+}
+
+async function revalidateOutputReplacement({
+  candidateDirectory,
+  decision,
+  discardLocalChanges,
+  outputDirectory,
+}) {
+  const latestComparison = await compareDirectories(outputDirectory, candidateDirectory);
+  assert(
+    latestComparison.existingFingerprint === decision.comparison.existingFingerprint
+      && latestComparison.candidateFingerprint === decision.comparison.candidateFingerprint,
+    'Output or candidate content changed during SB3 import; refusing to replace it.',
+  );
+  const latestGitState = await inspectGitOutputState(
+    outputDirectory,
+    latestComparison.existingFilePaths,
+  );
+  assert(latestGitState.managed,
+    'Output stopped being Git-managed during SB3 import; refusing to replace it.');
+  assert(latestGitState.fingerprint === decision.gitState.fingerprint,
+    'Git state changed during SB3 import; refusing to replace the output.');
+  assert(latestGitState.clean || discardLocalChanges,
+    'Output gained uncommitted Git changes during SB3 import; refusing to replace it.');
 }
 
 export function validateArchiveEntryName(entryName) {
@@ -167,40 +180,15 @@ export function decodeExtensionDataUrl(dataUrl) {
   };
 }
 
-async function replaceDirectoryAtomically(temporaryDirectory, outputDirectory) {
-  const parentDirectory = path.dirname(outputDirectory);
-  const backupDirectory = path.join(
-    parentDirectory,
-    `.${path.basename(outputDirectory)}.backup-${process.pid}-${Date.now()}`,
-  );
-  const outputExists = await pathExists(outputDirectory);
-
-  if (outputExists) {
-    await rename(outputDirectory, backupDirectory);
-  }
-
-  try {
-    await rename(temporaryDirectory, outputDirectory);
-  } catch (error) {
-    if (outputExists) {
-      await rename(backupDirectory, outputDirectory);
-    }
-    throw error;
-  }
-
-  if (outputExists) {
-    await rm(backupDirectory, {recursive: true});
-  }
-}
-
 export async function importSb3({
   inputPath = defaultInputPath,
   outputDirectory = defaultOutputDirectory,
-  force = false,
+  discardLocalChanges = false,
+  yes = false,
   confirmReplace,
 } = {}) {
   const resolvedInputPath = path.resolve(inputPath);
-  const resolvedOutputDirectory = validateOutputDirectoryPath(outputDirectory);
+  const resolvedOutputDirectory = validateOutputDirectoryPath(outputDirectory, projectRoot);
 
   const archive = unzipSync(new Uint8Array(await readFile(resolvedInputPath)));
   const archiveEntries = Object.entries(archive);
@@ -213,6 +201,8 @@ export async function importSb3({
   assert(projectEntry, 'SB3 archive does not contain project.json.');
 
   let project;
+  let decision;
+  let rollbackCleanupWarning = null;
   try {
     project = JSON.parse(strFromU8(projectEntry));
   } catch (error) {
@@ -293,12 +283,29 @@ export async function importSb3({
       ),
     ]);
 
-    await authorizeOutputReplacement({
-      outputDirectory: resolvedOutputDirectory,
-      force,
+    decision = await authorizeOutputReplacement({
+      candidateDirectory: temporaryDirectory,
       confirmReplace,
+      discardLocalChanges,
+      outputDirectory: resolvedOutputDirectory,
+      yes,
     });
-    await replaceDirectoryAtomically(temporaryDirectory, resolvedOutputDirectory);
+    if (decision.action === 'unchanged') {
+      await rm(temporaryDirectory, {recursive: true, force: true});
+    } else {
+      if (decision.action === 'replace') {
+        await revalidateOutputReplacement({
+          candidateDirectory: temporaryDirectory,
+          decision,
+          discardLocalChanges,
+          outputDirectory: resolvedOutputDirectory,
+        });
+      }
+      ({rollbackCleanupWarning} = await replaceDirectoryTransactionally(
+        temporaryDirectory,
+        resolvedOutputDirectory,
+      ));
+    }
   } catch (error) {
     await rm(temporaryDirectory, {recursive: true, force: true});
     throw error;
@@ -310,19 +317,27 @@ export async function importSb3({
       entryName !== 'project.json' && !entryName.endsWith('/')
     )).length,
     embeddedExtensionCount: embeddedExtensions.length,
+    changed: decision.action !== 'unchanged',
+    differenceCounts: decision.comparison ? {
+      added: decision.comparison.differences.added.length,
+      modified: decision.comparison.differences.modified.length,
+      removed: decision.comparison.differences.removed.length,
+    } : null,
     inputPath: resolvedInputPath,
     outputDirectory: resolvedOutputDirectory,
+    rollbackCleanupWarning,
   };
 }
 
 function usage() {
-  return `Usage: pnpm sb3:import -- [input.sb3] [--output directory] [--force]\n\nDefaults:\n  input:  ${defaultInputPath}\n  output: ${defaultOutputDirectory}\n\nExisting recognized output requires interactive confirmation.\nUse --force (or --yes) only for intentional non-interactive replacement.`;
+  return `Usage: pnpm sb3:import -- [input.sb3] [--output directory] [--yes] [--discard-local-changes]\n\nDefaults:\n  input:  ${defaultInputPath}\n  output: ${defaultOutputDirectory}\n\nIdentical output is left unchanged. Differing, Git-clean output requires confirmation.\nUse --yes to skip that confirmation. Uncommitted output changes are rejected unless\n--discard-local-changes is explicitly supplied.`;
 }
 
 export function parseCliArguments(arguments_) {
   let inputPath = defaultInputPath;
   let outputDirectory = defaultOutputDirectory;
-  let force = false;
+  let discardLocalChanges = false;
+  let yes = false;
   let positionalInputSeen = false;
 
   for (let index = 0; index < arguments_.length; index += 1) {
@@ -340,27 +355,55 @@ export function parseCliArguments(arguments_) {
       index += 1;
       continue;
     }
-    if (argument === '--force' || argument === '--yes') {
-      force = true;
+    if (argument === '--yes') {
+      yes = true;
       continue;
     }
+    if (argument === '--discard-local-changes') {
+      discardLocalChanges = true;
+      continue;
+    }
+    assert(argument !== '--force',
+      '--force is intentionally unsupported. Use --yes and, only when necessary, '
+      + '--discard-local-changes.');
     assert(!argument.startsWith('-'), `Unknown option: ${argument}`);
     assert(!positionalInputSeen, 'Only one input SB3 may be specified.');
     inputPath = path.resolve(argument);
     positionalInputSeen = true;
   }
 
-  return {help: false, inputPath, outputDirectory, force};
+  return {discardLocalChanges, help: false, inputPath, outputDirectory, yes};
 }
 
-async function confirmOutputReplacement(outputDirectory) {
+function formatDifferenceLines(differences) {
+  const labels = {added: '+', modified: '~', removed: '-'};
+  const lines = Object.entries(differences).flatMap(([kind, paths]) => (
+    paths.map((relativePath) => `${labels[kind]} ${relativePath}`)
+  ));
+  const visibleLines = lines.slice(0, 12);
+  if (lines.length > visibleLines.length) {
+    visibleLines.push(`... and ${lines.length - visibleLines.length} more`);
+  }
+  return visibleLines.join('\n');
+}
+
+async function confirmOutputReplacement(context) {
+  const {comparison, discardLocalChanges, gitState, outputDirectory} = context;
   assert(process.stdin.isTTY && process.stdout.isTTY,
     `Output directory already exists: ${outputDirectory}. `
-    + 'Non-interactive replacement requires --force.');
+    + 'Non-interactive replacement requires --yes.');
   const readline = createInterface({input: process.stdin, output: process.stdout});
   try {
+    const gitMessage = gitState.clean
+      ? 'Git state: clean'
+      : `Git state: uncommitted changes will be discarded (${summarizeGitChanges(gitState)})`;
     const answer = await readline.question(
-      `Existing SB3 source directory will be replaced and stale files removed:\n  ${outputDirectory}\nContinue? [y/N] `,
+      `Existing SB3 source differs from the import candidate:\n`
+      + `  ${outputDirectory}\n`
+      + `${formatDifferenceLines(comparison.differences)}\n`
+      + `${gitMessage}\n`
+      + `${discardLocalChanges ? 'WARNING: --discard-local-changes is active.\n' : ''}`
+      + 'Replace the existing source directory? [y/N] ',
     );
     return /^(?:y|yes)$/iu.test(answer.trim());
   } finally {
@@ -375,10 +418,22 @@ async function main() {
     return;
   }
   const result = await importSb3({...options, confirmReplace: confirmOutputReplacement});
-  console.log(
-    `Imported ${result.archiveEntryCount} SB3 entries into ${result.outputDirectory} `
-    + `(${result.assetCount} assets, ${result.embeddedExtensionCount} embedded extensions).`,
-  );
+  if (result.changed) {
+    const differenceMessage = result.differenceCounts
+      ? ` Changes: +${result.differenceCounts.added} `
+        + `~${result.differenceCounts.modified} -${result.differenceCounts.removed}.`
+      : '';
+    console.log(
+      `Imported ${result.archiveEntryCount} SB3 entries into ${result.outputDirectory} `
+      + `(${result.assetCount} assets, ${result.embeddedExtensionCount} embedded extensions).`
+      + differenceMessage,
+    );
+  } else {
+    console.log(`Already up to date; no files changed: ${result.outputDirectory}`);
+  }
+  if (result.rollbackCleanupWarning) {
+    console.warn(result.rollbackCleanupWarning);
+  }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {execFile} from 'node:child_process';
 import {mkdir, mkdtemp, readFile, rm, writeFile} from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -27,6 +28,41 @@ async function writeSb3(filePath, entries) {
   await writeFile(filePath, zipSync(entries, {level: 0}));
 }
 
+function git(arguments_, cwd) {
+  return new Promise((resolve, reject) => {
+    execFile('git', arguments_, {cwd, encoding: 'utf8'}, (error, stdout, stderr) => {
+      if (error) {
+        error.stdout = stdout;
+        error.stderr = stderr;
+        reject(error);
+        return;
+      }
+      resolve(stdout);
+    });
+  });
+}
+
+async function initializeGitRepository(directory) {
+  await git(['init', '--quiet'], directory);
+  await git(['config', 'user.name', 'SB3 Import Test'], directory);
+  await git(['config', 'user.email', 'sb3-import-test@example.invalid'], directory);
+}
+
+async function commitOutput(directory, message = 'track imported output') {
+  await git(['add', 'app'], directory);
+  await git(['commit', '--quiet', '-m', message], directory);
+}
+
+async function writeProjectSb3(filePath, extraProjectProperties = {}) {
+  await writeSb3(filePath, {
+    'project.json': strToU8(JSON.stringify({
+      targets: [],
+      extensionURLs: {},
+      ...extraProjectProperties,
+    })),
+  });
+}
+
 test('imports assets and extracts embedded extensions without changing external URLs', async () => {
   await withTemporaryDirectory(async (directory) => {
     const inputPath = path.join(directory, 'input.sb3');
@@ -52,8 +88,11 @@ test('imports assets and extracts embedded extensions without changing external 
       archiveEntryCount: 2,
       assetCount: 1,
       embeddedExtensionCount: 1,
+      changed: true,
+      differenceCounts: null,
       inputPath,
       outputDirectory,
+      rollbackCleanupWarning: null,
     });
     const importedProjectText = await readFile(
       path.join(outputDirectory, 'project.source.json'),
@@ -100,22 +139,43 @@ test('imports assets and extracts embedded extensions without changing external 
   });
 });
 
-test('replaces a recognized existing output only with explicit force', async () => {
+test('leaves an identical existing output unchanged without Git or confirmation', async () => {
   await withTemporaryDirectory(async (directory) => {
     const inputPath = path.join(directory, 'input.sb3');
     const outputDirectory = path.join(directory, 'app');
-    await writeSb3(inputPath, {
-      'project.json': strToU8(JSON.stringify({targets: [], extensionURLs: {}})),
-    });
+    await writeProjectSb3(inputPath);
     await importSb3({inputPath, outputDirectory});
-    await writeFile(path.join(outputDirectory, 'stale.txt'), 'stale');
-    await writeSb3(inputPath, {
-      'project.json': strToU8(JSON.stringify({targets: [], extensionURLs: {}, updated: true})),
+    let confirmationCalled = false;
+
+    const result = await importSb3({
+      inputPath,
+      outputDirectory,
+      confirmReplace: async () => {
+        confirmationCalled = true;
+        return false;
+      },
     });
 
-    await importSb3({inputPath, outputDirectory, force: true});
+    assert.equal(result.changed, false);
+    assert.deepEqual(result.differenceCounts, {added: 0, modified: 0, removed: 0});
+    assert.equal(confirmationCalled, false);
+  });
+});
 
-    await assert.rejects(readFile(path.join(outputDirectory, 'stale.txt')), {code: 'ENOENT'});
+test('replaces differing Git-clean output with --yes', async () => {
+  await withTemporaryDirectory(async (directory) => {
+    await initializeGitRepository(directory);
+    const inputPath = path.join(directory, 'input.sb3');
+    const outputDirectory = path.join(directory, 'app');
+    await writeProjectSb3(inputPath);
+    await importSb3({inputPath, outputDirectory});
+    await commitOutput(directory);
+    await writeProjectSb3(inputPath, {updated: true});
+
+    const result = await importSb3({inputPath, outputDirectory, yes: true});
+
+    assert.equal(result.changed, true);
+    assert.deepEqual(result.differenceCounts, {added: 0, modified: 1, removed: 0});
     assert.deepEqual(
       JSON.parse(await readFile(path.join(outputDirectory, 'project.source.json'), 'utf8')),
       {targets: [], extensionURLs: {}, updated: true},
@@ -123,89 +183,160 @@ test('replaces a recognized existing output only with explicit force', async () 
   });
 });
 
-test('uses confirmation for recognized output and preserves it when declined', async () => {
+test('shows candidate and Git comparison context and preserves clean output when declined', async () => {
   await withTemporaryDirectory(async (directory) => {
+    await initializeGitRepository(directory);
     const inputPath = path.join(directory, 'input.sb3');
     const outputDirectory = path.join(directory, 'app');
-    await writeSb3(inputPath, {
-      'project.json': strToU8(JSON.stringify({targets: [], extensionURLs: {}})),
-    });
+    await writeProjectSb3(inputPath);
     await importSb3({inputPath, outputDirectory});
-    await writeFile(path.join(outputDirectory, 'marker.txt'), 'preserved');
-    let confirmedPath;
+    await commitOutput(directory);
+    await writeProjectSb3(inputPath, {updated: true});
+    let confirmationContext;
 
     await assert.rejects(
       importSb3({
         inputPath,
         outputDirectory,
-        confirmReplace: async (candidatePath) => {
-          confirmedPath = candidatePath;
+        confirmReplace: async (context) => {
+          confirmationContext = context;
           return false;
         },
       }),
       /cancelled/u,
     );
 
-    assert.equal(confirmedPath, outputDirectory);
-    assert.equal(await readFile(path.join(outputDirectory, 'marker.txt'), 'utf8'), 'preserved');
+    assert.equal(confirmationContext.outputDirectory, outputDirectory);
+    assert.equal(confirmationContext.gitState.clean, true);
+    assert.deepEqual(confirmationContext.comparison.differences, {
+      added: [],
+      modified: ['project.source.json'],
+      removed: [],
+    });
+    assert.equal(
+      JSON.parse(await readFile(path.join(outputDirectory, 'project.source.json'), 'utf8')).updated,
+      undefined,
+    );
   });
 });
 
-test('replaces recognized output after affirmative confirmation', async () => {
+test('refuses non-interactive replacement of differing output without --yes', async () => {
   await withTemporaryDirectory(async (directory) => {
+    await initializeGitRepository(directory);
     const inputPath = path.join(directory, 'input.sb3');
     const outputDirectory = path.join(directory, 'app');
-    await writeSb3(inputPath, {
-      'project.json': strToU8(JSON.stringify({targets: [], extensionURLs: {}})),
-    });
+    await writeProjectSb3(inputPath);
     await importSb3({inputPath, outputDirectory});
-    await writeFile(path.join(outputDirectory, 'stale.txt'), 'stale');
-
-    await importSb3({
-      inputPath,
-      outputDirectory,
-      confirmReplace: async (candidatePath) => candidatePath === outputDirectory,
-    });
-
-    await assert.rejects(readFile(path.join(outputDirectory, 'stale.txt')), {code: 'ENOENT'});
-  });
-});
-
-test('refuses non-interactive replacement without force', async () => {
-  await withTemporaryDirectory(async (directory) => {
-    const inputPath = path.join(directory, 'input.sb3');
-    const outputDirectory = path.join(directory, 'app');
-    await writeSb3(inputPath, {
-      'project.json': strToU8(JSON.stringify({targets: [], extensionURLs: {}})),
-    });
-    await importSb3({inputPath, outputDirectory});
+    await commitOutput(directory);
+    await writeProjectSb3(inputPath, {updated: true});
 
     await assert.rejects(
       importSb3({inputPath, outputDirectory}),
-      /interactive confirmation or --force/u,
-    );
-    assert.equal(
-      JSON.parse(await readFile(path.join(outputDirectory, 'sb3-source.json'), 'utf8')).formatVersion,
-      1,
+      /interactive confirmation or --yes/u,
     );
   });
 });
 
-test('refuses to replace an unrecognized directory even with force', async () => {
+test('refuses to discard uncommitted output changes with --yes alone', async () => {
+  await withTemporaryDirectory(async (directory) => {
+    await initializeGitRepository(directory);
+    const inputPath = path.join(directory, 'input.sb3');
+    const outputDirectory = path.join(directory, 'app');
+    await writeProjectSb3(inputPath);
+    await importSb3({inputPath, outputDirectory});
+    await commitOutput(directory);
+    await writeFile(path.join(outputDirectory, 'project.source.json'), '{"manual":true}\n');
+    await git(['add', 'app/project.source.json'], directory);
+
+    await assert.rejects(
+      importSb3({inputPath, outputDirectory, yes: true}),
+      /uncommitted Git changes/u,
+    );
+    assert.equal(
+      await readFile(path.join(outputDirectory, 'project.source.json'), 'utf8'),
+      '{"manual":true}\n',
+    );
+  });
+});
+
+test('requires a separate explicit option to discard uncommitted output changes', async () => {
+  await withTemporaryDirectory(async (directory) => {
+    await initializeGitRepository(directory);
+    const inputPath = path.join(directory, 'input.sb3');
+    const outputDirectory = path.join(directory, 'app');
+    await writeProjectSb3(inputPath);
+    await importSb3({inputPath, outputDirectory});
+    await commitOutput(directory);
+    await writeFile(path.join(outputDirectory, 'project.source.json'), '{"manual":true}\n');
+    await writeFile(path.join(outputDirectory, 'untracked.txt'), 'remove me');
+
+    const result = await importSb3({
+      discardLocalChanges: true,
+      inputPath,
+      outputDirectory,
+      yes: true,
+    });
+
+    assert.equal(result.changed, true);
+    await assert.rejects(readFile(path.join(outputDirectory, 'untracked.txt')), {code: 'ENOENT'});
+    assert.deepEqual(
+      JSON.parse(await readFile(path.join(outputDirectory, 'project.source.json'), 'utf8')),
+      {targets: [], extensionURLs: {}},
+    );
+  });
+});
+
+test('refuses to replace differing output that is not Git-managed', async () => {
+  await withTemporaryDirectory(async (directory) => {
+    const inputPath = path.join(directory, 'input.sb3');
+    const outputDirectory = path.join(directory, 'app');
+    await writeProjectSb3(inputPath);
+    await importSb3({inputPath, outputDirectory});
+    await writeProjectSb3(inputPath, {updated: true});
+
+    await assert.rejects(
+      importSb3({discardLocalChanges: true, inputPath, outputDirectory, yes: true}),
+      /not tracked by Git/u,
+    );
+  });
+});
+
+test('refuses to replace an unrecognized directory with any override', async () => {
   await withTemporaryDirectory(async (directory) => {
     const inputPath = path.join(directory, 'input.sb3');
     const outputDirectory = path.join(directory, 'unrelated');
-    await writeSb3(inputPath, {
-      'project.json': strToU8(JSON.stringify({targets: [], extensionURLs: {}})),
-    });
+    await writeProjectSb3(inputPath);
     await mkdir(outputDirectory);
     await writeFile(path.join(outputDirectory, 'marker.txt'), 'preserved');
 
     await assert.rejects(
-      importSb3({inputPath, outputDirectory, force: true}),
+      importSb3({discardLocalChanges: true, inputPath, outputDirectory, yes: true}),
       /unrecognized directory/u,
     );
     assert.equal(await readFile(path.join(outputDirectory, 'marker.txt'), 'utf8'), 'preserved');
+  });
+});
+
+test('reports an interrupted rollback before treating identical output as up to date', async () => {
+  await withTemporaryDirectory(async (directory) => {
+    await initializeGitRepository(directory);
+    const inputPath = path.join(directory, 'input.sb3');
+    const outputDirectory = path.join(directory, 'app');
+    const rollbackDirectory = path.join(directory, '.app.rollback-preserved');
+    await writeProjectSb3(inputPath);
+    await importSb3({inputPath, outputDirectory});
+    await commitOutput(directory);
+    await mkdir(rollbackDirectory);
+    await writeFile(path.join(rollbackDirectory, 'marker.txt'), 'preserved');
+
+    await assert.rejects(
+      importSb3({inputPath, outputDirectory}),
+      /interrupted SB3 import rollback/u,
+    );
+    assert.equal(
+      await readFile(path.join(rollbackDirectory, 'marker.txt'), 'utf8'),
+      'preserved',
+    );
   });
 });
 
@@ -254,15 +385,23 @@ test('validates archive names, extension data URLs, and CLI arguments', () => {
 
   assert.deepEqual(parseCliArguments(['--', '--help']), {help: true});
   assert.deepEqual(
-    parseCliArguments(['project.sb3', '--output', 'generated', '--yes']),
+    parseCliArguments([
+      'project.sb3',
+      '--output',
+      'generated',
+      '--yes',
+      '--discard-local-changes',
+    ]),
     {
+      discardLocalChanges: true,
       help: false,
       inputPath: path.resolve('project.sb3'),
       outputDirectory: path.resolve('generated'),
-      force: true,
+      yes: true,
     },
   );
   assert.throws(() => parseCliArguments(['--output']), /requires a directory/u);
+  assert.throws(() => parseCliArguments(['--force']), /intentionally unsupported/u);
   assert.throws(() => parseCliArguments(['one.sb3', 'two.sb3']), /Only one input/u);
 });
 
