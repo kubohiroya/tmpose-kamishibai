@@ -24,6 +24,10 @@
         "D`?cWhHoPc.w2ufFi}1]": [
           "poseIndex",
           1
+        ],
+        "tmposeEmbeddedScript": [
+          "__tmpose_embedded_script",
+          ""
         ]
       },
       "lists": {
@@ -12972,7 +12976,156 @@
             ],
             "SUBSTACK": [
               2,
+              "embeddedScriptChoice"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "embeddedScriptChoice": {
+          "opcode": "control_if_else",
+          "next": null,
+          "parent": "bI",
+          "inputs": {
+            "CONDITION": [
+              2,
+              "embeddedScriptPresent"
+            ],
+            "SUBSTACK": [
+              2,
+              "embeddedSkipClear"
+            ],
+            "SUBSTACK2": [
+              2,
               "gl"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "embeddedScriptPresent": {
+          "opcode": "operator_not",
+          "next": null,
+          "parent": "embeddedScriptChoice",
+          "inputs": {
+            "OPERAND": [
+              2,
+              "embeddedScriptEmpty"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "embeddedScriptEmpty": {
+          "opcode": "operator_equals",
+          "next": null,
+          "parent": "embeddedScriptPresent",
+          "inputs": {
+            "OPERAND1": [
+              3,
+              "embeddedScriptValueForCheck",
+              [
+                10,
+                ""
+              ]
+            ],
+            "OPERAND2": [
+              1,
+              [
+                10,
+                ""
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "embeddedScriptValueForCheck": {
+          "opcode": "data_variable",
+          "next": null,
+          "parent": "embeddedScriptEmpty",
+          "inputs": {},
+          "fields": {
+            "VARIABLE": [
+              "__tmpose_embedded_script",
+              "tmposeEmbeddedScript"
+            ]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "embeddedSkipClear": {
+          "opcode": "lmsTempVars2_deleteRuntimeVariable",
+          "next": "embeddedSetScript",
+          "parent": "embeddedScriptChoice",
+          "inputs": {
+            "VAR": [
+              1,
+              [
+                10,
+                "skipMode"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "embeddedSetScript": {
+          "opcode": "lmsTempVars2_setRuntimeVariable",
+          "next": "embeddedStartStory",
+          "parent": "embeddedSkipClear",
+          "inputs": {
+            "VAR": [
+              1,
+              [
+                10,
+                "script"
+              ]
+            ],
+            "STRING": [
+              3,
+              "embeddedScriptValueForStart",
+              [
+                10,
+                ""
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "embeddedScriptValueForStart": {
+          "opcode": "data_variable",
+          "next": null,
+          "parent": "embeddedSetScript",
+          "inputs": {},
+          "fields": {
+            "VARIABLE": [
+              "__tmpose_embedded_script",
+              "tmposeEmbeddedScript"
+            ]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "embeddedStartStory": {
+          "opcode": "event_broadcastandwait",
+          "next": null,
+          "parent": "embeddedSetScript",
+          "inputs": {
+            "BROADCAST_INPUT": [
+              1,
+              [
+                11,
+                "startStory",
+                "6Pyo=N[k$}0.Pxna2e6)"
+              ]
             ]
           },
           "fields": {},
@@ -19786,7 +19939,7 @@
         "gl": {
           "opcode": "lmsTempVars2_deleteRuntimeVariable",
           "next": "l@",
-          "parent": "bI",
+          "parent": "embeddedScriptChoice",
           "inputs": {
             "VAR": [
               1,

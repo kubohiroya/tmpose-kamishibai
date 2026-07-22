@@ -260,10 +260,11 @@ tmpose-kamishibai build-sb3 \
   --base kamishibai.sb3 \
   --script source.txt \
   --assets assets.lock.json \
-  --output dist/sample
+  --output dist/_sample \
+  --profile editor
 ```
 
-このコマンドは`dist/sample.sb3`、`dist/sample.txt`、`dist/sample.manifest.json`を検証してから一括で確定します。API、アセットマニフェスト、ネットワークとファイルの安全設定、決定的出力、エラー、ロールバックの詳細は[`docs/general/06-developer-guide.md`](docs/general/06-developer-guide.md)を参照してください。
+このコマンドは編集用の`dist/_sample.sb3`、`dist/_sample.txt`、`dist/_sample.manifest.json`を検証してから一括で確定します。配布・再生用は出力名から先頭`_`を外し、`--profile player`を指定すると、同じ変換済み台本をSB3内にも組み込みます。API、アセットマニフェスト、ネットワークとファイルの安全設定、決定的出力、エラー、ロールバックの詳細は[`docs/general/06-developer-guide.md`](docs/general/06-developer-guide.md)を参照してください。
 
 ## バージョン
 

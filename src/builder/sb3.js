@@ -1,6 +1,7 @@
 import {strFromU8, strToU8, unzipSync, zipSync} from 'fflate';
 
 import {fixedZipTimestamp} from './constants.js';
+import {configureEmbeddedScript} from './embedded-script.js';
 import {Sb3BuilderError, toAssetError} from './errors.js';
 import {md5} from './hash.js';
 
@@ -78,10 +79,17 @@ function findTarget(project, targetName) {
 /**
  * @param {Buffer | Uint8Array} baseArchiveBytes
  * @param {import('./assets.js').ResolvedAsset[]} resolvedAssets
+ * @param {{profile: 'editor' | 'player', scriptBytes: Buffer | Uint8Array, maxEmbeddedScriptBytes?: number}} options
  */
-export function buildSb3Archive(baseArchiveBytes, resolvedAssets) {
+export function buildSb3Archive(baseArchiveBytes, resolvedAssets, options) {
   const {archive, project: baseProject} = readSb3(baseArchiveBytes);
   const project = structuredClone(baseProject);
+  configureEmbeddedScript(
+    project,
+    options.profile,
+    options.scriptBytes,
+    options.maxEmbeddedScriptBytes,
+  );
   const mappings = [];
   for (const resolved of resolvedAssets) {
     const {contents, entry} = resolved;

@@ -50,6 +50,11 @@ export class KamishibaiVmHarness {
     this.step();
   }
 
+  clickStage() {
+    this.vm.runtime.startHats('event_whenstageclicked');
+    this.step();
+  }
+
   triggerAsyncKey(keyId) {
     this.extensionState.asyncInput.emitKey(keyId);
     this.step();

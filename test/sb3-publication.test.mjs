@@ -130,6 +130,32 @@ test('keeps the generic app source free of Urashima sample content', async () =>
   const sampleAssetNames = ['Beach1', 'Dragon Castle', 'Ocean Wave', 'Urashima-old-2'];
 
   assert(genericStage, 'The generic app source has no Stage target.');
+  assert.deepEqual(genericStage.variables?.tmposeEmbeddedScript, [
+    '__tmpose_embedded_script',
+    '',
+  ]);
+  assert.equal(
+    genericProject.monitors.some((monitor) => monitor.id === 'tmposeEmbeddedScript'),
+    false,
+    'The reserved embedded script variable must not have a monitor.',
+  );
+  assert.equal(genericStage.blocks.embeddedScriptChoice?.opcode, 'control_if_else');
+  assert.equal(
+    genericStage.blocks.embeddedSetScript?.opcode,
+    'lmsTempVars2_setRuntimeVariable',
+  );
+  assert.deepEqual(genericStage.blocks.embeddedSetScript?.inputs?.VAR, [
+    1,
+    [10, 'script'],
+  ]);
+  assert.equal(
+    genericStage.blocks.embeddedStartStory?.inputs?.BROADCAST_INPUT?.[1]?.[1],
+    'startStory',
+  );
+  assert.equal(
+    genericStage.blocks['l@']?.inputs?.BROADCAST_INPUT?.[1]?.[1],
+    'showCover',
+  );
   for (const list of Object.values(genericStage.lists ?? {})) {
     assert.deepEqual(list[1], [], `Generic runtime list is not empty: ${list[0]}`);
   }

@@ -1,6 +1,13 @@
 import {strFromU8, unzipSync} from 'fflate';
 
-import {bundleManifestFormatVersion, packageName, packageVersion} from './constants.js';
+import {
+  builderProfiles,
+  bundleManifestFormatVersion,
+  embeddedScriptVariableId,
+  packageName,
+  packageVersion,
+} from './constants.js';
+import {resolveEmbeddedScriptSlot} from './embedded-script.js';
 import {Sb3BuilderError} from './errors.js';
 import {sha256} from './hash.js';
 import {collectAssetLines} from './script.js';
@@ -33,6 +40,7 @@ export function validateBundle(bundle) {
     manifest.builder?.package === packageName && manifest.builder?.version === packageVersion,
     'Output manifest builder identity is invalid.',
   );
+  assert(builderProfiles.includes(manifest.profile), 'Output manifest profile is invalid.');
   assert(
     manifest.outputs?.sb3?.sha256 === sha256(bundle.sb3Bytes),
     'Output SB3 SHA-256 does not match manifest.',
@@ -47,6 +55,23 @@ export function validateBundle(bundle) {
   const project = JSON.parse(strFromU8(projectEntry));
   assert(Array.isArray(project.targets), 'Generated SB3 project has no targets array.');
   const script = new TextDecoder('utf-8', {fatal: true}).decode(bundle.scriptBytes);
+  const expectedScriptMode = manifest.profile === 'player' ? 'embedded' : 'external';
+  assert(manifest.script?.mode === expectedScriptMode, 'Output manifest script mode is invalid.');
+  assert(
+    manifest.script?.embeddedVariableId ===
+      (manifest.profile === 'player' ? embeddedScriptVariableId : null),
+    'Output manifest embedded script variable is invalid.',
+  );
+  assert(
+    manifest.script?.size === bundle.scriptBytes.length &&
+      manifest.script?.sha256 === sha256(bundle.scriptBytes),
+    'Output manifest script metadata does not match the transformed script.',
+  );
+  const embeddedScript = resolveEmbeddedScriptSlot(project, 'validate-output')[1];
+  assert(
+    embeddedScript === (manifest.profile === 'player' ? script : ''),
+    'Generated SB3 embedded script does not match its profile and external script.',
+  );
   const scriptAssets = new Map(
     collectAssetLines(script).map((asset) => [asset.name, asset.reference]),
   );

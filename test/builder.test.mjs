@@ -7,7 +7,7 @@ import test from 'node:test';
 import {clearTimeout, setTimeout} from 'node:timers';
 import {fileURLToPath} from 'node:url';
 
-import {strFromU8, unzipSync} from 'fflate';
+import {strFromU8, strToU8, unzipSync, zipSync} from 'fflate';
 
 import {installBundleTransactionally} from '../src/builder/atomic-output.js';
 import {parseCliArguments, runCli} from '../src/builder/cli.js';
@@ -18,6 +18,7 @@ import {
   validateBundle,
 } from '../src/builder/index.js';
 import {createDeterministicSb3} from '../scripts/sb3/source.mjs';
+import {embeddedScriptVariableId, embeddedScriptVariableName} from '../src/builder/constants.js';
 import {loadKamishibaiVm} from './helpers/turbowarp-vm.mjs';
 
 const projectRoot = fileURLToPath(new URL('../', import.meta.url));
@@ -39,6 +40,19 @@ async function withTemporaryDirectory(callback) {
 
 async function writeJson(filePath, value) {
   await writeFile(filePath, `${JSON.stringify(value, null, 2)}\n`);
+}
+
+/**
+ * @param {string} inputPath
+ * @param {string} outputPath
+ * @param {(project: Record<string, any>) => void} updateProject
+ */
+async function rewriteSb3Project(inputPath, outputPath, updateProject) {
+  const archive = unzipSync(new Uint8Array(await readFile(inputPath)));
+  const project = JSON.parse(strFromU8(archive['project.json']));
+  updateProject(project);
+  archive['project.json'] = strToU8(`${JSON.stringify(project)}\n`);
+  await writeFile(outputPath, zipSync(archive));
 }
 
 function imageEntry({name, uri, kind, target, sb3Name, contents}) {
@@ -102,8 +116,14 @@ async function writeFileFixture(directory) {
     'asset=Hero,file:assets/costume.svg',
     'asset=StageAudio,file:assets/stage.wav',
     'asset=ActorAudio,file:assets/sprite.wav',
-    'scene=first',
-    'text=本文は変更しない',
+    'asset=Title,backdrop',
+    'text=Narration:本文は変更しない',
+    'actor=Hero,Hero',
+    'cover=Title,',
+    '---',
+    'sceneLabel=first',
+    'action=stage:Scene',
+    'action=wait:30',
     '',
   ].join('\r\n');
   await writeFile(sourceScriptPath, source);
@@ -172,6 +192,7 @@ test('builds all asset kinds, transforms only active asset lines, and preserves 
       assetManifest: fixture.assetManifestPath,
       outputDirectory: fixture.outputDirectory,
       outputName: 'sample',
+      profile: 'editor',
     });
     const outputSb3 = await readFile(first.outputPaths['sample.sb3']);
     const outputScript = await readFile(first.outputPaths['sample.txt']);
@@ -189,7 +210,7 @@ test('builds all asset kinds, transforms only active asset lines, and preserves 
     assert.match(validated.script, /^asset=Hero,costume:Actor:Builder Hero$/mu);
     assert.match(validated.script, /^asset=StageAudio,sound:@stage:Builder Stage Audio$/mu);
     assert.match(validated.script, /^asset=ActorAudio,sound:Actor:Builder Actor Audio$/mu);
-    assert.match(validated.script, /^text=本文は変更しない\r$/mu);
+    assert.match(validated.script, /^text=Narration:本文は変更しない\r$/mu);
     assert.equal(validated.script.includes('\r\n'), true);
 
     const outputProject = validated.project;
@@ -209,7 +230,15 @@ test('builds all asset kinds, transforms only active asset lines, and preserves 
     assert(stage.sounds.some(({name}) => name === 'Builder Stage Audio'));
     assert(actor.costumes.some(({name}) => name === 'Builder Hero'));
     assert(actor.sounds.some(({name}) => name === 'Builder Actor Audio'));
+    assert.equal(outputManifest.formatVersion, 2);
     assert.equal(outputManifest.assets.length, 4);
+    assert.equal(outputManifest.profile, 'editor');
+    assert.deepEqual(outputManifest.script, {
+      mode: 'external',
+      embeddedVariableId: null,
+      size: outputScript.length,
+      sha256: sha256(outputScript),
+    });
     assert.equal(outputManifest.outputs.sb3.sha256, sha256(outputSb3));
     assert.equal(outputManifest.outputs.script.sha256, sha256(outputScript));
 
@@ -224,6 +253,7 @@ test('builds all asset kinds, transforms only active asset lines, and preserves 
       assetManifest: fixture.assetManifestPath,
       outputDirectory: secondDirectory,
       outputName: 'sample',
+      profile: 'editor',
     });
     assert.deepEqual(await readFile(second.outputPaths['sample.sb3']), outputSb3);
     assert.deepEqual(await readFile(second.outputPaths['sample.txt']), outputScript);
@@ -234,6 +264,93 @@ test('builds all asset kinds, transforms only active asset lines, and preserves 
 
     const vmHarness = await loadKamishibaiVm({sb3Path: first.outputPaths['sample.sb3']});
     vmHarness.quit();
+  });
+});
+
+test('builds a player with the exact transformed script and starts it from the title click', async (context) => {
+  await withTemporaryDirectory(async (directory) => {
+    const fixture = await writeFileFixture(directory);
+    const playerSourcePath = path.join(fixture.inputDirectory, 'player-source.txt');
+    await writeFile(
+      playerSourcePath,
+      [
+        'kamishibai=3.1',
+        '# Unicode=日本語のコメント',
+        'asset=Scene,file:assets/backdrop.svg',
+        'asset=StageAudio,file:assets/stage.wav',
+        'asset=Title,backdrop',
+        'cover=Title,',
+        '---',
+        'sceneLabel=first',
+        'action=stage:Scene',
+        'action=wait:30',
+        '',
+      ].join('\n'),
+    );
+    const result = await buildSb3Bundle({
+      baseSb3: fixture.baseSb3Path,
+      sourceScript: playerSourcePath,
+      assetManifest: {
+        formatVersion: 1,
+        assets: [fixture.manifest.assets[0], fixture.manifest.assets[2]],
+      },
+      manifestBaseDirectory: fixture.inputDirectory,
+      outputDirectory: fixture.outputDirectory,
+      outputName: 'player',
+      profile: 'player',
+    });
+    const sb3Bytes = await readFile(result.outputPaths['player.sb3']);
+    const scriptBytes = await readFile(result.outputPaths['player.txt']);
+    const manifest = JSON.parse(await readFile(result.outputPaths['player.manifest.json'], 'utf8'));
+    const validated = validateBundle({sb3Bytes, scriptBytes, manifest});
+    const stage = validated.project.targets.find((target) => target.isStage);
+
+    assert.equal(manifest.profile, 'player');
+    assert.deepEqual(manifest.script, {
+      mode: 'embedded',
+      embeddedVariableId: embeddedScriptVariableId,
+      size: scriptBytes.length,
+      sha256: sha256(scriptBytes),
+    });
+    assert.equal(stage.variables[embeddedScriptVariableId][0], embeddedScriptVariableName);
+    assert.equal(stage.variables[embeddedScriptVariableId][1], validated.script);
+
+    const harness = await loadKamishibaiVm({sb3Path: result.outputPaths['player.sb3']});
+    context.after(() => harness.quit());
+    harness.extensionState.localStorage.set('script', 'stale localStorage script');
+    harness.greenFlag();
+    harness.runUntil(() => harness.getRuntimeVariable('skipMode') === 'title');
+    harness.setRuntimeVariable('script', 'stale script from another session');
+    harness.clickStage();
+    harness.runUntil(() => harness.getBackdropName() === 'Builder Scene');
+
+    assert.equal(harness.getRuntimeVariable('script'), validated.script);
+    assert.equal(
+      harness.extensionState.assets.get('StageAudio'),
+      'sound:@stage:Builder Stage Audio',
+    );
+    assert.equal(harness.extensionState.filePickerRequests, 0);
+    assert.equal(harness.hasRuntimeVariable('skipMode'), false);
+
+    const secondDirectory = path.join(directory, 'second-player-output');
+    const second = await buildSb3Bundle({
+      baseSb3: fixture.baseSb3Path,
+      sourceScript: playerSourcePath,
+      assetManifest: {
+        formatVersion: 1,
+        assets: [fixture.manifest.assets[0], fixture.manifest.assets[2]],
+      },
+      manifestBaseDirectory: fixture.inputDirectory,
+      outputDirectory: secondDirectory,
+      outputName: 'player',
+      profile: 'player',
+    });
+    for (const filename of ['player.sb3', 'player.txt', 'player.manifest.json']) {
+      assert.deepEqual(
+        await readFile(second.outputPaths[filename]),
+        await readFile(result.outputPaths[filename]),
+      );
+    }
   });
 });
 
@@ -290,6 +407,7 @@ test('resolves locked HTTP and HTTPS assets through the same builder core', asyn
         manifestBaseDirectory: fixture.inputDirectory,
         outputDirectory: fixture.outputDirectory,
         outputName: 'remote',
+        profile: 'editor',
         fetchImplementation,
       }),
       /Plain HTTP is disabled/u,
@@ -301,6 +419,7 @@ test('resolves locked HTTP and HTTPS assets through the same builder core', asyn
       manifestBaseDirectory: fixture.inputDirectory,
       outputDirectory: fixture.outputDirectory,
       outputName: 'remote',
+      profile: 'editor',
       fetchImplementation,
       allowHttp: true,
     });
@@ -354,6 +473,7 @@ test('rejects missing, escaped, and symlink-escaped file assets with asset conte
           manifestBaseDirectory: fixture.inputDirectory,
           outputDirectory: fixture.outputDirectory,
           outputName: 'unsafe',
+          profile: 'editor',
         }),
         (error) => {
           assert(error instanceof Sb3BuilderError);
@@ -389,6 +509,7 @@ test('rejects HTTP failures, redirects, type, size, and hash mismatches', async 
         manifestBaseDirectory: fixture.inputDirectory,
         outputDirectory: fixture.outputDirectory,
         outputName: 'failure',
+        profile: 'editor',
         fetchImplementation,
         ...extra,
       });
@@ -513,6 +634,7 @@ test('rejects missing mappings, name conflicts, kind conflicts, and existing SB3
         manifestBaseDirectory: fixture.inputDirectory,
         outputDirectory: fixture.outputDirectory,
         outputName: 'unmapped',
+        profile: 'editor',
       }),
       /External asset has no manifest entry/u,
     );
@@ -528,8 +650,89 @@ test('rejects missing mappings, name conflicts, kind conflicts, and existing SB3
         manifestBaseDirectory: fixture.inputDirectory,
         outputDirectory: fixture.outputDirectory,
         outputName: 'conflict',
+        profile: 'editor',
       }),
       /SB3 asset name already exists/u,
+    );
+  });
+});
+
+test('requires an explicit builder profile and validates the reserved embedded script slot', async () => {
+  await assert.rejects(
+    buildSb3Bundle({
+      baseSb3: 'base.sb3',
+      sourceScript: 'source.txt',
+      assetManifest: 'assets.lock.json',
+      outputDirectory: 'dist',
+      outputName: 'missing-profile',
+    }),
+    /profile must be either editor or player/u,
+  );
+
+  await withTemporaryDirectory(async (directory) => {
+    const fixture = await writeFileFixture(directory);
+    const cases = [
+      {
+        name: 'missing',
+        update(project) {
+          const stage = project.targets.find((target) => target.isStage);
+          delete stage.variables[embeddedScriptVariableId];
+        },
+        expected: /must resolve exactly once/u,
+      },
+      {
+        name: 'duplicate',
+        update(project) {
+          const stage = project.targets.find((target) => target.isStage);
+          stage.variables.duplicateEmbeddedScript = [embeddedScriptVariableName, ''];
+        },
+        expected: /must resolve exactly once/u,
+      },
+      {
+        name: 'invalid-type',
+        update(project) {
+          const stage = project.targets.find((target) => target.isStage);
+          stage.variables[embeddedScriptVariableId][1] = 123;
+        },
+        expected: /must contain a string value/u,
+      },
+      {
+        name: 'non-empty-base',
+        update(project) {
+          const stage = project.targets.find((target) => target.isStage);
+          stage.variables[embeddedScriptVariableId][1] = 'unexpected';
+        },
+        expected: /must be empty/u,
+      },
+    ];
+
+    for (const testCase of cases) {
+      const baseSb3 = path.join(fixture.inputDirectory, `${testCase.name}.sb3`);
+      await rewriteSb3Project(fixture.baseSb3Path, baseSb3, testCase.update);
+      await assert.rejects(
+        buildSb3Bundle({
+          baseSb3,
+          sourceScript: fixture.sourceScriptPath,
+          assetManifest: fixture.assetManifestPath,
+          outputDirectory: fixture.outputDirectory,
+          outputName: testCase.name,
+          profile: 'player',
+        }),
+        testCase.expected,
+      );
+    }
+
+    await assert.rejects(
+      buildSb3Bundle({
+        baseSb3: fixture.baseSb3Path,
+        sourceScript: fixture.sourceScriptPath,
+        assetManifest: fixture.assetManifestPath,
+        outputDirectory: fixture.outputDirectory,
+        outputName: 'too-large',
+        profile: 'player',
+        maxEmbeddedScriptBytes: 1,
+      }),
+      /exceeds the 1 byte limit/u,
     );
   });
 });
@@ -543,6 +746,7 @@ test('keeps all existing outputs when generation or installation fails', async (
       assetManifest: fixture.assetManifestPath,
       outputDirectory: fixture.outputDirectory,
       outputName: 'stable',
+      profile: 'editor',
     });
     const filenames = ['stable.sb3', 'stable.txt', 'stable.manifest.json'];
     const before = await Promise.all(
@@ -558,6 +762,7 @@ test('keeps all existing outputs when generation or installation fails', async (
         manifestBaseDirectory: fixture.inputDirectory,
         outputDirectory: fixture.outputDirectory,
         outputName: 'stable',
+        profile: 'editor',
       }),
       /SHA-256 mismatch/u,
     );
@@ -602,22 +807,40 @@ test('keeps all existing outputs when generation or installation fails', async (
 
 test('exposes one CLI contract and a fixed installable package version', async () => {
   assert.deepEqual(parseCliArguments(['--version']), {action: 'version'});
-  assert.equal(
-    parseCliArguments([
-      'build-sb3',
-      '--base',
-      'base.sb3',
-      '--script',
-      'source.txt',
-      '--assets',
-      'assets.json',
-      '--output',
-      'dist/sample',
-      '--allow-http',
-    ]).action,
-    'build',
-  );
+  const parsed = parseCliArguments([
+    'build-sb3',
+    '--base',
+    'base.sb3',
+    '--script',
+    'source.txt',
+    '--assets',
+    'assets.json',
+    '--output',
+    'dist/sample',
+    '--profile',
+    'editor',
+    '--allow-http',
+  ]);
+  assert.equal(parsed.action, 'build');
+  assert.equal(parsed.options.profile, 'editor');
   assert.throws(() => parseCliArguments(['build-sb3']), /Missing required option/u);
+  assert.throws(
+    () =>
+      parseCliArguments([
+        'build-sb3',
+        '--base',
+        'base.sb3',
+        '--script',
+        'source.txt',
+        '--assets',
+        'assets.json',
+        '--output',
+        'dist/sample',
+        '--profile',
+        'generic',
+      ]),
+    /--profile must be either editor or player/u,
+  );
 
   await withTemporaryDirectory(async (directory) => {
     const fixture = await writeFileFixture(directory);
@@ -633,6 +856,8 @@ test('exposes one CLI contract and a fixed installable package version', async (
         fixture.assetManifestPath,
         '--output',
         path.join(fixture.outputDirectory, 'cli-sample'),
+        '--profile',
+        'editor',
       ],
       {
         stdout: {

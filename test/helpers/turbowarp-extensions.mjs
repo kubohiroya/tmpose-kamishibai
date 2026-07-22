@@ -30,6 +30,7 @@ export function registerKamishibaiTestExtensions(vm, clock) {
     actorSkins: new Map(),
     asyncInput: null,
     assets: new Map(),
+    filePickerRequests: 0,
     keyInputBindings: new Map(),
     localStorage: new Map(),
     playingSounds: new Set(),
@@ -449,7 +450,10 @@ export function registerKamishibaiTestExtensions(vm, clock) {
     menu_automaticallyOpen(args) { return args.automaticallyOpen ?? ''; }
     menu_encoding(args) { return args.encoding ?? ''; }
     setOpenMode() {}
-    showPickerExtensionsAs() {}
+    showPickerExtensionsAs() {
+      state.filePickerRequests += 1;
+      return '';
+    }
   }
 
   class TextExtension {
