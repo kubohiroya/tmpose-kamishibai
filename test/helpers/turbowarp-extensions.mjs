@@ -1,0 +1,409 @@
+import {createRequire} from 'node:module';
+
+const require = createRequire(import.meta.url);
+const BlockType = require('scratch-vm/src/extension-support/block-type');
+const Cast = require('scratch-vm/src/util/cast');
+
+function block(opcode, blockType = BlockType.COMMAND, argumentNames = []) {
+  return {
+    opcode,
+    blockType,
+    text: opcode,
+    arguments: Object.fromEntries(argumentNames.map((name) => [name, {
+      type: 'string',
+      defaultValue: '',
+    }])),
+  };
+}
+
+function extensionInfo(id, blocks) {
+  return {id, name: id, blocks};
+}
+
+function register(vm, id, ExtensionClass) {
+  vm.extensionManager.addBuiltinExtension(id, ExtensionClass);
+}
+
+export function registerKamishibaiTestExtensions(vm, clock) {
+  const state = {
+    actorSequences: new Map(),
+    actorSkins: new Map(),
+    assets: new Map(),
+    localStorage: new Map(),
+    playingSounds: new Set(),
+    timers: new Map(),
+    tempVariables: null,
+  };
+
+  class ConsoleExtension {
+    getInfo() {
+      return extensionInfo('sipcconsole', [
+        block('Emptying'),
+        block('Error', BlockType.COMMAND, ['string']),
+        block('Journal', BlockType.COMMAND, ['string']),
+        block('debug', BlockType.COMMAND, ['string']),
+      ]);
+    }
+    Emptying() {}
+    Error() {}
+    Journal() {}
+    debug() {}
+  }
+
+  class TempVariablesExtension {
+    constructor(runtime) {
+      this.runtimeVariables = Object.create(null);
+      state.tempVariables = this;
+      runtime.on('PROJECT_START', () => this.resetRuntimeVariables());
+      runtime.on('PROJECT_STOP_ALL', () => this.resetRuntimeVariables());
+    }
+    getInfo() {
+      return extensionInfo('lmsTempVars2', [
+        block('setThreadVariable', BlockType.COMMAND, ['VAR', 'STRING']),
+        block('changeThreadVariable', BlockType.COMMAND, ['VAR', 'NUM']),
+        block('getThreadVariable', BlockType.REPORTER, ['VAR']),
+        block('setRuntimeVariable', BlockType.COMMAND, ['VAR', 'STRING']),
+        block('changeRuntimeVariable', BlockType.COMMAND, ['VAR', 'NUM']),
+        block('getRuntimeVariable', BlockType.REPORTER, ['VAR']),
+        block('runtimeVariableExists', BlockType.BOOLEAN, ['VAR']),
+        block('deleteRuntimeVariable', BlockType.COMMAND, ['VAR']),
+      ]);
+    }
+    threadVariables(util) {
+      if (!util.thread.variables) {
+        util.thread.variables = Object.create(null);
+      }
+      return util.thread.variables;
+    }
+    setThreadVariable(args, util) {
+      this.threadVariables(util)[args.VAR] = args.STRING;
+    }
+    changeThreadVariable(args, util) {
+      const variables = this.threadVariables(util);
+      variables[args.VAR] = Cast.toNumber(variables[args.VAR]) + Cast.toNumber(args.NUM);
+    }
+    getThreadVariable(args, util) {
+      return this.threadVariables(util)[args.VAR] ?? '';
+    }
+    setRuntimeVariable(args) {
+      this.runtimeVariables[args.VAR] = args.STRING;
+    }
+    changeRuntimeVariable(args) {
+      this.runtimeVariables[args.VAR]
+        = Cast.toNumber(this.runtimeVariables[args.VAR]) + Cast.toNumber(args.NUM);
+    }
+    getRuntimeVariable(args) {
+      return this.runtimeVariables[args.VAR] ?? '';
+    }
+    runtimeVariableExists(args) {
+      return Object.hasOwn(this.runtimeVariables, args.VAR);
+    }
+    deleteRuntimeVariable(args) {
+      Reflect.deleteProperty(this.runtimeVariables, args.VAR);
+    }
+    resetRuntimeVariables() {
+      this.runtimeVariables = Object.create(null);
+    }
+  }
+
+  class StringsExtension {
+    getInfo() {
+      return extensionInfo('strings', [
+        block('count', BlockType.REPORTER, ['SUBSTRING', 'STRING']),
+        block('identical', BlockType.BOOLEAN, ['OPERAND1', 'OPERAND2']),
+        block('indexof', BlockType.REPORTER, ['SUBSTRING', 'STRING']),
+        block('letters_of', BlockType.REPORTER, ['LETTER1', 'LETTER2', 'STRING']),
+        block('menu_positions', BlockType.REPORTER),
+        block('menu_trimMethod', BlockType.REPORTER),
+        block('posWith', BlockType.BOOLEAN, ['STRING', 'POSITION', 'SUBSTRING']),
+        block('replaceRegex', BlockType.REPORTER, ['REGEX', 'FLAGS', 'STRING', 'REPLACE']),
+        block('split', BlockType.REPORTER, ['ITEM', 'STRING', 'SPLIT']),
+        block('trim', BlockType.REPORTER, ['STRING', 'METHOD']),
+      ]);
+    }
+    count(args) {
+      const string = Cast.toString(args.STRING);
+      const substring = Cast.toString(args.SUBSTRING);
+      return substring ? string.split(substring).length - 1 : 0;
+    }
+    identical(args) {
+      return Cast.toString(args.OPERAND1) === Cast.toString(args.OPERAND2);
+    }
+    indexof(args) {
+      const index = Cast.toString(args.STRING).indexOf(Cast.toString(args.SUBSTRING));
+      return index < 0 ? 0 : index + 1;
+    }
+    letters_of(args) {
+      const string = Cast.toString(args.STRING);
+      const first = Math.max(1, Math.trunc(Cast.toNumber(args.LETTER1)));
+      const last = Math.max(first, Math.trunc(Cast.toNumber(args.LETTER2)));
+      return string.slice(first - 1, last);
+    }
+    menu_positions(args) {
+      return args.positions ?? '';
+    }
+    menu_trimMethod(args) {
+      return args.trimMethod ?? '';
+    }
+    posWith(args) {
+      const string = Cast.toString(args.STRING);
+      const substring = Cast.toString(args.SUBSTRING);
+      return args.POSITION === 'ends'
+        ? string.endsWith(substring)
+        : string.startsWith(substring);
+    }
+    replaceRegex(args) {
+      return Cast.toString(args.STRING).replace(
+        new RegExp(Cast.toString(args.REGEX), Cast.toString(args.FLAGS)),
+        Cast.toString(args.REPLACE),
+      );
+    }
+    split(args) {
+      const parts = Cast.toString(args.STRING).split(Cast.toString(args.SPLIT));
+      return parts[Math.trunc(Cast.toNumber(args.ITEM)) - 1] ?? '';
+    }
+    trim(args) {
+      const string = Cast.toString(args.STRING);
+      if (args.METHOD === 'left') return string.trimStart();
+      if (args.METHOD === 'right') return string.trimEnd();
+      return string.trim();
+    }
+  }
+
+  class AssetManagerExtension {
+    constructor(runtime) {
+      this.runtime = runtime;
+      const resetState = () => {
+        state.actorSequences.clear();
+        state.actorSkins.clear();
+        state.playingSounds.clear();
+      };
+      runtime.on('PROJECT_START', resetState);
+      runtime.on('PROJECT_STOP_ALL', resetState);
+    }
+    getInfo() {
+      return extensionInfo('twAssetManager', [
+        block('isLoaded', BlockType.BOOLEAN, ['NAME']),
+        block('playSound', BlockType.COMMAND, ['NAME']),
+        block('playSoundUntilDone', BlockType.COMMAND, ['NAME']),
+        block('registerAsset', BlockType.COMMAND, ['RESOURCE_ID', 'NAME']),
+        block('setStageSkin', BlockType.COMMAND, ['NAME']),
+        block('setThisSpriteSkin', BlockType.COMMAND, ['NAME']),
+        block('startActorLoop', BlockType.COMMAND, ['ACTOR', 'ASSETS', 'DURATIONS']),
+        block('startActorSequence', BlockType.COMMAND, ['ACTOR', 'ASSETS', 'DURATIONS']),
+        block('finishAllActorSequences'),
+        block('stopAllSounds'),
+      ]);
+    }
+    registerAsset(args) {
+      state.assets.set(Cast.toString(args.NAME), Cast.toString(args.RESOURCE_ID));
+    }
+    isLoaded(args) {
+      return state.assets.has(Cast.toString(args.NAME));
+    }
+    resolveCostumeName(name) {
+      const resource = state.assets.get(Cast.toString(name)) ?? '';
+      if (resource === 'backdrop' || resource === 'costume') return Cast.toString(name);
+      const parts = resource.split(':');
+      return parts.at(-1) || Cast.toString(name);
+    }
+    applyCostume(target, name) {
+      const costumeName = this.resolveCostumeName(name);
+      const index = target.getCostumes().findIndex((costume) => costume.name === costumeName);
+      if (index >= 0) target.setCostume(index);
+      const actorName = target.lookupVariableByNameAndType?.('actorName', '')?.value;
+      if (actorName) state.actorSkins.set(actorName, Cast.toString(name));
+    }
+    setStageSkin(args) {
+      this.applyCostume(this.runtime.getTargetForStage(), args.NAME);
+    }
+    setThisSpriteSkin(args, util) {
+      this.applyCostume(util.target, args.NAME);
+    }
+    playSound(args) {
+      state.playingSounds.add(Cast.toString(args.NAME));
+    }
+    playSoundUntilDone(args, util) {
+      const name = Cast.toString(args.NAME);
+      if (!util.stackFrame.started) {
+        util.stackFrame.started = true;
+        state.playingSounds.add(name);
+      }
+      if (state.playingSounds.has(name)) util.yield();
+    }
+    stopAllSounds() {
+      state.playingSounds.clear();
+    }
+    startActorLoop() {}
+    startActorSequence(args) {
+      const actor = Cast.toString(args.ACTOR);
+      const assets = Cast.toString(args.ASSETS).split(',').map((name) => name.trim());
+      state.actorSequences.set(actor, assets.at(-1));
+      if (assets[0]) state.actorSkins.set(actor, assets[0]);
+    }
+    finishAllActorSequences() {
+      for (const [actor, finalAsset] of state.actorSequences) {
+        state.actorSkins.set(actor, finalAsset);
+      }
+      state.actorSequences.clear();
+    }
+  }
+
+  class PoseExtension {
+    getInfo() {
+      return extensionInfo('tmpose', [
+        block('currentPoseReporter', BlockType.REPORTER),
+        block('hidePreview'),
+        block('isModelLoaded', BlockType.BOOLEAN),
+        block('isPoseWithThreshold', BlockType.BOOLEAN, ['NAME', 'THRESHOLD']),
+        block('lastErrorReporter', BlockType.REPORTER),
+        block('loadModel'),
+        block('menu_positionMenu', BlockType.REPORTER),
+        block('poseScoreReporter', BlockType.REPORTER, ['NAME']),
+        block('scoreReporter', BlockType.REPORTER),
+        block('setModelURL', BlockType.COMMAND, ['URL']),
+        block('setPreviewOpacity', BlockType.COMMAND, ['OPACITY']),
+        block('setPreviewPosition', BlockType.COMMAND, ['POSITION']),
+        block('showPreview'),
+        block('startCamera'),
+        block('startPredict'),
+        block('stopCamera'),
+        block('stopPredict'),
+      ]);
+    }
+    currentPoseReporter() { return ''; }
+    hidePreview() {}
+    isModelLoaded() { return true; }
+    isPoseWithThreshold() { return false; }
+    lastErrorReporter() { return ''; }
+    loadModel() {}
+    menu_positionMenu(args) { return args.positionMenu ?? 'top-left'; }
+    poseScoreReporter() { return 0; }
+    scoreReporter() { return 0; }
+    setModelURL() {}
+    setPreviewOpacity() {}
+    setPreviewPosition() {}
+    showPreview() {}
+    startCamera() {}
+    startPredict() {}
+    stopCamera() {}
+    stopPredict() {}
+  }
+
+  class LocalStorageExtension {
+    getInfo() {
+      return extensionInfo('localstorage', [
+        block('get', BlockType.REPORTER, ['KEY']),
+        block('set', BlockType.COMMAND, ['KEY', 'VALUE']),
+        block('setProjectId', BlockType.COMMAND, ['ID']),
+      ]);
+    }
+    get(args) { return state.localStorage.get(Cast.toString(args.KEY)) ?? ''; }
+    set(args) { state.localStorage.set(Cast.toString(args.KEY), args.VALUE); }
+    setProjectId() {}
+  }
+
+  class TextLinesExtension {
+    constructor(runtime) {
+      this.runtime = runtime;
+    }
+    getInfo() {
+      return extensionInfo('kubohiroyatextlines', [
+        block('menu_LIST_MENU', BlockType.REPORTER),
+        block('writeLinesToList', BlockType.COMMAND, ['TEXT', 'LIST']),
+      ]);
+    }
+    menu_LIST_MENU(args) { return args.LIST_MENU ?? ''; }
+    writeLinesToList(args, util) {
+      const listName = Cast.toString(args.LIST);
+      const stage = this.runtime.getTargetForStage();
+      const list = util.target.lookupVariableById(listName)
+        ?? stage?.lookupVariableById(listName)
+        ?? util.target.lookupVariableByNameAndType(listName, 'list')
+        ?? stage?.lookupVariableByNameAndType(listName, 'list');
+      if (!list) throw new Error(`List not found: ${listName}`);
+      list.value = Cast.toString(args.TEXT).split(/\r\n|\n|\r/u);
+    }
+  }
+
+  class RuntimeExpressionExtension {
+    getInfo() {
+      return extensionInfo('twRuntimeExpression', [
+        block('runtimeCondition', BlockType.BOOLEAN, ['EXPRESSION']),
+      ]);
+    }
+    runtimeCondition() { return false; }
+  }
+
+  class AsyncInputExtension {
+    getInfo() {
+      return extensionInfo('twAsyncInput', [
+        block('listenForKeyAndBroadcast', BlockType.COMMAND, [
+          'KEY_ID', 'RUNTIME_VAR', 'VALUE', 'MESSAGE',
+        ]),
+        block('stopAllInputListeners'),
+        block('stopAllKeyListeners'),
+      ]);
+    }
+    listenForKeyAndBroadcast() {}
+    stopAllInputListeners() {}
+    stopAllKeyListeners() {}
+  }
+
+  class TimersExtension {
+    constructor(runtime) {
+      runtime.on('PROJECT_START', () => state.timers.clear());
+      runtime.on('PROJECT_STOP_ALL', () => state.timers.clear());
+    }
+    getInfo() {
+      return extensionInfo('lmsTimers', [
+        block('removeTimer', BlockType.COMMAND, ['TIMER']),
+        block('startResetTimer', BlockType.COMMAND, ['TIMER']),
+        block('valueOfTimer', BlockType.REPORTER, ['TIMER']),
+      ]);
+    }
+    removeTimer(args) { state.timers.delete(Cast.toString(args.TIMER)); }
+    startResetTimer(args) { state.timers.set(Cast.toString(args.TIMER), clock.now); }
+    valueOfTimer(args) {
+      const start = state.timers.get(Cast.toString(args.TIMER));
+      return start === undefined ? '' : (clock.now - start) / 1000;
+    }
+  }
+
+  class FilesExtension {
+    getInfo() {
+      return extensionInfo('files', [
+        block('menu_automaticallyOpen', BlockType.REPORTER),
+        block('menu_encoding', BlockType.REPORTER),
+        block('setOpenMode', BlockType.COMMAND, ['mode']),
+        block('showPickerExtensionsAs', BlockType.COMMAND, ['extension', 'as']),
+      ]);
+    }
+    menu_automaticallyOpen(args) { return args.automaticallyOpen ?? ''; }
+    menu_encoding(args) { return args.encoding ?? ''; }
+    setOpenMode() {}
+    showPickerExtensionsAs() {}
+  }
+
+  class TextExtension {
+    getInfo() {
+      return extensionInfo('text', [block('animateText', BlockType.REPORTER, ['TEXT'])]);
+    }
+    animateText(args) { return args.TEXT; }
+  }
+
+  register(vm, 'sipcconsole', ConsoleExtension);
+  register(vm, 'lmsTempVars2', TempVariablesExtension);
+  register(vm, 'strings', StringsExtension);
+  register(vm, 'twAssetManager', AssetManagerExtension);
+  register(vm, 'tmpose', PoseExtension);
+  register(vm, 'localstorage', LocalStorageExtension);
+  register(vm, 'kubohiroyatextlines', TextLinesExtension);
+  register(vm, 'twRuntimeExpression', RuntimeExpressionExtension);
+  register(vm, 'twAsyncInput', AsyncInputExtension);
+  register(vm, 'lmsTimers', TimersExtension);
+  register(vm, 'files', FilesExtension);
+  register(vm, 'text', TextExtension);
+
+  return state;
+}

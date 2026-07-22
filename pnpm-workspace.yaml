@@ -1,0 +1,12 @@
+packages:
+  - .
+
+allowBuilds:
+  fsevents: false
+
+overrides:
+  "scratch-vm>scratch-parser": 6.0.0
+
+peerDependencyRules:
+  allowedVersions:
+    scratch-render-fonts: 1.0.0
