@@ -51,6 +51,33 @@ function actorActionScript(action, {before = []} = {}) {
   ].join('\n');
 }
 
+function sceneNavigationScript(firstSceneActions, {runtimeVariables = [], branches = []} = {}) {
+  return [
+    'kamishibai=3.1',
+    'asset=Title,backdrop',
+    'asset=Stars,backdrop',
+    'asset=LeftDoor,costume:Hatchling:hatchling-c',
+    'asset=RightDoor,costume:Hatchling:hatchling-c',
+    'actor=LeftDoor,LeftDoor',
+    'actor=RightDoor,RightDoor',
+    ...runtimeVariables.map((value) => `setRuntimeVariable=${value}`),
+    ...branches.map((value) => `registerBranch=${value}`),
+    'cover=Title,',
+    '---',
+    'sceneLabel=first',
+    'action=stage:Stars',
+    ...firstSceneActions.map((action) => `action=${action}`),
+    '---',
+    'sceneLabel=home',
+    'action=stage:Title',
+    'action=wait:30',
+    '---',
+    'sceneLabel=ocean',
+    'action=stage:Stars',
+    'action=wait:30',
+  ].join('\n');
+}
+
 test('pins and loads the generated SB3 in the TurboWarp VM', async (context) => {
   assert.equal(turbowarpVmCommit, 'c4823421cb7c17d8d8a89878851ce1668c26a21f');
   const harness = await loadKamishibaiVm();
@@ -68,6 +95,88 @@ test('pins and loads the generated SB3 in the TurboWarp VM', async (context) => 
       'Hatchling',
     ],
   );
+});
+
+for (const branchCase of [
+  {condition: 'true', expectedSceneIndex: 3, expectedBackdrop: 'Stars'},
+  {condition: 'false', expectedSceneIndex: 2, expectedBackdrop: 'Title'},
+]) {
+  test(`branches to the first true label when the first condition is ${branchCase.condition}`, async (context) => {
+    const harness = await loadKamishibaiVm();
+    context.after(() => harness.quit());
+    startScript(harness, sceneNavigationScript([
+      'wait:0.1',
+      'branch:chooseRoute',
+      'wait:30',
+    ], {
+      runtimeVariables: [`takeSeaRoute:${branchCase.condition}`],
+      branches: ['chooseRoute:takeSeaRoute,true:ocean,home'],
+    }));
+
+    harness.runUntil(() => (
+      Number(harness.getRuntimeVariable('sceneIndex')) === branchCase.expectedSceneIndex
+      && harness.getBackdropName() === branchCase.expectedBackdrop
+    ));
+    assert.equal(harness.getBackdropName(), branchCase.expectedBackdrop);
+  });
+}
+
+test('continues the current scene when no registered branch condition is true', async (context) => {
+  const harness = await loadKamishibaiVm();
+  context.after(() => harness.quit());
+  startScript(harness, sceneNavigationScript([
+    'wait:0.1',
+    'branch:noRoute',
+    'stage:Title',
+    'wait:30',
+  ], {
+    branches: ['noRoute:false,false:ocean,home'],
+  }));
+
+  harness.runUntil(() => (
+    harness.getBackdropName() === 'Title'
+    && Number(harness.getRuntimeVariable('sceneIndex')) === 1
+    && harness.getRuntimeVariable('actionCommand') === 'wait'
+  ));
+  assert.equal(harness.hasRuntimeVariable('nextSceneLabel'), false);
+});
+
+test('changes scene from a registered physical key input', async (context) => {
+  const harness = await loadKamishibaiVm();
+  context.after(() => harness.quit());
+  startScript(harness, sceneNavigationScript([
+    'keyInputToChangeScene:ArrowLeft,ArrowRight:home,ocean',
+    'wait:30',
+  ]));
+  harness.runUntil(() => harness.extensionState.keyInputBindings.size === 2);
+  assert.equal(harness.extensionState.keyInputBindings.get('ArrowLeft').VALUE, 'home');
+  assert.equal(harness.extensionState.keyInputBindings.get('ArrowRight').VALUE, 'ocean');
+
+  harness.triggerAsyncKey('ArrowRight');
+  harness.runUntil(() => Number(harness.getRuntimeVariable('sceneIndex')) === 3);
+
+  assert.equal(harness.getBackdropName(), 'Stars');
+  assert.equal(harness.extensionState.keyInputBindings.size, 0);
+});
+
+test('changes scene from a registered actor touch input', async (context) => {
+  const harness = await loadKamishibaiVm();
+  context.after(() => harness.quit());
+  startScript(harness, sceneNavigationScript([
+    'LeftDoor:show:LeftDoor:-100,0,50',
+    'RightDoor:show:RightDoor:100,0,50',
+    'touchInputToChangeScene:LeftDoor,RightDoor:home,ocean',
+    'wait:30',
+  ]));
+  harness.runUntil(() => harness.extensionState.touchInputBindings.size === 2);
+  assert.equal(harness.extensionState.touchInputBindings.get('LeftDoor').VALUE, 'home');
+  assert.equal(harness.extensionState.touchInputBindings.get('RightDoor').VALUE, 'ocean');
+
+  harness.triggerActorTouch('RightDoor');
+  harness.runUntil(() => Number(harness.getRuntimeVariable('sceneIndex')) === 3);
+
+  assert.equal(harness.getBackdropName(), 'Stars');
+  assert.equal(harness.extensionState.touchInputBindings.size, 0);
 });
 
 test('accepts only Space while the title is active', async (context) => {

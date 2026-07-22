@@ -50,6 +50,16 @@ export class KamishibaiVmHarness {
     this.step();
   }
 
+  triggerAsyncKey(keyId) {
+    this.extensionState.asyncInput.emitKey(keyId);
+    this.step();
+  }
+
+  triggerActorTouch(actorName) {
+    this.extensionState.asyncInput.emitActorTouch(actorName);
+    this.step();
+  }
+
   broadcast(name) {
     this.vm.runtime.startHats('event_whenbroadcastreceived', {
       BROADCAST_OPTION: name,
