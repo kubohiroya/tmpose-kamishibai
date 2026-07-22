@@ -11,6 +11,7 @@ import {
   importSb3,
   parseCliArguments,
   validateArchiveEntryName,
+  validateOutputDirectoryPath,
 } from '../scripts/sb3/import.mjs';
 
 async function withTemporaryDirectory(callback) {
@@ -99,23 +100,112 @@ test('imports assets and extracts embedded extensions without changing external 
   });
 });
 
-test('replaces an existing output only after a successful import', async () => {
+test('replaces a recognized existing output only with explicit force', async () => {
   await withTemporaryDirectory(async (directory) => {
     const inputPath = path.join(directory, 'input.sb3');
     const outputDirectory = path.join(directory, 'app');
-    await mkdir(outputDirectory);
-    await writeFile(path.join(outputDirectory, 'stale.txt'), 'stale');
     await writeSb3(inputPath, {
       'project.json': strToU8(JSON.stringify({targets: [], extensionURLs: {}})),
     });
-
     await importSb3({inputPath, outputDirectory});
+    await writeFile(path.join(outputDirectory, 'stale.txt'), 'stale');
+    await writeSb3(inputPath, {
+      'project.json': strToU8(JSON.stringify({targets: [], extensionURLs: {}, updated: true})),
+    });
+
+    await importSb3({inputPath, outputDirectory, force: true});
 
     await assert.rejects(readFile(path.join(outputDirectory, 'stale.txt')), {code: 'ENOENT'});
     assert.deepEqual(
       JSON.parse(await readFile(path.join(outputDirectory, 'project.source.json'), 'utf8')),
-      {targets: [], extensionURLs: {}},
+      {targets: [], extensionURLs: {}, updated: true},
     );
+  });
+});
+
+test('uses confirmation for recognized output and preserves it when declined', async () => {
+  await withTemporaryDirectory(async (directory) => {
+    const inputPath = path.join(directory, 'input.sb3');
+    const outputDirectory = path.join(directory, 'app');
+    await writeSb3(inputPath, {
+      'project.json': strToU8(JSON.stringify({targets: [], extensionURLs: {}})),
+    });
+    await importSb3({inputPath, outputDirectory});
+    await writeFile(path.join(outputDirectory, 'marker.txt'), 'preserved');
+    let confirmedPath;
+
+    await assert.rejects(
+      importSb3({
+        inputPath,
+        outputDirectory,
+        confirmReplace: async (candidatePath) => {
+          confirmedPath = candidatePath;
+          return false;
+        },
+      }),
+      /cancelled/u,
+    );
+
+    assert.equal(confirmedPath, outputDirectory);
+    assert.equal(await readFile(path.join(outputDirectory, 'marker.txt'), 'utf8'), 'preserved');
+  });
+});
+
+test('replaces recognized output after affirmative confirmation', async () => {
+  await withTemporaryDirectory(async (directory) => {
+    const inputPath = path.join(directory, 'input.sb3');
+    const outputDirectory = path.join(directory, 'app');
+    await writeSb3(inputPath, {
+      'project.json': strToU8(JSON.stringify({targets: [], extensionURLs: {}})),
+    });
+    await importSb3({inputPath, outputDirectory});
+    await writeFile(path.join(outputDirectory, 'stale.txt'), 'stale');
+
+    await importSb3({
+      inputPath,
+      outputDirectory,
+      confirmReplace: async (candidatePath) => candidatePath === outputDirectory,
+    });
+
+    await assert.rejects(readFile(path.join(outputDirectory, 'stale.txt')), {code: 'ENOENT'});
+  });
+});
+
+test('refuses non-interactive replacement without force', async () => {
+  await withTemporaryDirectory(async (directory) => {
+    const inputPath = path.join(directory, 'input.sb3');
+    const outputDirectory = path.join(directory, 'app');
+    await writeSb3(inputPath, {
+      'project.json': strToU8(JSON.stringify({targets: [], extensionURLs: {}})),
+    });
+    await importSb3({inputPath, outputDirectory});
+
+    await assert.rejects(
+      importSb3({inputPath, outputDirectory}),
+      /interactive confirmation or --force/u,
+    );
+    assert.equal(
+      JSON.parse(await readFile(path.join(outputDirectory, 'sb3-source.json'), 'utf8')).formatVersion,
+      1,
+    );
+  });
+});
+
+test('refuses to replace an unrecognized directory even with force', async () => {
+  await withTemporaryDirectory(async (directory) => {
+    const inputPath = path.join(directory, 'input.sb3');
+    const outputDirectory = path.join(directory, 'unrelated');
+    await writeSb3(inputPath, {
+      'project.json': strToU8(JSON.stringify({targets: [], extensionURLs: {}})),
+    });
+    await mkdir(outputDirectory);
+    await writeFile(path.join(outputDirectory, 'marker.txt'), 'preserved');
+
+    await assert.rejects(
+      importSb3({inputPath, outputDirectory, force: true}),
+      /unrecognized directory/u,
+    );
+    assert.equal(await readFile(path.join(outputDirectory, 'marker.txt'), 'utf8'), 'preserved');
   });
 });
 
@@ -163,8 +253,34 @@ test('validates archive names, extension data URLs, and CLI arguments', () => {
   );
 
   assert.deepEqual(parseCliArguments(['--', '--help']), {help: true});
+  assert.deepEqual(
+    parseCliArguments(['project.sb3', '--output', 'generated', '--yes']),
+    {
+      help: false,
+      inputPath: path.resolve('project.sb3'),
+      outputDirectory: path.resolve('generated'),
+      force: true,
+    },
+  );
   assert.throws(() => parseCliArguments(['--output']), /requires a directory/u);
   assert.throws(() => parseCliArguments(['one.sb3', 'two.sb3']), /Only one input/u);
+});
+
+test('rejects repository roots, ancestors, filesystem roots, and .git paths as output', () => {
+  const protectedRoot = path.join(path.parse(process.cwd()).root, 'workspace', 'project');
+  assert.equal(
+    validateOutputDirectoryPath(path.join(protectedRoot, 'app'), protectedRoot),
+    path.join(protectedRoot, 'app'),
+  );
+  for (const dangerousPath of [
+    path.parse(protectedRoot).root,
+    protectedRoot,
+    path.dirname(protectedRoot),
+    path.join(protectedRoot, '.git'),
+    path.join(protectedRoot, '.git', 'objects'),
+  ]) {
+    assert.throws(() => validateOutputDirectoryPath(dangerousPath, protectedRoot));
+  }
 });
 
 test('rejects an embedded extension ID that cannot become a safe filename', async () => {

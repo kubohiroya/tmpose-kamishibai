@@ -1,5 +1,6 @@
 import {
   access,
+  lstat,
   mkdir,
   mkdtemp,
   readFile,
@@ -8,6 +9,8 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import path from 'node:path';
+import process from 'node:process';
+import {createInterface} from 'node:readline/promises';
 import {fileURLToPath, pathToFileURL} from 'node:url';
 
 import {strFromU8, unzipSync} from 'fflate';
@@ -33,6 +36,71 @@ async function pathExists(targetPath) {
     }
     throw error;
   }
+}
+
+function isSamePathOrAncestor(candidatePath, targetPath) {
+  const relativePath = path.relative(candidatePath, targetPath);
+  return relativePath === '' || (
+    relativePath !== '..'
+    && !relativePath.startsWith(`..${path.sep}`)
+    && !path.isAbsolute(relativePath)
+  );
+}
+
+export function validateOutputDirectoryPath(outputDirectory, protectedRoot = projectRoot) {
+  const resolvedOutputDirectory = path.resolve(outputDirectory);
+  const resolvedProtectedRoot = path.resolve(protectedRoot);
+  assert(resolvedOutputDirectory !== path.parse(resolvedOutputDirectory).root,
+    'Refusing to replace a filesystem root with imported SB3 sources.');
+  assert(!isSamePathOrAncestor(resolvedOutputDirectory, resolvedProtectedRoot),
+    'Refusing to replace the repository root or one of its ancestors.');
+  assert(!resolvedOutputDirectory.split(path.sep).includes('.git'),
+    'Refusing to write imported SB3 sources into a .git directory.');
+  return resolvedOutputDirectory;
+}
+
+async function assertRecognizedOutputDirectory(outputDirectory) {
+  const stats = await lstat(outputDirectory);
+  assert(stats.isDirectory() && !stats.isSymbolicLink(),
+    `Refusing to replace a non-directory or symbolic link: ${outputDirectory}`);
+
+  let manifest;
+  try {
+    manifest = JSON.parse(await readFile(path.join(outputDirectory, 'sb3-source.json'), 'utf8'));
+  } catch (error) {
+    if (error?.code !== 'ENOENT' && !(error instanceof SyntaxError)) {
+      throw error;
+    }
+    throw new Error(
+      `Refusing to replace an unrecognized directory without a valid sb3-source.json: ${outputDirectory}`,
+      {cause: error},
+    );
+  }
+
+  assert(
+    manifest?.formatVersion === sourceFormatVersion
+      && manifest.project === 'project.source.json'
+      && manifest.embeddedExtensions === 'embedded-extensions.json'
+      && manifest.assetsDirectory === 'assets'
+      && Array.isArray(manifest.archiveEntries),
+    `Refusing to replace an unrecognized directory without a valid sb3-source.json: ${outputDirectory}`,
+  );
+}
+
+async function authorizeOutputReplacement({outputDirectory, force, confirmReplace}) {
+  if (!await pathExists(outputDirectory)) {
+    return;
+  }
+
+  await assertRecognizedOutputDirectory(outputDirectory);
+  if (force) {
+    return;
+  }
+  assert(typeof confirmReplace === 'function',
+    `Output directory already exists: ${outputDirectory}. `
+    + 'Refusing to replace it without interactive confirmation or --force.');
+  assert(await confirmReplace(outputDirectory),
+    'SB3 import cancelled; the existing output was not changed.');
 }
 
 export function validateArchiveEntryName(entryName) {
@@ -125,11 +193,14 @@ async function replaceDirectoryAtomically(temporaryDirectory, outputDirectory) {
   }
 }
 
-export async function importSb3({inputPath = defaultInputPath, outputDirectory = defaultOutputDirectory} = {}) {
+export async function importSb3({
+  inputPath = defaultInputPath,
+  outputDirectory = defaultOutputDirectory,
+  force = false,
+  confirmReplace,
+} = {}) {
   const resolvedInputPath = path.resolve(inputPath);
-  const resolvedOutputDirectory = path.resolve(outputDirectory);
-  assert(resolvedOutputDirectory !== path.parse(resolvedOutputDirectory).root,
-    'Refusing to replace a filesystem root with imported SB3 sources.');
+  const resolvedOutputDirectory = validateOutputDirectoryPath(outputDirectory);
 
   const archive = unzipSync(new Uint8Array(await readFile(resolvedInputPath)));
   const archiveEntries = Object.entries(archive);
@@ -222,6 +293,11 @@ export async function importSb3({inputPath = defaultInputPath, outputDirectory =
       ),
     ]);
 
+    await authorizeOutputReplacement({
+      outputDirectory: resolvedOutputDirectory,
+      force,
+      confirmReplace,
+    });
     await replaceDirectoryAtomically(temporaryDirectory, resolvedOutputDirectory);
   } catch (error) {
     await rm(temporaryDirectory, {recursive: true, force: true});
@@ -240,12 +316,13 @@ export async function importSb3({inputPath = defaultInputPath, outputDirectory =
 }
 
 function usage() {
-  return `Usage: pnpm sb3:import -- [input.sb3] [--output directory]\n\nDefaults:\n  input:  ${defaultInputPath}\n  output: ${defaultOutputDirectory}`;
+  return `Usage: pnpm sb3:import -- [input.sb3] [--output directory] [--force]\n\nDefaults:\n  input:  ${defaultInputPath}\n  output: ${defaultOutputDirectory}\n\nExisting recognized output requires interactive confirmation.\nUse --force (or --yes) only for intentional non-interactive replacement.`;
 }
 
 export function parseCliArguments(arguments_) {
   let inputPath = defaultInputPath;
   let outputDirectory = defaultOutputDirectory;
+  let force = false;
   let positionalInputSeen = false;
 
   for (let index = 0; index < arguments_.length; index += 1) {
@@ -263,13 +340,32 @@ export function parseCliArguments(arguments_) {
       index += 1;
       continue;
     }
+    if (argument === '--force' || argument === '--yes') {
+      force = true;
+      continue;
+    }
     assert(!argument.startsWith('-'), `Unknown option: ${argument}`);
     assert(!positionalInputSeen, 'Only one input SB3 may be specified.');
     inputPath = path.resolve(argument);
     positionalInputSeen = true;
   }
 
-  return {help: false, inputPath, outputDirectory};
+  return {help: false, inputPath, outputDirectory, force};
+}
+
+async function confirmOutputReplacement(outputDirectory) {
+  assert(process.stdin.isTTY && process.stdout.isTTY,
+    `Output directory already exists: ${outputDirectory}. `
+    + 'Non-interactive replacement requires --force.');
+  const readline = createInterface({input: process.stdin, output: process.stdout});
+  try {
+    const answer = await readline.question(
+      `Existing SB3 source directory will be replaced and stale files removed:\n  ${outputDirectory}\nContinue? [y/N] `,
+    );
+    return /^(?:y|yes)$/iu.test(answer.trim());
+  } finally {
+    readline.close();
+  }
 }
 
 async function main() {
@@ -278,7 +374,7 @@ async function main() {
     console.log(usage());
     return;
   }
-  const result = await importSb3(options);
+  const result = await importSb3({...options, confirmReplace: confirmOutputReplacement});
   console.log(
     `Imported ${result.archiveEntryCount} SB3 entries into ${result.outputDirectory} `
     + `(${result.assetCount} assets, ${result.embeddedExtensionCount} embedded extensions).`,
