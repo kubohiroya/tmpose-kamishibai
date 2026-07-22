@@ -31,6 +31,7 @@ asset=Ocean,backdrop
 asset=Dragon Castle,backdrop
 asset=Smoke,backdrop
 asset=End,backdrop
+asset=Stars,backdrop
 asset=Guitar Chords2,sound
 asset=Rip,sound
 asset=Squish Pop,sound
@@ -60,7 +61,7 @@ cover=Beach1,Ocean Wave
 # scene 1
 sceneLabel=opening
 action=transition:fadeOut
-action=stage:Star
+action=stage:Stars
 action=transition:fadeUp
 action=Prompt:show:Narration:0,0,100
 text=Narration:むかし

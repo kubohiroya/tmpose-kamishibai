@@ -137,7 +137,8 @@ actor=Princess,Princess</code></pre>
           <p>アプリ起動時や物語終了後に表示する表紙画面を指定します。</p>
           <p>例:</p>
           <pre class="language-text"><code class="language-text">cover=Beach1,OceanWave</code></pre>
-          <p>音声を使わない場合は、アプリ側の動作確認をしたうえで、空指定または無音アセットの利用を検討してください。安定運用では、明示的に表紙用音声を指定する方法がおすすめです。</p>
+          <p><code>cover</code> の第2引数には音声アセットを指定します。表紙で音を鳴らさない場合は、区切りのカンマを残して第2引数を空にします。アプリは第2引数が空でなく、同名のアセットが読み込み済みの場合だけ音声を再生します。</p>
+          <pre class="language-text"><code class="language-text">cover=Beach1,</code></pre>
         </section>
         <section class="level3">
           <h3 id="45-ランタイム変数">4.5 ランタイム変数</h3>
@@ -153,7 +154,10 @@ setRuntimeVariable=takeSeaRoute:true</code></pre>
           <p>条件と移動先の組を登録します。条件はRuntime Expressionの式として上から順に評価され、最初に真になった条件と同じ位置のシーンラベルが選ばれます。</p>
           <pre class="language-text"><code class="language-text">setRuntimeVariable=takeSeaRoute:true
 registerBranch=chooseRoute:takeSeaRoute,true:ocean,home</code></pre>
-          <p>最後に <code>true</code> を置くと、どの条件にも一致しなかった場合の移動先を表せます。条件とシーンラベルの個数はそろえてください。<code>=</code> はトップレベルコマンドの区切りでもあるため、条件式内の等価比較は避け、真偽値のランタイム変数を条件として使うのが安全です。</p>
+          <p>最後に <code>true</code> を置くと、どの条件にも一致しなかった場合の移動先を表せます。条件とシーンラベルの個数はそろえてください。</p>
+          <p>条件式では <code>==</code>、<code>!=</code>、<code>===</code>、<code>!==</code> による等価比較を使用できます。コマンド行の最初の <code>=</code> だけがキーと値の区切りになり、条件式内の <code>=</code> は保持されます。単独の <code>=</code> は条件式の演算子ではありません。</p>
+          <pre class="language-text"><code class="language-text">setRuntimeVariable=score:1
+registerBranch=chooseRoute:score == 1,true:ocean,home</code></pre>
         </section>
       </section>
       <section class="level2">
@@ -169,7 +173,7 @@ action=Urashima:show:Urashima-walk-1:172,-77,25
 action=Urashima:say:今日は浜辺を散歩しよう。:2</code></pre>
         <section class="level3">
           <h3 id="51-シーンの基本方針">5.1 シーンの基本方針</h3>
-          <p>シーンごとに、必要な背景、登場人物、音、セリフを改めて指定します。アプリはシーン終了時にアクターを隠し、音を止めます。つまり、前のシーンの表示状態に頼らない書き方が安全です。</p>
+          <p>シーンごとに、必要な背景、登場人物、音、セリフを改めて指定します。アプリはシーン終了時にアクターを隠し、音を止めるため、前のシーンの表示状態は次のシーンへ引き継がれません。</p>
           <p>よい書き方:</p>
           <pre class="language-text"><code class="language-text">---
 # scene 2
@@ -482,7 +486,7 @@ text=Narration:むかし　むかし、あるところに...</code></pre>
           <pre class="language-text"><code class="language-text">背景: Beach1, Ocean, Castle
 人物: Hero-walk-1, Hero-happy, Hero-open-1
 音: OpenSound, SuccessSound, OceanWave</code></pre>
-          <p>名前は英数字、ハイフン、アンダースコアを中心にすると安全です。日本語名も扱える場合がありますが、URLやツールとの相性を考えると英数字名が安定します。</p>
+          <p>この例では、参照箇所を見分けやすくするため英数字、ハイフン、アンダースコアを使用しています。名前は文字列として照合されるため、定義箇所と参照箇所で同じ表記を使います。アクション要素として使う名前に半角 <code>:</code> があると別の要素に分割され、リスト要素として使う名前に半角 <code>,</code> があると別の項目に分割されます。</p>
         </section>
         <section class="level3">
           <h3 id="84-ヘッダを書く">8.4 ヘッダを書く</h3>
@@ -540,12 +544,12 @@ action=wait:1</code></pre>
               <td>パーサが行単位で処理するためです。</td>
             </tr>
             <tr>
-              <td><code>=</code> はコマンドの区切り</td>
-              <td>値の中にはなるべく入れないでください。</td>
+              <td>最初の <code>=</code> はコマンドの区切り</td>
+              <td>2個目以降の <code>=</code> は値として保持されます。</td>
             </tr>
             <tr>
               <td><code>:</code> はアクションの区切り</td>
-              <td>セリフ本文には半角 <code>:</code> を入れない方が安全です。</td>
+              <td><code>say</code> と <code>think</code> の本文中では、コロンを全角 <code>：</code> で書きます。</td>
             </tr>
             <tr>
               <td><code>,</code> はリストの区切り</td>
@@ -635,7 +639,7 @@ abc</code></pre>
         </section>
         <section class="level3">
           <h3 id="114-長い物語は小さく作る">11.4 長い物語は小さく作る</h3>
-          <p>最初から長い台本を書くより、1シーンだけ作って動かし、次に2シーン目を足していく方法が安全です。紙芝居制作は、料理でいえば味見しながら作るタイプです。いきなり鍋いっぱいにしないのがコツです。</p>
+          <p>最初に1シーンだけ作って動かし、確認後に2シーン目を足すと、文法エラーや不足アセットをシーン単位で特定できます。紙芝居制作は、料理でいえば味見しながら作るタイプです。いきなり鍋いっぱいにしないのがコツです。</p>
         </section>
       </section>
       <section class="level2">

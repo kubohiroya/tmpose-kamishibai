@@ -47,7 +47,7 @@ action=stage:Beach1</code></pre>
             <tbody>
               <tr>
                 <td><code>=</code></td>
-                <td>コマンドのキーと値を分ける</td>
+                <td>行内で最初に現れるものが、コマンドのキーと値を分ける</td>
               </tr>
               <tr>
                 <td><code>:</code></td>
@@ -67,7 +67,8 @@ action=stage:Beach1</code></pre>
               </tr>
             </tbody>
           </table>
-          <p>セリフ本文に半角 <code>:</code> や <code>=</code> を入れると、パーサが区切り文字として扱う可能性があります。セリフでは全角 <code>：</code> や別表現を使うと安全です。</p>
+          <p>コマンド行では、最初の <code>=</code> だけがキーと値の区切りです。値に含まれる2個目以降の <code>=</code> はそのまま保持されるため、セリフ本文や <code>registerBranch</code> の条件式で使用できます。</p>
+          <p>半角 <code>:</code> と <code>,</code> の解釈はコマンドごとに異なります。たとえば <code>say</code> と <code>think</code> では半角 <code>:</code> が本文と秒数の区切りになるため、本文中のコロンには全角 <code>：</code> を使用します。</p>
         </section>
       </section>
       <section class="level2">
@@ -297,7 +298,12 @@ setRuntimeVariable=takeSeaRoute:true</code></pre>
           <pre class="language-text"><code class="language-text">registerBranch=分岐名:条件1,条件2,...:シーンラベル1,シーンラベル2,...</code></pre>
           <p>Runtime Expressionで評価する条件と、移動先シーンラベルの組を登録します。条件は左から評価され、最初に真になった条件と同じ位置のラベルが選ばれます。</p>
           <pre class="language-text"><code class="language-text">registerBranch=chooseRoute:takeSeaRoute,true:ocean,home</code></pre>
-          <p>条件数とラベル数はそろえてください。最後の条件に <code>true</code> を置くと既定の移動先になります。登録した分岐は <code>action=branch:分岐名</code> で実行します。<code>=</code> はトップレベルコマンドの区切りでもあるため、条件式内の等価比較は避け、真偽値のランタイム変数を条件として使うのが安全です。</p>
+          <p>等価比較を含む条件も指定できます。</p>
+          <pre class="language-text"><code class="language-text">setRuntimeVariable=score:1
+setRuntimeVariable=route:ocean
+registerBranch=chooseByScore:score == 1,true:ocean,home
+registerBranch=chooseByName:route === "ocean",true:ocean,home</code></pre>
+          <p>等価比較演算子は <code>==</code>、<code>!=</code>、<code>===</code>、<code>!==</code> です。単独の <code>=</code> は代入記号であり、条件式の演算子としては使用できません。条件数とラベル数はそろえてください。最後の条件に <code>true</code> を置くと既定の移動先になります。登録した分岐は <code>action=branch:分岐名</code> で実行します。</p>
         </section>
         <section class="level3">
           <h3 id="27-scenelabel">2.7 <code>sceneLabel</code></h3>
@@ -370,7 +376,7 @@ text=Narration:</code></pre>
           <p>音声アセットを再生し、再生完了を待たずに次のアクションへ進みます。</p>
           <p>例:</p>
           <pre class="language-text"><code class="language-text">action=bgm:Odesong</code></pre>
-          <p>補足: 名前は <code>bgm</code> ですが、ループ再生ではなく「待たずに再生する音」と考えると安全です。シーン終了時には音が停止します。</p>
+          <p>補足: <code>bgm</code> はループ再生しません。再生開始後すぐに次のアクションへ進み、シーン終了時に停止します。</p>
         </section>
         <section class="level3">
           <h3 id="34-sound">3.4 <code>sound</code></h3>
@@ -581,8 +587,8 @@ action=アクター名:setLayer:数値</code></pre>
                 <td>指定レイヤー数だけ前へ移動</td>
               </tr>
               <tr>
-                <td>その他</td>
-                <td>後ろへ移動する処理になります。安定運用では <code>front</code> / <code>back</code> / 正の数値を推奨します。</td>
+                <td><code>0</code>、負の数値、数値以外</td>
+                <td>1レイヤー後ろへ移動</td>
               </tr>
             </tbody>
           </table>
@@ -615,7 +621,7 @@ action=Turtle:setLayer:back</code></pre>
         <section class="level3">
           <h3 id="52-複数ポーズ">5.2 複数ポーズ</h3>
           <pre class="language-text"><code class="language-text">action=Urashima:pose:Skin1,Skin2,Skin3:pose1,pose2,pose3:Sound1,Sound2,Sound3</code></pre>
-          <p>スキン、ポーズ名、効果音は、同じ個数にそろえることを推奨します。</p>
+          <p>処理回数はポーズ名の個数で決まります。各回では、同じ位置のスキンと効果音を参照します。対応する項目がない場合は空文字列になり、ポーズ名より後ろにある余分なスキンや効果音は参照されません。そのため、各ポーズに対応するスキンと効果音を1つずつ指定します。</p>
           <table>
             <thead>
               <tr>
@@ -655,8 +661,8 @@ action=Turtle:setLayer:back</code></pre>
           </ol>
         </section>
         <section class="level3">
-          <h3 id="54-認識パラメータの実装目安">5.4 認識パラメータの実装目安</h3>
-          <p>アプリ内部では、ポーズ認識時に次のような考え方で進行します。</p>
+          <h3 id="54-認識パラメータの実装値">5.4 認識パラメータの実装値</h3>
+          <p>現在の配布用アプリは、起動時に <code>poseRecog=0.5</code>、<code>poseCharge=10</code>、<code>poseIdle=0.1</code> を設定し、次の計算で進行します。</p>
           <table>
             <thead>
               <tr>
@@ -667,23 +673,23 @@ action=Turtle:setLayer:back</code></pre>
             <tbody>
               <tr>
                 <td>認識しきい値</td>
-                <td>目標ポーズとみなすためのしきい値。実装上はおおむね <code>0.5</code> を基準にしています。</td>
-              </tr>
-              <tr>
-                <td>チャージ</td>
-                <td>成功までの蓄積値。100になると次へ進みます。</td>
+                <td>対象ポーズのスコアが <code>0.5</code> 以上なら認識中と判定する</td>
               </tr>
               <tr>
                 <td>認識中</td>
-                <td>信頼度に応じてチャージが速く増えます。</td>
+                <td>反復ごとに <code>min(対象ポーズのスコア × 10, 100)</code> をチャージへ加える</td>
               </tr>
               <tr>
                 <td>非認識中</td>
-                <td>わずかにチャージが増える場合がありますが、基本的には正しいポーズを取る必要があります。</td>
+                <td>反復ごとに <code>min(対象ポーズのスコア × 0.1, 100)</code> をチャージへ加える</td>
+              </tr>
+              <tr>
+                <td>成功条件</td>
+                <td>チャージが100に達すると次のポーズへ進む</td>
               </tr>
             </tbody>
           </table>
-          <p>この仕様により、一瞬だけポーズが一致しただけではなく、少しの間ポーズを保つことが求められます。</p>
+          <p>しきい値未満でも対象ポーズのスコアに応じてチャージは増えますが、認識中の100分の1の係数です。このため、短い一致よりもポーズを保った場合の方が早く成功条件へ到達します。</p>
         </section>
         <section class="level3">
           <h3 id="55-ポーズ設計のコツ">5.5 ポーズ設計のコツ</h3>
@@ -809,21 +815,22 @@ action=Turtle:setLayer:back</code></pre>
           <tbody>
             <tr>
               <td>スペース</td>
-              <td>ポーズ認識をスキップ</td>
-              <td>ポーズモデル確認前に演出だけ確認する</td>
+              <td>現在のポーズ認識1件をスキップ</td>
+              <td>複数ポーズを1件ずつ確認する</td>
             </tr>
             <tr>
               <td>右矢印</td>
-              <td>現在シーンの残りアクションをスキップ</td>
-              <td>シーン末尾まで飛ばす</td>
+              <td>現在のアクションを完了して次のアクションへ進む</td>
+              <td>演出を1件ずつ確認する</td>
             </tr>
             <tr>
               <td>下矢印</td>
-              <td>現在シーンをスキップ</td>
+              <td>現在シーンを終了して次のシーンへ進む</td>
               <td>長いシーンを飛ばす</td>
             </tr>
           </tbody>
         </table>
+        <p>スペースはポーズ待ち中、右矢印はアクション実行中、下矢印はシーン実行中だけ受け付けます。未処理の入力要求がある間は後続キーで上書きしません。タイトル画面ではスペースまたは画面クリックだけが有効です。</p>
         <p>本番運用では誤操作に注意してください。</p>
       </section>
       <section class="level2">
