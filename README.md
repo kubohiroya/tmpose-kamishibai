@@ -204,6 +204,7 @@ RUBYGANA_GRADE=4 pnpm run deploy
 ├── site/
 │   ├── docs/
 │   └── downloads/
+│       └── kamishibai-3_1a1.sb3
 └── test/
 ```
 
@@ -215,9 +216,12 @@ RUBYGANA_GRADE=4 pnpm run deploy
 - `site/docs/`: 一般文書と体験会資料を統合する公開入口
 - `site/app/`: TurboWarpからエクスポートしたWebアプリ一式
 - `samples/`: Git管理するテキスト形式のサンプル台本
-- `site/downloads/`: 最新版のSB3、台本、配布ZIP
+- `site/downloads/`: 版名付きのSB3など、サイトから直接配布するファイル
 - `output/pdf/`: ローカル確認用の印刷PDF
 
 ## バージョン
 
 既存の開発履歴を引き継ぎ、初回公開版は`3.0.0`とします。
+
+紙芝居アプリの配布SB3は、kamishibai 3.1の暫定版として
+`site/downloads/kamishibai-3_1a1.sb3` に配置します。

@@ -23,6 +23,12 @@ const docsDirectory = path.join(projectRoot, 'dist/docs');
 const siteIndexPath = path.join(projectRoot, 'dist/index.html');
 const heroImageSourcePath = path.join(projectRoot, 'docs/images/image49.png');
 const heroImagePath = path.join(projectRoot, 'dist/images/image49.png');
+const downloadFilename = 'kamishibai-3_1a1.sb3';
+const downloadSourcePath = path.join(projectRoot, 'site/downloads', downloadFilename);
+const downloadDirectory = path.join(projectRoot, 'dist/downloads');
+const downloadIndexPath = path.join(downloadDirectory, 'index.html');
+const downloadPath = path.join(downloadDirectory, downloadFilename);
+const legacySb3Path = path.join(projectRoot, 'kamishibai.sb3');
 const docsIndexPath = path.join(docsDirectory, 'index.html');
 const generalDirectory = path.join(docsDirectory, generalDocumentConfig.outputDirectory);
 const workshopDirectory = path.join(docsDirectory, documentConfig.outputDirectory);
@@ -52,6 +58,18 @@ const samplesIndexPath = path.join(samplesDirectory, 'index.html');
 function assert(condition, message) {
   if (!condition) {
     throw new Error(message);
+  }
+}
+
+async function pathExists(targetPath) {
+  try {
+    await access(targetPath);
+    return true;
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      return false;
+    }
+    throw error;
   }
 }
 
@@ -115,7 +133,10 @@ async function verifySamples() {
 async function verifySiteIndex() {
   const html = await readFile(siteIndexPath, 'utf8');
   const images = await verifyLocalReferences(siteIndexPath, 'img', 'src');
+  const localLinks = await verifyLocalReferences(siteIndexPath, 'a', 'href');
+  const allLinks = attributeValues(html, 'a', 'href');
   const altTexts = attributeValues(html, 'img', 'alt');
+  const cardCount = (html.match(/<a class="content-card"/gu) ?? []).length;
   const [sourceImage, publishedImage] = await Promise.all([
     readFile(heroImageSourcePath),
     readFile(heroImagePath),
@@ -127,6 +148,44 @@ async function verifySiteIndex() {
     'The top-page hero image does not have the expected alternative text.');
   assert(sourceImage.equals(publishedImage),
     'The published top-page hero image differs from docs/images/image49.png.');
+  assert(cardCount === 4, `Expected four top-page content cards, found ${cardCount}.`);
+  assert(allLinks.includes('https://sqs.prof.cuc.ac.jp/kamishibai/'),
+    'The top page does not link to the published web app.');
+  for (const link of ['docs/', 'samples/', 'downloads/']) {
+    assert(localLinks.includes(link), `The top-page card link ${link} is missing.`);
+  }
+  for (const icon of ['▶️', '📕', '🎭', '📁']) {
+    assert(html.includes(`<span class="card-icon" aria-hidden="true">${icon}</span>`),
+      `The top-page card icon ${icon} is missing.`);
+  }
+  assert(!html.includes('class="actions"')
+      && !html.includes('docs/workshops/2026-08-01/tmpose-kamishibai-20260801.pdf'),
+  'The retired standalone top-page button group remains.');
+}
+
+async function verifyDownloads() {
+  const html = await readFile(downloadIndexPath, 'utf8');
+  const links = await verifyLocalReferences(downloadIndexPath, 'a', 'href');
+  const [sourceArchive, publishedArchive, archiveStat] = await Promise.all([
+    readFile(downloadSourcePath),
+    readFile(downloadPath),
+    stat(downloadPath),
+  ]);
+
+  assert(links.includes(downloadFilename),
+    `${downloadFilename} is missing from the download page.`);
+  assert(html.includes(`href="${downloadFilename}" download`),
+    'The SB3 link does not use the browser download behavior.');
+  assert(html.includes('3.1a1') && html.includes('暫定版'),
+    'The download page does not identify the SB3 as the 3.1a1 provisional release.');
+  assert(sourceArchive.equals(publishedArchive),
+    'The published SB3 differs from its site/downloads source.');
+  assert(archiveStat.size > 1_000_000 && publishedArchive.subarray(0, 2).toString() === 'PK',
+    'The published SB3 is not a plausible ZIP-based Scratch project.');
+  assert(!(await pathExists(legacySb3Path)),
+    'The retired repository-root kamishibai.sb3 still exists.');
+
+  return {filename: downloadFilename, size: archiveStat.size};
 }
 
 async function pdfBookmarkCount(pdfPath) {
@@ -351,6 +410,7 @@ export async function verifyBuild() {
   ];
   const readingOrder = publicationManifest.readingOrder.map((entry) => entry.url ?? entry);
   await verifySiteIndex();
+  const downloadResults = await verifyDownloads();
   const generalResults = await verifyGeneralDocuments(grade);
   const staffResults = await verifyStaffDocument();
   const sampleCount = await verifySamples();
@@ -477,7 +537,8 @@ export async function verifyBuild() {
       + `${images.length} workshop images, `
       + `staff PDF ${staffResults.pageCount} pages/${staffResults.imageCount} image, `
       + `${rubyCount} ruby elements, ${sampleCount} sample file(s), `
-      + `${tocLinks.length} PDF bookmarks, and both PDF copies.`,
+      + `${tocLinks.length} PDF bookmarks, ${downloadResults.filename} `
+      + `(${downloadResults.size} bytes), and both PDF copies.`,
   );
 }
 
