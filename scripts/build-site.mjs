@@ -3,7 +3,6 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 
 import {buildDocs} from './build-docs.mjs';
-import {buildSamples} from './build-samples.mjs';
 import {buildSb3} from './sb3/build.mjs';
 import {verifyBuild} from './verify-build.mjs';
 
@@ -51,7 +50,6 @@ const sb3Build = await buildSb3({outputPath: fileURLToPath(downloadSb3)});
 console.log(`Built downloadable SB3: ${sb3Build.outputPath}`);
 await mkdir(heroImageDirectory, {recursive: true});
 await copyFile(heroImageSource, new URL('image49.png', heroImageDirectory));
-await buildSamples();
 await buildDocs();
 await addFaviconLinks();
 await verifyBuild();

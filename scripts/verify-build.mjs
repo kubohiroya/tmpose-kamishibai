@@ -55,9 +55,7 @@ const outputPdfPath = path.join(
   documentConfig.pdfFilename,
 );
 const buildInfoPath = path.join(workshopDirectory, 'build-info.json');
-const samplesSourceDirectory = path.join(projectRoot, 'samples');
-const samplesDirectory = path.join(projectRoot, 'dist/samples');
-const samplesIndexPath = path.join(samplesDirectory, 'index.html');
+const sampleRepositoryUrl = 'https://github.com/kubohiroya/tmpose-kamishibai-samples/';
 const documentationCardIcons = [
   ['🕹️', '紙芝居アプリ 操作説明書'],
   ['✍️', '紙芝居DSLファイル作成マニュアル'],
@@ -146,37 +144,6 @@ async function verifyLocalReferences(htmlPath, tagName, attributeName) {
   return references;
 }
 
-async function verifySamples() {
-  const sourceEntries = await readdir(samplesSourceDirectory, {withFileTypes: true});
-  const publishedEntries = await readdir(samplesDirectory, {withFileTypes: true});
-  const sourceFilenames = sourceEntries
-    .filter((entry) => entry.isFile() && entry.name.endsWith('.txt'))
-    .map((entry) => entry.name)
-    .sort();
-  const publishedFilenames = publishedEntries
-    .filter((entry) => entry.isFile() && entry.name.endsWith('.txt'))
-    .map((entry) => entry.name)
-    .sort();
-  const sampleLinks = (await verifyLocalReferences(samplesIndexPath, 'a', 'href'))
-    .map((reference) => decodeURIComponent(reference.replace(/^\.\//u, '')));
-
-  assert(sourceFilenames.length > 0, 'No samples/*.txt source files were found.');
-  assert(JSON.stringify(publishedFilenames) === JSON.stringify(sourceFilenames),
-    'Published sample files do not match samples/*.txt.');
-
-  for (const filename of sourceFilenames) {
-    assert(sampleLinks.includes(filename),
-      `${filename} is missing from the published sample index.`);
-    const [source, published] = await Promise.all([
-      readFile(path.join(samplesSourceDirectory, filename)),
-      readFile(path.join(samplesDirectory, filename)),
-    ]);
-    assert(source.equals(published), `${filename} changed while being published.`);
-  }
-
-  return sourceFilenames.length;
-}
-
 async function verifySiteIndex() {
   const html = await readFile(siteIndexPath, 'utf8');
   const images = await verifyLocalReferences(siteIndexPath, 'img', 'src');
@@ -198,9 +165,11 @@ async function verifySiteIndex() {
   assert(cardCount === 4, `Expected four top-page content cards, found ${cardCount}.`);
   assert(allLinks.includes('https://sqs.prof.cuc.ac.jp/kamishibai/'),
     'The top page does not link to the published web app.');
-  for (const link of ['docs/', 'samples/', 'downloads/']) {
+  for (const link of ['docs/', 'downloads/']) {
     assert(localLinks.includes(link), `The top-page card link ${link} is missing.`);
   }
+  assert(allLinks.includes(sampleRepositoryUrl),
+    'The top page does not link to the external sample repository.');
   for (const icon of ['▶️', '📕', '🎭', '📁']) {
     assert(html.includes(`<span class="card-icon" aria-hidden="true">${icon}</span>`),
       `The top-page card icon ${icon} is missing.`);
@@ -488,7 +457,6 @@ export async function verifyBuild() {
   const downloadResults = await verifyDownloads();
   const generalResults = await verifyGeneralDocuments(grade);
   const staffResults = await verifyStaffDocument();
-  const sampleCount = await verifySamples();
   const faviconHtmlCount = await verifyFavicon();
   const sourceHeadingCount = (source.match(/^#{1,4}\s+/gmu) ?? []).length;
 
@@ -612,7 +580,7 @@ export async function verifyBuild() {
       + `${generalResults.rubyDocumentCount} document), ${tocLinks.length} workshop TOC links, `
       + `${images.length} workshop images, `
       + `staff PDF ${staffResults.pageCount} pages/${staffResults.imageCount} image, `
-      + `${rubyCount} ruby elements, ${sampleCount} sample file(s), `
+      + `${rubyCount} ruby elements, `
       + `favicon links in ${faviconHtmlCount} HTML file(s), `
       + `${tocLinks.length} PDF bookmarks, ${downloadResults.filename} `
       + `(${downloadResults.size} bytes), and both PDF copies.`,
