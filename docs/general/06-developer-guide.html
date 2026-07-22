@@ -135,10 +135,12 @@ pnpm run build</code></pre>
   <span class="token literal-property property">assetManifest</span><span class="token operator">:</span> <span class="token string">'assets.lock.json'</span><span class="token punctuation">,</span>
   <span class="token literal-property property">outputDirectory</span><span class="token operator">:</span> <span class="token string">'dist'</span><span class="token punctuation">,</span>
   <span class="token literal-property property">outputName</span><span class="token operator">:</span> <span class="token string">'sample'</span><span class="token punctuation">,</span>
+  <span class="token literal-property property">profile</span><span class="token operator">:</span> <span class="token string">'editor'</span><span class="token punctuation">,</span>
 <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
 
 <span class="token console class-name">console</span><span class="token punctuation">.</span><span class="token method function property-access">log</span><span class="token punctuation">(</span>result<span class="token punctuation">.</span><span class="token property-access">outputPaths</span><span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
-            <p><code>baseSb3</code>と<code>sourceScript</code>にはファイルパスまたは<code>file:</code> URLを指定します。<code>assetManifest</code>にはファイルパス、<code>file:</code> URL、または同じ構造のJavaScriptオブジェクトを指定できます。オブジェクトを渡し、相対<code>file:</code>参照を使う場合は<code>manifestBaseDirectory</code>で基準ディレクトリを明示します。</p>
+            <p><code>profile</code>は<code>editor</code>または<code>player</code>を必ず明示します。<code>editor</code>は変換済み台本を外部TXTだけに保持し、<code>player</code>は同じバイト列を外部TXTとSB3内の予約変数<code>tmposeEmbeddedScript</code>の両方へ保持します。<code>baseSb3</code>と<code>sourceScript</code>にはファイルパスまたは<code>file:</code> URLを指定します。<code>assetManifest</code>にはファイルパス、<code>file:</code> URL、または同じ構造のJavaScriptオブジェクトを指定できます。オブジェクトを渡し、相対<code>file:</code>参照を使う場合は<code>manifestBaseDirectory</code>で基準ディレクトリを明示します。</p>
+            <p>組み込み台本は既定で1 MiBまでです。APIの<code>maxEmbeddedScriptBytes</code>、CLIの<code>--max-script-bytes</code>で1以上のバイト数へ変更できます。空台本、不正なUTF-8、上限超過、予約変数の欠損・重複・型不一致、または台本が入ったベースSB3は、既存成果物を更新せずエラーにします。</p>
           </section>
           <section class="level4">
             <h4 id="cli">CLI</h4>
@@ -147,7 +149,8 @@ pnpm run build</code></pre>
   --base kamishibai.sb3 <span class="token punctuation">\</span>
   --script source.txt <span class="token punctuation">\</span>
   --assets assets.lock.json <span class="token punctuation">\</span>
-  --output dist/sample</code></pre>
+  --output dist/sample <span class="token punctuation">\</span>
+  --profile editor</code></pre>
             <p>追加オプションは次のとおりです。</p>
             <table>
               <thead>
@@ -157,6 +160,10 @@ pnpm run build</code></pre>
                 </tr>
               </thead>
               <tbody>
+                <tr>
+                  <td><code>--profile PROFILE</code></td>
+                  <td><code>editor</code>または<code>player</code>を必ず指定する</td>
+                </tr>
                 <tr>
                   <td><code>--allow-file-root DIR</code></td>
                   <td><code>file:</code>の許可ルートを追加する。複数回指定可能</td>
@@ -172,6 +179,10 @@ pnpm run build</code></pre>
                 <tr>
                   <td><code>--max-asset-bytes N</code></td>
                   <td>1アセットの最大サイズ</td>
+                </tr>
+                <tr>
+                  <td><code>--max-script-bytes N</code></td>
+                  <td>組み込み台本の最大サイズ</td>
                 </tr>
                 <tr>
                   <td><code>--max-redirects N</code></td>
@@ -261,13 +272,80 @@ pnpm run build</code></pre>
             <p><code>file:</code>参照は既定でマニフェストのあるディレクトリ以下だけを許可します。<code>..</code>やシンボリックリンクの解決後に許可ルートを脱出するパスは拒否します。追加ルートはAPIの<code>allowedFileRoots</code>またはCLIの<code>--allow-file-root</code>で明示します。</p>
             <p>HTTP(S)取得はステータス、Content-Type、実サイズ、ロック済みサイズ、SHA-256、タイムアウト、最大サイズ、リダイレクト回数を検証します。既定ではHTTPSだけを許可し、HTTPはAPIの<code>allowHttp: true</code>またはCLIの<code>--allow-http</code>を指定した場合だけ使用できます。</p>
             <p>生成SB3はZIPエントリを<code>project.json</code>先頭、残りをファイル名順に並べ、日時を1980年1月1日、圧縮レベルを固定します。<code>project.json</code>と出力manifestも正規化して書き出します。同じ入力と設定から生成したSB3、台本、manifestはbit-for-bitで一致します。</p>
-            <p>出力manifestは使用パッケージとバージョン、入力3点のSHA-256、各アセットの入力ロックとSB3ファイル名・アセットID・台本参照、出力SB3と台本のSHA-256を記録します。出力確定前に、SB3内のtargetとアセットファイル、変換済み台本、manifestの全対応を照合します。</p>
+            <p>出力manifestの<code>formatVersion</code>は2です。使用パッケージとバージョン、<code>profile</code>、入力3点のSHA-256、各アセットの入力ロックとSB3ファイル名・アセットID・台本参照、出力SB3と台本のSHA-256を記録します。<code>script</code>には<code>mode</code>（<code>external</code>または<code>embedded</code>）、予約変数ID、UTF-8バイト数、SHA-256を記録します。出力確定前に、SB3内のtargetとアセットファイル、変換済み台本、manifestの全対応を照合し、<code>player</code>ではSB3内の台本、外部TXT、manifestのサイズとハッシュが一致することを再読込して確認します。</p>
           </section>
           <section class="level4">
             <h4 id="エラーとロールバック">エラーとロールバック</h4>
             <p>アセット固有のエラーには処理段階、DSLアセット名、入力URIを含めます。欠損、HTTPエラー、Content-Type・サイズ・SHA-256不一致、target欠損、名前競合、危険なパスのいずれでも、検証が完了するまで既存出力を変更しません。</p>
             <p>3成果物は同じ出力ディレクトリ内の一時領域で生成・検証します。確定時は既存3成果物をロールバック領域へ移してから新成果物へ置き換え、途中で失敗した場合は新成果物を除去して旧成果物を復元します。<code>.＜出力名＞.rollback-*</code>が残っている場合は、前回処理が中断した可能性があるため自動上書きせず停止します。内容を確認して旧成果物を復元した後に再実行します。</p>
             <p>パッケージに問題がある場合、消費側は依存バージョンを直前の検証済み版へ戻します。このビルダーは通常の本体ビルドへ直接組み込まれていないため、本体配布処理を変更せず切り戻せます。</p>
+          </section>
+        </section>
+        <section class="level3">
+          <h3 id="17-成果物プロファイル">1.7 成果物プロファイル</h3>
+          <p>紙芝居アプリのSB3は、台本と物語固有アセットをどこに保持するかにより、<code>generic</code>、<code>editor</code>、<code>player</code>の3プロファイルに分けます。プロファイルは用途と生成契約を表すものであり、SB3をTurboWarp Editorで編集できるかどうかを制限するアクセス権ではありません。そのため、<code>player</code>は「再生専用」ではなく「再生用」と表記します。</p>
+          <table>
+            <thead>
+              <tr>
+                <th>プロファイル</th>
+                <th>ファイル名の例</th>
+                <th>台本</th>
+                <th>物語固有アセット</th>
+                <th>主な用途</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>generic</code></td>
+                <td><code>kamishibai.sb3</code></td>
+                <td>非埋め込み</td>
+                <td>非埋め込み</td>
+                <td>汎用の物語作成・再生用雛形</td>
+              </tr>
+              <tr>
+                <td><code>editor</code></td>
+                <td><code>_urashima.sb3</code></td>
+                <td>非埋め込み</td>
+                <td>埋め込み</td>
+                <td>物語作成者による台本編集・動作確認</td>
+              </tr>
+              <tr>
+                <td><code>player</code></td>
+                <td><code>urashima.sb3</code></td>
+                <td>埋め込み</td>
+                <td>埋め込み</td>
+                <td>配布・再生、PackagerによるWeb版生成</td>
+              </tr>
+            </tbody>
+          </table>
+          <section class="level4">
+            <h4 id="generic-汎用雛形"><code>generic</code>: 汎用雛形</h4>
+            <p><code>generic</code>は本体リポジトリが<code>app/</code>から生成する<code>kamishibai.sb3</code>です。公開する物語の台本、背景、キャラクター画像、効果音、BGMを含めません。利用者または物語作成者が台本を開き、台本の<code>asset=</code>定義に従ってアセットを読み込む従来の作成・再生フローを提供します。</p>
+            <p><code>generic</code>はサンプル変換ビルダーの出力ではなく、<code>editor</code>と<code>player</code>を生成するためのベースアプリでもあります。本体リポジトリでは、特定の物語を追加せず、この汎用性を配布テストで維持します。</p>
+          </section>
+          <section class="level4">
+            <h4 id="editor-物語作成者向け"><code>editor</code>: 物語作成者向け</h4>
+            <p><code>editor</code>は特定の物語で使用する画像・音声をSB3へ組み込みますが、台本は組み込みません。浦島太郎では<code>_urashima.sb3</code>を使用し、物語作成者が外部の<code>urashima.txt</code>を開いて編集・再読込しながら動作を確認します。台本を変更してもアセットを再取得する必要がないため、台本の反復編集とデバッグに使用できます。</p>
+            <p>ファイル名先頭の<code>_</code>は、物語作成者が内部的に使用する編集用成果物であることをコンパクトに示します。隠しファイル、非公開ファイル、または一時ファイルであることは意味しません。一般利用者向けの主導線とは分けますが、必要に応じて開発者向けページから取得できるようにします。</p>
+          </section>
+          <section class="level4">
+            <h4 id="player-配布再生用"><code>player</code>: 配布・再生用</h4>
+            <p><code>player</code>は、<code>editor</code>と同じ画像・音声に加えて、同時生成した変換済み台本をSB3内へ組み込みます。浦島太郎では<code>urashima.sb3</code>を使用します。アプリ起動後に表示されるタイトル画面をクリックすると、組み込み台本をランタイム変数<code>script</code>へ設定し、ファイル選択を行わずに<code>startStory</code>を実行します。台本固有の画像・音声も同じSB3から解決し、アセット配信サーバから取得しません。</p>
+            <p>この保証は台本と物語固有アセットを対象とします。TMPoseモデル、カメラ、その他の外部サービスなど、別途オンライン利用を前提とする機能まで完全にオフライン化するものではありません。オンライン依存は成果物manifestと公開ページへ明記します。</p>
+            <p>TurboWarp PackagerでHTMLを生成する場合は、<code>player</code>だけを入力にします。<code>editor</code>をWeb版へ変換して、実行時に台本ファイル選択を要求する構成にはしません。サンプル一覧ではWeb版と<code>player</code>を一般向けに案内し、<code>editor</code>は物語作成者向けの導線へ分離します。</p>
+          </section>
+          <section class="level4">
+            <h4 id="生成と検証の契約">生成と検証の契約</h4>
+            <ul>
+              <li><code>generic</code>は本体リポジトリで生成し、公開サンプルの台本・固有アセットを含めません。</li>
+              <li><code>editor</code>と<code>player</code>はサンプルリポジトリで、固定バージョンの本体ビルダー、同じビルド元台本、アセットロック、名前対応表から生成します。</li>
+              <li>生成設定とmanifestへ<code>profile</code>を記録し、入力台本、アセット、ベースSB3、各成果物のSHA-256を対応付けます。</li>
+              <li><code>editor</code>の外部台本と<code>player</code>へ組み込む台本は同じ変換結果を使用します。内容またはアセット参照がプロファイル間で分岐してはいけません。</li>
+              <li>同じ入力と固定依存から各プロファイルを再生成した場合、SB3、台本、manifestのハッシュが一致しなければなりません。</li>
+              <li><code>player</code>は、タイトルクリック後にファイル選択を開かず最初のシーンへ進み、台本固有アセットのHTTP取得を行わないことをVMテストとブラウザテストで確認します。</li>
+            </ul>
+            <p>このプロファイル契約は段階導入中です。本体の台本組み込みとタイトルクリック開始は<a href="https://github.com/kubohiroya/tmpose-kamishibai/issues/60">Issue #60</a>、浦島太郎の<code>editor</code>／<code>player</code>生成は<a href="https://github.com/kubohiroya/tmpose-kamishibai-samples/issues/2"><code>tmpose-kamishibai-samples</code> Issue #2</a>、Packager Web版は同<a href="https://github.com/kubohiroya/tmpose-kamishibai-samples/issues/7">Issue #7</a>で管理します。各Issueが完了するまでは、現在配布中のSB3がこの最終契約をすべて満たすとはみなしません。</p>
+            <p>問題が見つかった場合、Web版と<code>player</code>の公開を停止し、台本を外部から開く<code>editor</code>へ切り戻します。ビルダーの不具合では固定依存を直前の検証済みバージョンへ戻します。サンプル固有ファイルを本体リポジトリへコピーしてロールバックしてはいけません。</p>
           </section>
         </section>
       </section>
