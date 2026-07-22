@@ -295,10 +295,12 @@ test('stops an asset sound when Right finishes sound-until-done', async (context
     'asset=Title,backdrop',
     'asset=Stars,backdrop',
     'asset=Effect,sound:Hatchling:Chirp',
+    'asset=Music,https://example.com/music.mp3',
     'cover=Title,',
     '---',
     'sceneLabel=first',
     'action=stage:Stars',
+    'action=bgm:Music',
     'action=sound:Effect',
     'action=stage:Title',
     'action=wait:30',
@@ -313,6 +315,40 @@ test('stops an asset sound when Right finishes sound-until-done', async (context
   harness.runUntil(() => harness.getBackdropName() === 'Title', {maxSteps: 50});
 
   assert.equal(harness.isSoundPlaying('Effect'), false);
+  assert.equal(harness.isSoundPlaying('Music'), true);
+  assert.equal(harness.hasRuntimeVariable('skipMode'), false);
+});
+
+test('keeps BGM playing when Right finishes an unrelated wait', async (context) => {
+  const harness = await loadKamishibaiVm();
+  context.after(() => harness.quit());
+  startScript(harness, [
+    'kamishibai=3.1',
+    'asset=Title,backdrop',
+    'asset=Stars,backdrop',
+    'asset=Music,sound:Hatchling:Chirp',
+    'cover=Title,',
+    '---',
+    'sceneLabel=first',
+    'action=stage:Stars',
+    'action=bgm:Music',
+    'action=wait:30',
+    'action=stage:Title',
+    'action=wait:30',
+    '---',
+    'sceneLabel=second',
+    'action=stage:Stars',
+    'action=wait:30',
+  ].join('\n'));
+  harness.runUntil(() => (
+    harness.isSoundPlaying('Music')
+    && harness.getRuntimeVariable('actionCommand') === 'wait'
+  ));
+
+  harness.pressKey('ArrowRight');
+  harness.runUntil(() => harness.getBackdropName() === 'Title', {maxSteps: 50});
+
+  assert.equal(harness.isSoundPlaying('Music'), true);
   assert.equal(harness.hasRuntimeVariable('skipMode'), false);
 });
 

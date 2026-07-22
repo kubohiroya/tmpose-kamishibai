@@ -20863,10 +20863,96 @@
           "topLevel": false
         },
         "ctxRightStopSound": {
-          "opcode": "twAssetManager_stopAllSounds",
+          "opcode": "control_if",
           "next": "ctxRightFinishSequence",
           "parent": "jc",
-          "inputs": {},
+          "inputs": {
+            "CONDITION": [
+              2,
+              "ctxRightIsSound"
+            ],
+            "SUBSTACK": [
+              2,
+              "ctxRightStopCurrentSound"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "ctxRightIsSound": {
+          "opcode": "operator_equals",
+          "next": null,
+          "parent": "ctxRightStopSound",
+          "inputs": {
+            "OPERAND1": [
+              3,
+              "ctxRightActionCommand",
+              [
+                10,
+                ""
+              ]
+            ],
+            "OPERAND2": [
+              1,
+              [
+                10,
+                "sound"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "ctxRightActionCommand": {
+          "opcode": "lmsTempVars2_getRuntimeVariable",
+          "next": null,
+          "parent": "ctxRightIsSound",
+          "inputs": {
+            "VAR": [
+              1,
+              [
+                10,
+                "actionCommand"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "ctxRightStopCurrentSound": {
+          "opcode": "twAssetManager_stopSound",
+          "next": null,
+          "parent": "ctxRightStopSound",
+          "inputs": {
+            "NAME": [
+              3,
+              "ctxRightActionParam",
+              [
+                10,
+                "sound1"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "ctxRightActionParam": {
+          "opcode": "lmsTempVars2_getRuntimeVariable",
+          "next": null,
+          "parent": "ctxRightStopCurrentSound",
+          "inputs": {
+            "VAR": [
+              1,
+              [
+                10,
+                "actionParam"
+              ]
+            ]
+          },
           "fields": {},
           "shadow": false,
           "topLevel": false
