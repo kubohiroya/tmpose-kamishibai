@@ -3,14 +3,13 @@ import {createRequire} from 'node:module';
 import path from 'node:path';
 import {fileURLToPath, pathToFileURL} from 'node:url';
 
-import {strFromU8, unzipSync} from 'fflate';
-
 import {
   documentConfig,
   generalDocumentConfig,
   resolveLearnedThroughGrade,
   staffDocumentConfig,
 } from '../docs/config.mjs';
+import {createDeterministicSb3} from './sb3/source.mjs';
 
 const projectRoot = fileURLToPath(new URL('../', import.meta.url));
 const require = createRequire(import.meta.url);
@@ -25,12 +24,12 @@ const docsDirectory = path.join(projectRoot, 'dist/docs');
 const siteIndexPath = path.join(projectRoot, 'dist/index.html');
 const heroImageSourcePath = path.join(projectRoot, 'docs/images/image49.png');
 const heroImagePath = path.join(projectRoot, 'dist/images/image49.png');
-const downloadFilename = 'kamishibai-3_1a1.sb3';
-const downloadSourcePath = path.join(projectRoot, 'site/downloads', downloadFilename);
+const downloadFilename = 'kamishibai.sb3';
+const downloadSourceDirectory = path.join(projectRoot, 'site/downloads');
 const downloadDirectory = path.join(projectRoot, 'dist/downloads');
 const downloadIndexPath = path.join(downloadDirectory, 'index.html');
 const downloadPath = path.join(downloadDirectory, downloadFilename);
-const developmentSb3Path = path.join(projectRoot, 'kamishibai.sb3');
+const sb3SourceDirectory = path.join(projectRoot, 'app');
 const docsIndexPath = path.join(docsDirectory, 'index.html');
 const generalDirectory = path.join(docsDirectory, generalDocumentConfig.outputDirectory);
 const workshopDirectory = path.join(docsDirectory, documentConfig.outputDirectory);
@@ -156,35 +155,44 @@ async function verifySiteIndex() {
 async function verifyDownloads() {
   const html = await readFile(downloadIndexPath, 'utf8');
   const links = await verifyLocalReferences(downloadIndexPath, 'a', 'href');
-  const [sourceArchive, publishedArchive, archiveStat, developmentArchive] = await Promise.all([
-    readFile(downloadSourcePath),
+  const [
+    sourceEntries,
+    publishedEntries,
+    publishedArchive,
+    archiveStat,
+    expectedBuild,
+  ] = await Promise.all([
+    readdir(downloadSourceDirectory, {withFileTypes: true}),
+    readdir(downloadDirectory, {withFileTypes: true}),
     readFile(downloadPath),
     stat(downloadPath),
-    readFile(developmentSb3Path),
+    createDeterministicSb3(sb3SourceDirectory),
   ]);
+  const sourceSb3Files = sourceEntries
+    .filter((entry) => entry.isFile() && entry.name.endsWith('.sb3'))
+    .map((entry) => entry.name);
+  const publishedSb3Files = publishedEntries
+    .filter((entry) => entry.isFile() && entry.name.endsWith('.sb3'))
+    .map((entry) => entry.name)
+    .sort();
 
   assert(links.includes(downloadFilename),
     `${downloadFilename} is missing from the download page.`);
   assert(html.includes(`href="${downloadFilename}" download`),
     'The SB3 link does not use the browser download behavior.');
-  assert(html.includes('3.1a1') && html.includes('暫定版'),
-    'The download page does not identify the SB3 as the 3.1a1 provisional release.');
-  assert(sourceArchive.equals(publishedArchive),
-    'The published SB3 differs from its site/downloads source.');
-  assert(archiveStat.size > 1_000_000 && publishedArchive.subarray(0, 2).toString() === 'PK',
-    'The published SB3 is not a plausible ZIP-based Scratch project.');
-  assert(developmentArchive.length > 1_000_000
-      && developmentArchive.subarray(0, 2).toString() === 'PK',
-    'The repository-root development SB3 is not a plausible ZIP-based Scratch project.');
-
-  const developmentProjectFile = unzipSync(
-    new Uint8Array(developmentArchive),
-  )['project.json'];
-  assert(developmentProjectFile,
-    'The repository-root development SB3 does not contain project.json.');
-  const developmentProject = JSON.parse(strFromU8(developmentProjectFile));
-  assert(Array.isArray(developmentProject.targets),
-    'The repository-root development SB3 project.json does not contain targets.');
+  assert(html.includes('kamishibai 3.1') && html.includes('ビルド生成'),
+    'The download page does not identify the generated kamishibai 3.1 archive.');
+  assert(sourceSb3Files.length === 0,
+    `site/downloads must not contain tracked SB3 binaries: ${sourceSb3Files.join(', ')}`);
+  assert(JSON.stringify(publishedSb3Files) === JSON.stringify([downloadFilename]),
+    `Unexpected published SB3 files: ${publishedSb3Files.join(', ')}`);
+  assert(publishedArchive.equals(Buffer.from(expectedBuild.archive)),
+    'The published SB3 differs from the deterministic app source build.');
+  assert(archiveStat.size === publishedArchive.length && archiveStat.size > 0
+      && publishedArchive.subarray(0, 2).toString() === 'PK',
+    'The published SB3 is not a non-empty ZIP-based Scratch project.');
+  assert(Array.isArray(expectedBuild.source.project.targets),
+    'The canonical app source project does not contain targets.');
 
   return {filename: downloadFilename, size: archiveStat.size};
 }

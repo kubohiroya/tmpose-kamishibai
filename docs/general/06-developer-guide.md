@@ -17,7 +17,7 @@
 
 ### 1.2 `kamishibai.sb3` の依存物管理方針
 
-`kamishibai.sb3` は、台本固有の画像・音声アセットを組み込まない汎用実行環境として管理します。機能拡張とアセットは、提供元と用途に応じて次のように扱います。
+配布する `kamishibai.sb3` は、台本固有の画像・音声アセットを組み込まない汎用実行環境として、Git管理された展開ソースから生成します。機能拡張とアセットは、提供元と用途に応じて次のように扱います。
 
 * Animated TextやTemporary Variablesなど、`extensions.turbowarp.org` で提供されるTurboWarp Extension Gallery採用済みの機能拡張は、外部URLを参照します。本資料では、これらをTurboWarp標準の機能拡張と呼びます。
 * Asset Manager、TMPose、Text Lines、Runtime Expression、Async Inputなど、tmpose-kamishibai固有の非サンドボックス機能拡張は、JavaScriptをbase64データURLに変換して `kamishibai.sb3` 内へ格納します。
@@ -25,6 +25,68 @@
 * TurboWarp標準の機能拡張と外部アセットは、提供元が内容とURLを安定して維持することを前提に利用します。SHA-3などのハッシュ値による独自の完全性検証は行いません。
 
 外部アセットの提供元には、HTTPSで取得できること、ブラウザからの取得に必要なCORS設定が行われていること、URLが長期的に維持されることを求めます。配信内容またはURLが変更された場合は、必要に応じて台本ファイルを更新します。
+
+### 1.3 正本と生成物
+
+`app/` ディレクトリを紙芝居アプリの正本としてGit管理します。ルートの `kamishibai.sb3` や `site/downloads/` 配下のSB3バイナリは正本として管理しません。
+
+浦島太郎の台本と画像・音声を組み込んだスナップショットは、本体とは別の [`kubohiroya/tmpose-kamishibai-samples`](https://github.com/kubohiroya/tmpose-kamishibai-samples) リポジトリの `samples/urashima/urashima.sb3` で管理します。本体リポジトリでは、浦島太郎固有のSB3、台本、画像、音声を管理・配布しません。
+
+`app/` の主な内容は次のとおりです。
+
+* `project.source.json`: 整形済みのScratchプロジェクトJSON
+* `embedded-extensions.json`: 埋め込み拡張のID、ファイル、データURL符号化方式
+* `extensions/`: 個別ファイルへ復号したカスタム機能拡張
+* `assets/`: 汎用実行環境自体が参照する画像・音声
+* `sb3-source.json`: ZIPエントリの順序を含む展開ソースのマニフェスト
+
+`app/project.source.json` の台本解析・実行用リストは空の初期状態で管理し、浦島太郎固有のターゲット、背景、コスチューム、音声は含めません。この不変条件は配布テストで検査します。
+
+SB3は用途ごとに次の場所へ生成します。どちらもGit管理対象ではありません。
+
+| 用途 | 生成先 | 生成コマンド |
+|---|---|---|
+| TurboWarpでの再編集、ローカルテスト | `tmp/kamishibai.sb3` | `pnpm sb3:build` |
+| GitHub Pagesでの配布 | `dist/downloads/kamishibai.sb3` | `pnpm run build` |
+
+生成処理はZIPエントリ順とタイムスタンプを固定します。同じ `app/` から生成したSB3はbit-for-bitで一致します。`pnpm sb3:check` は、アセット参照とMD5、マニフェストの不足・余剰、埋め込み拡張の対応関係を検証します。
+
+### 1.4 TurboWarpで編集した内容を取り込む
+
+通常の更新手順は次のとおりです。
+
+1. `app/` に未コミット差分がないことを確認する。
+2. `pnpm sb3:build` を実行する。
+3. `tmp/kamishibai.sb3` をTurboWarpで開き、編集する。
+4. TurboWarpから編集済みSB3を明示した場所へ保存する。
+5. `pnpm sb3:import -- /path/to/edited-kamishibai.sb3` を実行する。
+6. `git diff -- app` で、ブロック、拡張、アセットの差分を確認する。
+7. 次の検証を順に実行する。
+
+```sh
+pnpm sb3:check
+pnpm test
+pnpm run build
+```
+
+importは、入力SB3から作成した候補と既存の `app/` を比較します。内容が同一なら書き換えません。相違がある場合、Git管理外の出力や未コミット差分を既定では置換しません。Git管理済みでcleanな差分の確認だけを省略するときは `--yes`、未コミット差分も意図的に破棄するときだけ `--discard-local-changes` を追加します。後者は別指定であり、`--yes` だけでは未コミット差分を破棄できません。
+
+カスタム機能拡張だけを修正する場合は、`app/extensions/` のJavaScriptを直接編集できます。手作業でもコーディングエージェントでも、編集後は同じ3つの検証コマンドを実行します。TurboWarp GUIで行った変更とソースファイルへの部分修正を同時に取り込む場合は、先にimportを完了してGit差分を確認してから、部分修正を重ねます。
+
+### 1.5 配布確認とロールバック
+
+`pnpm run build` はサイト一式を作成し、`dist/downloads/kamishibai.sb3` が `app/` からの決定的生成結果と一致すること、ダウンロードページから参照されていること、ZIP形式とプロジェクト構造が妥当であることを検証します。
+
+リリースまたはマージ前には、生成SB3をTurboWarpで開き、少なくとも次を手動確認します。
+
+* 読込エラーが表示されない。
+* 緑の旗で表紙とメニューが表示される。
+* 台本ファイルを読み込める。
+* スペースキー、右矢印キー、下矢印キーの進行操作が機能する。
+
+ソース更新を戻す場合は、該当コミットを `git revert` してから `pnpm sb3:build` と `pnpm run build` を再実行します。未コミットの `app/` を戻す操作は差分を失うため、先に `git diff -- app` を確認し、必要ならコミットまたはstashします。
+
+importまたはbuildの途中で `.app.rollback-*` や `.kamishibai.sb3.rollback-*` が残った場合は、自動削除や再実行をせず、中身と元の出力を比較します。復旧対象を確定した後で元の場所へ戻し、通常の検証を実行します。配布に問題が見つかった場合は、GitHub Pagesを直前の検証済みコミットから再構築できます。SB3バイナリを正本としてリポジトリへ戻す必要はありません。
 
 ## 2. 内部仕様: `skipMode` の状態遷移
 

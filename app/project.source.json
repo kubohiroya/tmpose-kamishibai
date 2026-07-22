@@ -29,21 +29,15 @@
       "lists": {
         "%%4:3L3H/Ff.^;4D3*tY": [
           "skinList",
-          [
-            "Urashima-old-2"
-          ]
+          []
         ],
         "B,!.is_$?Mse.N}oUen3": [
           "poseList",
-          [
-            "despair"
-          ]
+          []
         ],
         ".DC}O2]v}$)g~9I.Gg}5": [
           "soundList",
-          [
-            "Ocean Wave"
-          ]
+          []
         ],
         "jXct!1Nb7`!.KS2zv09@": [
           "actionList",
@@ -51,83 +45,19 @@
         ],
         "I1GQ4zfjXrRBtaX@7D0U": [
           "sceneList",
-          [
-            "kamishibai=3.1\n# title: 浦島太郎\n# author: Hiroya Kubo <hiroya@cuc.ac.jp>\n# date: 2026-07-14\nsetRuntimeVariable=startSceneIndex:1\nasset=Urashima-walk-1,costume:Urashima\nasset=Urashima-help-1,costume:Urashima\nasset=Urashima-dance-1,costume:Urashima\nasset=Urashima-dance-2,costume:Urashima\nasset=Urashima-ride-1,costume:Urashima\nasset=Urashima-ride-2,costume:Urashima\nasset=Urashima-box-1,costume:Urashima\nasset=Urashima-box-2,costume:Urashima\nasset=Urashima-surprised,costume:Urashima\nasset=Urashima-open-1,costume:Urashima\nasset=Urashima-open-2,costume:Urashima\nasset=Urashima-open-3,costume:Urashima\nasset=Urashima-old-1,costume:Urashima\nasset=Urashima-old-2,costume:Urashima\nasset=Turtle,costume\nasset=Princess,costume\n#asset=p1,costume:Princess\n#asset=p2,costume:Princess\n#asset=p3,costume:Princess\n#asset=p4,costume:Princess\nasset=Fish1,costume:Fish\nasset=Fish2,costume:Fish\nasset=Beach1,backdrop\nasset=Beach2,backdrop\nasset=Ocean,backdrop\nasset=Dragon Castle,backdrop\nasset=Smoke,backdrop\nasset=End,backdrop\nasset=Guitar Chords2,sound\nasset=Rip,sound\nasset=Squish Pop,sound\nasset=Squeaky Toy,sound\nasset=Jump,sound\nasset=Odesong,sound\nasset=Splash,sound\nasset=Drum Funky,sound\nasset=Medieval2,sound\nasset=Medieval1,sound\nasset=Lo Gliss Tabla,sound\nasset=Low Conga,sound\nasset=Lo Geh Tabla,sound\nasset=Gong,sound\nasset=Crowd Gasp,sound\nasset=Ocean Wave,sound\nasset=Xylo2,sound\nasset=Goal Cheer,sound\nasset=Narration,text\nactor=Urashima,Urashima-walk-1\nactor=Turtle,Turtle\nactor=Princess,Princess\nactor=Fish,Fish1\nactor=Narration,Narration\ncover=Beach1,Ocean Wave\n",
-            "\n# scene 1\nsceneLabel=beach\naction=Prompt:show:Narration:0,0,100\nsetRuntimeVariable=Narration:むかし\naction=wait:2\nsetRuntimeVariable=Narration:むかし　むかし、\naction=wait:2\nsetRuntimeVariable=Narration:むかし　むかし、あるところに...\naction=wait:2\nsetRuntimeVariable=Narration:\n",
-            "\n# scene 1\nsceneLabel=beach\nTMPoseURL=https://sqs.prof.cuc.ac.jp/kamishibai/20260630/1and2/\naction=transition:fadeOut\naction=stage:Beach1\naction=transition:fadeUp\naction=wait:0.5\naction=bgm:Guitar Chords2\naction=wait:0.3\naction=Urashima:show:Urashima-walk-1:172,-77,45\naction=wait:1.5\naction=Urashima:say:今日は浜辺を散歩しよう。:2\naction=wait:1\naction=Urashima:moveTo:40,-77,1.5\naction=wait:0.25\naction=Turtle:show:Turtle:-190,-110,35\naction=Turtle:moveTo:-165,-110,0.5\naction=wait:0.75\naction=Urashima:say:あっカメだ！どうしたの？:2\naction=wait:1\naction=Turtle:say:............:2\naction=wait:1\naction=bgm:Squeaky Toy\naction=Turtle:say:助けてください！:2\naction=wait:2\naction=Urashima:say:\naction=Turtle:say:\naction=Urashima:show:Urashima-help-1:40,-77,45\naction=Urashima:moveTo:0,-77,0.5\naction=Urashima:pose:Urashima-help-1:help:Squish Pop\naction=Urashima:setSkin:Urashima-walk-1:45\naction=wait:1.5\naction=Urashima:moveTo:120,-77,1.5\naction=bgm:Squeaky Toy\naction=Turtle:say:ありがとうございます！:1\naction=wait:1\naction=bgm:Squeaky Toy\naction=Turtle:say:お礼に竜宮城へご案内します。:2\naction=wait:1\naction=bgm:Jump\naction=Urashima:setSkin:Urashima-dance-1:45\naction=Urashima:say:わーい🎵:2\naction=wait:1.5\naction=Urashima:say:\naction=bgm:Odesong\naction=wait:1.2\n",
-            "\n# scene 2\nsceneLabel=ocean\nTMPoseURL=https://sqs.prof.cuc.ac.jp/kamishibai/20260630/1and2/\naction=stage:Ocean\naction=wait:1.5\naction=Urashima:show:Urashima-ride-1:170,5,40\naction=Urashima:moveTo:140,-5,0.25\naction=Urashima:moveTo:110,5,0.25\naction=Urashima:moveTo:80,-5,0.25\naction=Urashima:moveTo:50,5,0.25\naction=Urashima:moveTo:20,-5,0.25\naction=Urashima:pose:Urashima-ride-2,Urashima-ride-1,Urashima-ride-2,Urashima-ride-1:ride2,ride1,ride2,ride1:Splash,Splash,Splash,Splash\naction=bgm:Odesong\naction=wait:2\naction=Urashima:moveTo:-10,5,0.25\naction=Urashima:moveTo:-40,-5,0.25\naction=Urashima:moveTo:-70,5,0.25\naction=Urashima:moveTo:-100,-5,0.25\n",
-            "\n# scene 3\nsceneLabel=welcome to dragon castle\nTMPoseURL=https://sqs.prof.cuc.ac.jp/kamishibai/20260630/3and4/\naction=stage:Dragon Castle\naction=wait:0.5\naction=Urashima:show:Urashima-walk-1:172,-57,45\naction=wait:1\naction=Urashima:moveTo:40,-57,1.5\naction=Fish:show:-130,-27,70\naction=Fish:loop:Fish1,Fish2:1,1\naction=Princess:show:Princess:-130,-27,70\naction=wait:1\naction=Princess:say:ようこそ竜宮城へ。:2.5\naction=wait:0.1\naction=Princess:say:楽しんでいってくださいね。:2.5\naction=wait:1\naction=bgm:Jump\naction=Urashima:setSkin:Urashima-dance-1:45\naction=Urashima:pose:Urashima-dance-1,Urashima-dance-2,Urashima-dance-1,Urashima-dance-2:dance1,dance2,dance1,dance2:Drum Funky,Drum Funky,Drum Funky,Drum Funky\n#action=Princess:pose:p1,p2,p1,p2:pose1,pose2,pose1,pose2:Drum Funky,Drum Funky,Drum Funky,Drum Funky\n#action=Princess:pose:p1,p2,p3,p1,p2,p3:pose1,pose2,pose3,pose1,pose2,pose3:Drum Funky,Drum Funky,Drum Funky,Drum Funky,Drum Funky,Drum Funky\n#action=Princess:pose:p1,p2,p3,p4,p1,p2,p3,p4:pose1,pose2,pose3,pose4,pose1,pose2,pose3,pose4:Drum Funky,Drum Funky,Drum Funky,Drum Funky,Drum Funky,Drum Funky,Drum Funky,Drum Funky\naction=wait:2\n",
-            "\n# scene 4\nsceneLabel=goodbye dragon castle\nTMPoseURL=https://sqs.prof.cuc.ac.jp/kamishibai/20260630/3and4/\naction=stage:Dragon Castle\naction=wait:2\naction=bgm:Medieval2\naction=wait:1.4\naction=Princess:show:Princess:-130,-27,70\naction=wait:1.9\naction=Urashima:show:Urashima-walk-1:80,-77,45\naction=wait:1.9\naction=Princess:say:お帰りになる前に、この玉手箱をどうぞ。:2.2\naction=wait:2.4\naction=Urashima:moveTo:55,-77,0.5\naction=Urashima:setSkin:Urashima-box-1:45\naction=Urashima:pose:Urashima-box-1,Urashima-box-2:receive,goodbye:Rip,Rip\naction=Urashima:moveTo:170,-77,2.5\naction=wait:1\naction=Urashima:hide\naction=wait:1\naction=Princess:think:............:2.5\naction=Princess:hide\naction=wait:2\n",
-            "\n# scene 5\nsceneLabel=home village\naction=transition:fadeOut\naction=stage:Beach2\naction=transition:fadeUp\naction=wait:1\naction=bgm:Medieval1\naction=wait:3\naction=Urashima:show:Urashima-walk-1:172,-57,45\naction=wait:2\naction=Urashima:moveTo:0,-57,2\naction=wait:0.5\naction=Urashima:setSkin:Urashima-surprised:45\naction=wait:1\naction=bgm:Ocean Wave\naction=Urashima:say:村の様子が変わっている:3\naction=wait:1\n",
-            "\n# scene 6\nsceneLabel=open the box\naction=stage:Beach2\nTMPoseURL=https://sqs.prof.cuc.ac.jp/kamishibai/20260630/6and7/\naction=Urashima:show:Urashima-open-1:0,-57,45\naction=wait:2\naction=Urashima:say:開けてはいけないと言われたけれど......:4\naction=Urashima:pose:Urashima-open-1,Urashima-open-2,Urashima-open-3:open1,open2,open3:Lo Geh Tabla,Lo Gliss Tabla,Low Conga\naction=Urashima:say:\naction=wait:2\n",
-            "\n# scene 7\nsceneLabel=regret\nTMPoseURL=https://sqs.prof.cuc.ac.jp/kamishibai/20260630/6and7/\naction=transition:fadeUp\naction=stage:Smoke\naction=transition:fadeOut\naction=sound:Gong\naction=Urashima:show:Urashima-old-1:0,-57,45\naction=bgm:Crowd Gasp\naction=wait:2\naction=Urashima:setSkin:Urashima-old-2\naction=wait:1\naction=Urashima:think:あっという間におじいさんになってしまった…:3\naction=Urashima:pose:Urashima-old-2:despair:Ocean Wave\naction=bgm:Medieval1\naction=wait:4\naction=Urashima:hide\naction=wait:1\n",
-            "\n# scene 8\nsceneLabel=curtain call\naction=transition:fadeOut\naction=stage:Dragon Castle\naction=transition:fadeUp\naction=sound:Ocean Wave\naction=wait:1.5\naction=bgm:Xylo2\naction=wait:2.7\naction=Turtle:show:Turtle:-170,-20,40\naction=wait:1.2\naction=Princess:show:Princess:0,-27,70\naction=wait:1.2\naction=Urashima:show:Urashima-walk-1:155,-10,45\naction=wait:1.2\naction=Princess:say:バイバイ！:4.6\naction=wait:0.1\n",
-            "\n# scene 9\nsceneLabel=end credit\naction=stage:End\naction=sound:Goal Cheer\naction=wait:4\naction=transition:fadeOut\n"
-          ]
+          []
         ],
         "?ZBHb1dE9N@(R;AqIbOj": [
           "commandList",
-          [
-            ""
-          ]
+          []
         ],
         "N/$Q/ghQ@1TOw*Ph7Y+7": [
           "actorList",
-          [
-            "Urashima,Urashima-walk-1",
-            "Turtle,Turtle",
-            "Princess,Princess",
-            "Fish,Fish1",
-            "Narration,Narration"
-          ]
+          []
         ],
         "_fx7;?py{8^TL;,eyogt": [
           "assetList",
-          [
-            "Urashima-walk-1,costume:Urashima",
-            "Urashima-help-1,costume:Urashima",
-            "Urashima-dance-1,costume:Urashima",
-            "Urashima-dance-2,costume:Urashima",
-            "Urashima-ride-1,costume:Urashima",
-            "Urashima-ride-2,costume:Urashima",
-            "Urashima-box-1,costume:Urashima",
-            "Urashima-box-2,costume:Urashima",
-            "Urashima-surprised,costume:Urashima",
-            "Urashima-open-1,costume:Urashima",
-            "Urashima-open-2,costume:Urashima",
-            "Urashima-open-3,costume:Urashima",
-            "Urashima-old-1,costume:Urashima",
-            "Urashima-old-2,costume:Urashima",
-            "Turtle,costume",
-            "Princess,costume",
-            "Fish1,costume:Fish",
-            "Fish2,costume:Fish",
-            "Beach1,backdrop",
-            "Beach2,backdrop",
-            "Ocean,backdrop",
-            "Dragon Castle,backdrop",
-            "Smoke,backdrop",
-            "End,backdrop",
-            "Guitar Chords2,sound",
-            "Rip,sound",
-            "Squish Pop,sound",
-            "Squeaky Toy,sound",
-            "Jump,sound",
-            "Odesong,sound",
-            "Splash,sound",
-            "Drum Funky,sound",
-            "Medieval2,sound",
-            "Medieval1,sound",
-            "Lo Gliss Tabla,sound",
-            "Low Conga,sound",
-            "Lo Geh Tabla,sound",
-            "Gong,sound",
-            "Crowd Gasp,sound",
-            "Ocean Wave,sound",
-            "Xylo2,sound",
-            "Goal Cheer,sound",
-            "Narration,text"
-          ]
+          []
         ],
         "3r_aj`IWcX(;LN(N6[/.": [
           "durationList",
@@ -135,31 +65,11 @@
         ],
         "SDqX*KVcQbyuG_lQN_{U": [
           "sceneLabelList",
-          [
-            "beach",
-            "beach",
-            "ocean",
-            "welcome to dragon castle",
-            "goodbye dragon castle",
-            "home village",
-            "open the box",
-            "regret",
-            "curtain call",
-            "end credit"
-          ]
+          []
         ],
         "-r*VZVDvolUB|7:AEZB)": [
           "lines",
-          [
-            "",
-            "# scene 9",
-            "sceneLabel=end credit",
-            "action=stage:End",
-            "action=sound:Goal Cheer",
-            "action=wait:4",
-            "action=transition:fadeOut",
-            ""
-          ]
+          []
         ]
       },
       "broadcasts": {
@@ -20482,241 +20392,9 @@
           "md5ext": "47282ff0f7047c6fab9c94b531abf721.png",
           "rotationCenterX": 480,
           "rotationCenterY": 360
-        },
-        {
-          "name": "Beach1",
-          "bitmapResolution": 2,
-          "dataFormat": "png",
-          "assetId": "eb776c9010f3e8cb37c996ed28ced040",
-          "md5ext": "eb776c9010f3e8cb37c996ed28ced040.png",
-          "rotationCenterX": 480,
-          "rotationCenterY": 320
-        },
-        {
-          "name": "Ocean",
-          "bitmapResolution": 2,
-          "dataFormat": "png",
-          "assetId": "f17a928d2b84a862897355d764b27ea7",
-          "md5ext": "f17a928d2b84a862897355d764b27ea7.png",
-          "rotationCenterX": 480,
-          "rotationCenterY": 320
-        },
-        {
-          "name": "Dragon Castle",
-          "bitmapResolution": 2,
-          "dataFormat": "png",
-          "assetId": "cb0680dde39f37183cf6a036c1ba9d84",
-          "md5ext": "cb0680dde39f37183cf6a036c1ba9d84.png",
-          "rotationCenterX": 480,
-          "rotationCenterY": 320
-        },
-        {
-          "name": "Beach2",
-          "bitmapResolution": 2,
-          "dataFormat": "png",
-          "assetId": "a3989cb8ade50e902eca361fb039eb9e",
-          "md5ext": "a3989cb8ade50e902eca361fb039eb9e.png",
-          "rotationCenterX": 480,
-          "rotationCenterY": 322
-        },
-        {
-          "name": "Smoke",
-          "bitmapResolution": 2,
-          "dataFormat": "png",
-          "assetId": "93393d4256c7651095f509e7beede6f7",
-          "md5ext": "93393d4256c7651095f509e7beede6f7.png",
-          "rotationCenterX": 480,
-          "rotationCenterY": 320
-        },
-        {
-          "name": "End",
-          "bitmapResolution": 2,
-          "dataFormat": "png",
-          "assetId": "45b03f8de9c2090c0449184b43f0a33c",
-          "md5ext": "45b03f8de9c2090c0449184b43f0a33c.png",
-          "rotationCenterX": 480,
-          "rotationCenterY": 360
         }
       ],
-      "sounds": [
-        {
-          "name": "Rip",
-          "assetId": "4081f8fac2ca83bd34329400eb95bbde",
-          "dataFormat": "wav",
-          "rate": 22050,
-          "sampleCount": 12193,
-          "md5ext": "4081f8fac2ca83bd34329400eb95bbde.wav"
-        },
-        {
-          "name": "Space Noise",
-          "assetId": "a5cd5e83841aaaf34583d6ad53d551f5",
-          "dataFormat": "wav",
-          "rate": 22050,
-          "sampleCount": 58929,
-          "md5ext": "a5cd5e83841aaaf34583d6ad53d551f5.wav"
-        },
-        {
-          "name": "A Bass",
-          "assetId": "c04ebf21e5e19342fa1535e4efcdb43b",
-          "dataFormat": "wav",
-          "rate": 48000,
-          "sampleCount": 61300,
-          "md5ext": "c04ebf21e5e19342fa1535e4efcdb43b.wav"
-        },
-        {
-          "name": "Goal Cheer",
-          "assetId": "a434069c58e79d42f5d21abb1c318919",
-          "dataFormat": "wav",
-          "rate": 22050,
-          "sampleCount": 84329,
-          "md5ext": "a434069c58e79d42f5d21abb1c318919.wav"
-        },
-        {
-          "name": "Guitar Chords2",
-          "assetId": "e956f15da397a13fae0c90d9fe4571fb",
-          "dataFormat": "wav",
-          "rate": 22050,
-          "sampleCount": 159513,
-          "md5ext": "e956f15da397a13fae0c90d9fe4571fb.wav"
-        },
-        {
-          "name": "Squish Pop",
-          "assetId": "853cc25eb47a35c88e3a1fe88b171ed4",
-          "dataFormat": "wav",
-          "rate": 22050,
-          "sampleCount": 10161,
-          "md5ext": "853cc25eb47a35c88e3a1fe88b171ed4.wav"
-        },
-        {
-          "name": "Squeaky Toy",
-          "assetId": "09d36c3c7531a0a1224437f3994bad40",
-          "dataFormat": "wav",
-          "rate": 22050,
-          "sampleCount": 10161,
-          "md5ext": "09d36c3c7531a0a1224437f3994bad40.wav"
-        },
-        {
-          "name": "Odesong",
-          "assetId": "2c41921491b1da2bfa1ebcaba34265ca",
-          "dataFormat": "wav",
-          "rate": 22050,
-          "sampleCount": 212345,
-          "md5ext": "2c41921491b1da2bfa1ebcaba34265ca.wav"
-        },
-        {
-          "name": "Splash",
-          "assetId": "6aed5e38d40b87a21d893d26fa2858c0",
-          "dataFormat": "wav",
-          "rate": 22050,
-          "sampleCount": 46737,
-          "md5ext": "6aed5e38d40b87a21d893d26fa2858c0.wav"
-        },
-        {
-          "name": "Odesong2",
-          "assetId": "2c41921491b1da2bfa1ebcaba34265ca",
-          "dataFormat": "wav",
-          "rate": 22050,
-          "sampleCount": 212345,
-          "md5ext": "2c41921491b1da2bfa1ebcaba34265ca.wav"
-        },
-        {
-          "name": "Medieval1",
-          "assetId": "9329fef6a59c5406d70cbe5837976d6b",
-          "dataFormat": "wav",
-          "rate": 22050,
-          "sampleCount": 213361,
-          "md5ext": "9329fef6a59c5406d70cbe5837976d6b.wav"
-        },
-        {
-          "name": "Drum Funky",
-          "assetId": "fb56022366d21b299cbc3fd5e16000c2",
-          "dataFormat": "wav",
-          "rate": 22050,
-          "sampleCount": 44705,
-          "md5ext": "fb56022366d21b299cbc3fd5e16000c2.wav"
-        },
-        {
-          "name": "Medieval2",
-          "assetId": "7bc8c4a9d0525f04451356c6cc483dd7",
-          "dataFormat": "wav",
-          "rate": 22050,
-          "sampleCount": 324105,
-          "md5ext": "7bc8c4a9d0525f04451356c6cc483dd7.wav"
-        },
-        {
-          "name": "Ocean Wave",
-          "assetId": "c904610d770398b98872a708a2f75611",
-          "dataFormat": "wav",
-          "rate": 22050,
-          "sampleCount": 99569,
-          "md5ext": "c904610d770398b98872a708a2f75611.wav"
-        },
-        {
-          "name": "Lo Geh Tabla",
-          "assetId": "9205359ab69d042ed3da8a160a651690",
-          "dataFormat": "wav",
-          "rate": 48000,
-          "sampleCount": 67012,
-          "md5ext": "9205359ab69d042ed3da8a160a651690.wav"
-        },
-        {
-          "name": "Lo Gliss Tabla",
-          "assetId": "d7cd24689737569c93e7ea7344ba6b0e",
-          "dataFormat": "wav",
-          "rate": 48000,
-          "sampleCount": 15255,
-          "md5ext": "d7cd24689737569c93e7ea7344ba6b0e.wav"
-        },
-        {
-          "name": "Low Conga",
-          "assetId": "0b6f94487cd8a1cf0bb77e15966656c3",
-          "dataFormat": "wav",
-          "rate": 48000,
-          "sampleCount": 18250,
-          "md5ext": "0b6f94487cd8a1cf0bb77e15966656c3.wav"
-        },
-        {
-          "name": "Gong",
-          "assetId": "bd7004546144bf54536c7142cddfbc6b",
-          "dataFormat": "wav",
-          "format": "",
-          "rate": 48000,
-          "sampleCount": 228451,
-          "md5ext": "bd7004546144bf54536c7142cddfbc6b.wav"
-        },
-        {
-          "name": "Crowd Gasp",
-          "assetId": "0eaf773c9d1b06e801e7b5fd56298801",
-          "dataFormat": "wav",
-          "rate": 22050,
-          "sampleCount": 27433,
-          "md5ext": "0eaf773c9d1b06e801e7b5fd56298801.wav"
-        },
-        {
-          "name": "Xylo2",
-          "assetId": "d38fc904a0acfc27854baf7335ed46f9",
-          "dataFormat": "wav",
-          "rate": 22050,
-          "sampleCount": 246889,
-          "md5ext": "d38fc904a0acfc27854baf7335ed46f9.wav"
-        },
-        {
-          "name": "Jump",
-          "assetId": "6fcd64d6357e4ea03704e5f96bfd35ba",
-          "dataFormat": "wav",
-          "rate": 22050,
-          "sampleCount": 7113,
-          "md5ext": "6fcd64d6357e4ea03704e5f96bfd35ba.wav"
-        },
-        {
-          "name": "Clock Ticking",
-          "assetId": "a634fcb87894520edbd7a534d1479ec4",
-          "dataFormat": "wav",
-          "rate": 22050,
-          "sampleCount": 109729,
-          "md5ext": "a634fcb87894520edbd7a534d1479ec4.wav"
-        }
-      ],
+      "sounds": [],
       "volume": 100,
       "layerOrder": 0,
       "tempo": 60,
@@ -25443,256 +25121,6 @@
       "visible": false,
       "x": 1,
       "y": -92,
-      "size": 100,
-      "direction": 90,
-      "draggable": false,
-      "rotationStyle": "all around"
-    },
-    {
-      "isStage": false,
-      "name": "Turtle",
-      "variables": {},
-      "lists": {},
-      "broadcasts": {},
-      "blocks": {},
-      "comments": {},
-      "currentCostume": 0,
-      "costumes": [
-        {
-          "name": "Turtle",
-          "bitmapResolution": 1,
-          "dataFormat": "svg",
-          "assetId": "e9440d396734310dae5a63617d312015",
-          "md5ext": "e9440d396734310dae5a63617d312015.svg",
-          "rotationCenterX": 173,
-          "rotationCenterY": 178
-        }
-      ],
-      "sounds": [],
-      "volume": 100,
-      "layerOrder": 7,
-      "visible": false,
-      "x": -169.00026257891273,
-      "y": -20.00008239764953,
-      "size": 35,
-      "direction": 90,
-      "draggable": false,
-      "rotationStyle": "all around"
-    },
-    {
-      "isStage": false,
-      "name": "Princess",
-      "variables": {},
-      "lists": {},
-      "broadcasts": {},
-      "blocks": {},
-      "comments": {},
-      "currentCostume": 0,
-      "costumes": [
-        {
-          "name": "Princess",
-          "bitmapResolution": 2,
-          "dataFormat": "png",
-          "assetId": "bb5e81842988f89263e9f94aadb1adfb",
-          "md5ext": "bb5e81842988f89263e9f94aadb1adfb.png",
-          "rotationCenterX": 360,
-          "rotationCenterY": 360
-        }
-      ],
-      "sounds": [],
-      "volume": 100,
-      "layerOrder": 5,
-      "visible": false,
-      "x": 4,
-      "y": -16,
-      "size": 70,
-      "direction": 90,
-      "draggable": false,
-      "rotationStyle": "all around"
-    },
-    {
-      "isStage": false,
-      "name": "Urashima",
-      "variables": {},
-      "lists": {},
-      "broadcasts": {},
-      "blocks": {},
-      "comments": {},
-      "currentCostume": 13,
-      "costumes": [
-        {
-          "name": "Urashima-walk-1",
-          "bitmapResolution": 2,
-          "dataFormat": "png",
-          "assetId": "963e926995791fde1b335fd4ba60d6d7",
-          "md5ext": "963e926995791fde1b335fd4ba60d6d7.png",
-          "rotationCenterX": 360,
-          "rotationCenterY": 360
-        },
-        {
-          "name": "Urashima-help-1",
-          "bitmapResolution": 2,
-          "dataFormat": "png",
-          "assetId": "de2c9922d359138cd8f4fd96829c377a",
-          "md5ext": "de2c9922d359138cd8f4fd96829c377a.png",
-          "rotationCenterX": 346,
-          "rotationCenterY": 282
-        },
-        {
-          "name": "Urashima-dance-1",
-          "bitmapResolution": 2,
-          "dataFormat": "png",
-          "assetId": "fbcd808f6a222080bc8722d631e40ac4",
-          "md5ext": "fbcd808f6a222080bc8722d631e40ac4.png",
-          "rotationCenterX": 352,
-          "rotationCenterY": 346.5
-        },
-        {
-          "name": "Urashima-ride-1",
-          "bitmapResolution": 2,
-          "dataFormat": "png",
-          "assetId": "603045ae9bc87d42d84ebed21e76af7e",
-          "md5ext": "603045ae9bc87d42d84ebed21e76af7e.png",
-          "rotationCenterX": 357.5,
-          "rotationCenterY": 355
-        },
-        {
-          "name": "Urashima-ride-2",
-          "bitmapResolution": 2,
-          "dataFormat": "png",
-          "assetId": "a6b0d96dd3d9fe9069acb213d2682caf",
-          "md5ext": "a6b0d96dd3d9fe9069acb213d2682caf.png",
-          "rotationCenterX": 360,
-          "rotationCenterY": 360
-        },
-        {
-          "name": "Urashima-dance-2",
-          "bitmapResolution": 2,
-          "dataFormat": "png",
-          "assetId": "2c8a567edc720b9039dc7a00bf164289",
-          "md5ext": "2c8a567edc720b9039dc7a00bf164289.png",
-          "rotationCenterX": 324,
-          "rotationCenterY": 320
-        },
-        {
-          "name": "Urashima-box-1",
-          "bitmapResolution": 2,
-          "dataFormat": "png",
-          "assetId": "0ec7d76d7a77cf94aa14a3cbf1030f1d",
-          "md5ext": "0ec7d76d7a77cf94aa14a3cbf1030f1d.png",
-          "rotationCenterX": 360,
-          "rotationCenterY": 360
-        },
-        {
-          "name": "Urashima-box-2",
-          "bitmapResolution": 2,
-          "dataFormat": "png",
-          "assetId": "7c4060f3c1f3b3535a6c035d3c811ed4",
-          "md5ext": "7c4060f3c1f3b3535a6c035d3c811ed4.png",
-          "rotationCenterX": 321,
-          "rotationCenterY": 338
-        },
-        {
-          "name": "Urashima-surprised",
-          "bitmapResolution": 2,
-          "dataFormat": "png",
-          "assetId": "9a9d051e632a6a0bc14283d4067051c3",
-          "md5ext": "9a9d051e632a6a0bc14283d4067051c3.png",
-          "rotationCenterX": 321,
-          "rotationCenterY": 338
-        },
-        {
-          "name": "Urashima-open-1",
-          "bitmapResolution": 2,
-          "dataFormat": "png",
-          "assetId": "cccd1f9ec5d5f5d424391830a7e961ca",
-          "md5ext": "cccd1f9ec5d5f5d424391830a7e961ca.png",
-          "rotationCenterX": 360,
-          "rotationCenterY": 360
-        },
-        {
-          "name": "Urashima-open-2",
-          "bitmapResolution": 2,
-          "dataFormat": "png",
-          "assetId": "bf71533830b43c976033475e2c1ddda9",
-          "md5ext": "bf71533830b43c976033475e2c1ddda9.png",
-          "rotationCenterX": 258.5,
-          "rotationCenterY": 264
-        },
-        {
-          "name": "Urashima-open-3",
-          "bitmapResolution": 2,
-          "dataFormat": "png",
-          "assetId": "57cd266ee81b71c922eeec3cffaa9543",
-          "md5ext": "57cd266ee81b71c922eeec3cffaa9543.png",
-          "rotationCenterX": 360,
-          "rotationCenterY": 360
-        },
-        {
-          "name": "Urashima-old-1",
-          "bitmapResolution": 2,
-          "dataFormat": "png",
-          "assetId": "83e50d9ac4fb3c4b8e2f280dac8a31f7",
-          "md5ext": "83e50d9ac4fb3c4b8e2f280dac8a31f7.png",
-          "rotationCenterX": 360,
-          "rotationCenterY": 360
-        },
-        {
-          "name": "Urashima-old-2",
-          "bitmapResolution": 2,
-          "dataFormat": "png",
-          "assetId": "8f7246587c9aa5e105ecf759ec7fdbf2",
-          "md5ext": "8f7246587c9aa5e105ecf759ec7fdbf2.png",
-          "rotationCenterX": 248,
-          "rotationCenterY": 187
-        }
-      ],
-      "sounds": [],
-      "volume": 100,
-      "layerOrder": 6,
-      "visible": false,
-      "x": -21,
-      "y": -7,
-      "size": 60,
-      "direction": 90,
-      "draggable": false,
-      "rotationStyle": "all around"
-    },
-    {
-      "isStage": false,
-      "name": "Fish",
-      "variables": {},
-      "lists": {},
-      "broadcasts": {},
-      "blocks": {},
-      "comments": {},
-      "currentCostume": 1,
-      "costumes": [
-        {
-          "name": "Fish1",
-          "bitmapResolution": 2,
-          "dataFormat": "png",
-          "assetId": "b72fee140b181e3d2ece61e33c625b2c",
-          "md5ext": "b72fee140b181e3d2ece61e33c625b2c.png",
-          "rotationCenterX": 354,
-          "rotationCenterY": 359
-        },
-        {
-          "name": "Fish2",
-          "bitmapResolution": 2,
-          "dataFormat": "png",
-          "assetId": "b06dbfe1c71a1309b12dced1411bfb74",
-          "md5ext": "b06dbfe1c71a1309b12dced1411bfb74.png",
-          "rotationCenterX": 346,
-          "rotationCenterY": 360
-        }
-      ],
-      "sounds": [],
-      "volume": 100,
-      "layerOrder": 10,
-      "visible": false,
-      "x": -38,
-      "y": -10,
       "size": 100,
       "direction": 90,
       "draggable": false,

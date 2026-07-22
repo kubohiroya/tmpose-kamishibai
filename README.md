@@ -71,6 +71,9 @@ RUBYGANA_GRADE=4 pnpm run build
 ```text
 dist/
 ├── index.html
+├── downloads/
+│   ├── index.html
+│   └── kamishibai.sb3
 └── docs/
     ├── index.html
     ├── general/
@@ -156,6 +159,7 @@ pnpm run build
 - 体験会資料の自動目次、PDFしおり、画像参照と表示幅
 - スタッフ向け資料への旧付録Aの分離、ソフトウェア開発者向け資料への旧付録B・Cの分離、rubygana非適用、会場図、HTML/PDF導線
 - サンプル台本と公開ファイルの一致
+- `app/` から生成した `dist/downloads/kamishibai.sb3` とダウンロードリンク
 
 PDFの見た目はPopplerでPNG化して確認できます。
 
@@ -183,6 +187,12 @@ RUBYGANA_GRADE=4 pnpm run deploy
 
 ```text
 .
+├── app/                       # SB3のGit管理上の正本
+│   ├── assets/
+│   ├── extensions/
+│   ├── embedded-extensions.json
+│   ├── project.source.json
+│   └── sb3-source.json
 ├── docs/
 │   ├── general/
 │   ├── images/
@@ -204,7 +214,7 @@ RUBYGANA_GRADE=4 pnpm run deploy
 ├── site/
 │   ├── docs/
 │   └── downloads/
-│       └── kamishibai-3_1a1.sb3
+│       └── index.html
 └── test/
 ```
 
@@ -213,15 +223,36 @@ RUBYGANA_GRADE=4 pnpm run deploy
 - `docs/general/`: 日付やイベントに依存しない一般向けMarkdown原稿
 - `docs/workshops/<日付>/`: 特定の体験会で利用する参加者向け・スタッフ向けMarkdown原稿
 - `docs/images/`: 体験会資料から参照する元画像
+- `app/`: 整形済みproject、アセット、埋め込み拡張を含むSB3のGit管理上の正本
 - `site/docs/`: 一般文書と体験会資料を統合する公開入口
 - `site/app/`: TurboWarpからエクスポートしたWebアプリ一式
 - `samples/`: Git管理するテキスト形式のサンプル台本
-- `site/downloads/`: 版名付きのSB3など、サイトから直接配布するファイル
+- `site/downloads/`: SB3ダウンロードページ。配布SB3自体はビルド時に `dist/downloads/` へ生成
 - `output/pdf/`: ローカル確認用の印刷PDF
+
+## SB3の開発と配布
+
+ローカル編集用SB3は次のコマンドで `tmp/kamishibai.sb3` へ生成します。
+
+```bash
+pnpm sb3:build
+```
+
+TurboWarpで編集して保存したSB3は、明示した入力パスから `app/` へ取り込みます。
+
+```bash
+pnpm sb3:import -- /path/to/edited-kamishibai.sb3
+pnpm sb3:check
+pnpm test
+pnpm run build
+```
+
+`pnpm run build` は配布用 `dist/downloads/kamishibai.sb3` を同じ正本から生成します。通常手順、置換時の安全判定、手動確認、ロールバックについては [`docs/general/06-developer-guide.md`](docs/general/06-developer-guide.md) を参照してください。
+
+浦島太郎の台本、専用スプライト、背景、画像、音声を組み込んだ `samples/urashima/urashima.sb3` は、別リポジトリ [`kubohiroya/tmpose-kamishibai-samples`](https://github.com/kubohiroya/tmpose-kamishibai-samples) で管理します。本体リポジトリの `pnpm run build` では、浦島太郎固有のSB3を生成・公開しません。
 
 ## バージョン
 
 既存の開発履歴を引き継ぎ、初回公開版は`3.0.0`とします。
 
-紙芝居アプリの配布SB3は、kamishibai 3.1の暫定版として
-`site/downloads/kamishibai-3_1a1.sb3` に配置します。
+紙芝居アプリの配布SB3は、kamishibai 3.1の展開ソースからビルド時に生成します。
