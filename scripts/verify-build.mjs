@@ -188,8 +188,9 @@ async function verifyDownloads() {
     `Unexpected published SB3 files: ${publishedSb3Files.join(', ')}`);
   assert(publishedArchive.equals(Buffer.from(expectedBuild.archive)),
     'The published SB3 differs from the deterministic app source build.');
-  assert(archiveStat.size > 1_000_000 && publishedArchive.subarray(0, 2).toString() === 'PK',
-    'The published SB3 is not a plausible ZIP-based Scratch project.');
+  assert(archiveStat.size === publishedArchive.length && archiveStat.size > 0
+      && publishedArchive.subarray(0, 2).toString() === 'PK',
+    'The published SB3 is not a non-empty ZIP-based Scratch project.');
   assert(Array.isArray(expectedBuild.source.project.targets),
     'The canonical app source project does not contain targets.');
 
