@@ -58,15 +58,18 @@ actor=Narration,Narration
 cover=Beach1,Ocean Wave
 ---
 # scene 1
-sceneLabel=beach
+sceneLabel=opening
+action=transition:fadeOut
+action=stage:Star
+action=transition:fadeUp
 action=Prompt:show:Narration:0,0,100
-setRuntimeVariable=Narration:むかし
+text=Narration:むかし
 action=wait:2
-setRuntimeVariable=Narration:むかし　むかし、
+text=Narration:むかし　むかし、
 action=wait:2
-setRuntimeVariable=Narration:むかし　むかし、あるところに...
+text=Narration:むかし　むかし、あるところに...
 action=wait:2
-setRuntimeVariable=Narration:
+text=Narration:
 ---
 # scene 1
 sceneLabel=beach
