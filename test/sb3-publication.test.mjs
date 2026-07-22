@@ -4,8 +4,6 @@ import path from 'node:path';
 import test from 'node:test';
 import {fileURLToPath} from 'node:url';
 
-import {strFromU8, unzipSync} from 'fflate';
-
 const projectRoot = fileURLToPath(new URL('../', import.meta.url));
 
 test('keeps static distribution sources free of SB3 binaries', async () => {
@@ -19,7 +17,12 @@ test('keeps static distribution sources free of SB3 binaries', async () => {
     (await readFile(path.join(projectRoot, '.gitignore'), 'utf8')).split(/\r?\n/u),
   );
   assert(ignoreRules.has('/kamishibai.sb3'));
+  assert(ignoreRules.has('/urashima.sb3'));
   assert(ignoreRules.has('/site/downloads/*.sb3'));
+  await assert.rejects(
+    readFile(path.join(projectRoot, 'urashima.sb3')),
+    (error) => error.code === 'ENOENT',
+  );
 });
 
 test('links and documents the generated downloadable SB3', async () => {
@@ -44,48 +47,37 @@ test('links and documents the generated downloadable SB3', async () => {
   }
   assert.match(developerGuide, /`app\/`[^\n]*正本/u);
   assert.match(readme, /`dist\/downloads\/kamishibai\.sb3`/u);
+  for (const document of [developerGuide, readme]) {
+    assert.match(document, /tmpose-kamishibai-samples/u);
+    assert.match(document, /samples\/urashima\/urashima\.sb3/u);
+  }
 });
 
-test('separates the bundled Urashima snapshot from the generic app source', async () => {
-  const [genericProjectSource, urashimaArchive] = await Promise.all([
-    readFile(path.join(projectRoot, 'app/project.source.json'), 'utf8'),
-    readFile(path.join(projectRoot, 'urashima.sb3')),
-  ]);
+test('keeps the generic app source free of Urashima sample content', async () => {
+  const genericProjectSource = await readFile(
+    path.join(projectRoot, 'app/project.source.json'),
+    'utf8',
+  );
   const genericProject = JSON.parse(genericProjectSource);
-  const urashimaEntries = unzipSync(new Uint8Array(urashimaArchive));
-  const urashimaProject = JSON.parse(strFromU8(urashimaEntries['project.json']));
   const genericStage = genericProject.targets.find((target) => target.isStage);
-  const urashimaStage = urashimaProject.targets.find((target) => target.isStage);
   const sampleTargetNames = ['Fish', 'Princess', 'Turtle', 'Urashima'];
   const sampleAssetNames = ['Beach1', 'Dragon Castle', 'Ocean Wave', 'Urashima-old-2'];
 
-  assert.equal(Object.keys(urashimaEntries).length, 57);
-  assert.equal(Object.keys(urashimaEntries).filter((name) => name !== 'project.json').length, 56);
-
   assert(genericStage, 'The generic app source has no Stage target.');
-  assert(urashimaStage, 'urashima.sb3 has no Stage target.');
   for (const list of Object.values(genericStage.lists ?? {})) {
     assert.deepEqual(list[1], [], `Generic runtime list is not empty: ${list[0]}`);
   }
   for (const targetName of sampleTargetNames) {
     assert(!genericProject.targets.some((target) => target.name === targetName),
       `Generic app source contains the sample target: ${targetName}`);
-    assert(urashimaProject.targets.some((target) => target.name === targetName),
-      `urashima.sb3 is missing the sample target: ${targetName}`);
   }
 
   const genericAssetNames = genericProject.targets.flatMap((target) => [
     ...(target.costumes ?? []).map((costume) => costume.name),
     ...(target.sounds ?? []).map((sound) => sound.name),
   ]);
-  const urashimaAssetNames = urashimaProject.targets.flatMap((target) => [
-    ...(target.costumes ?? []).map((costume) => costume.name),
-    ...(target.sounds ?? []).map((sound) => sound.name),
-  ]);
   for (const assetName of sampleAssetNames) {
     assert(!genericAssetNames.includes(assetName),
       `Generic app source contains the sample asset: ${assetName}`);
-    assert(urashimaAssetNames.includes(assetName),
-      `urashima.sb3 is missing the sample asset: ${assetName}`);
   }
 });

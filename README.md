@@ -187,7 +187,6 @@ RUBYGANA_GRADE=4 pnpm run deploy
 
 ```text
 .
-├── urashima.sb3              # 浦島太郎アセット組み込み版の暫定スナップショット
 ├── app/                       # SB3のGit管理上の正本
 │   ├── assets/
 │   ├── extensions/
@@ -225,7 +224,6 @@ RUBYGANA_GRADE=4 pnpm run deploy
 - `docs/workshops/<日付>/`: 特定の体験会で利用する参加者向け・スタッフ向けMarkdown原稿
 - `docs/images/`: 体験会資料から参照する元画像
 - `app/`: 整形済みproject、アセット、埋め込み拡張を含むSB3のGit管理上の正本
-- `urashima.sb3`: 浦島太郎固有アセットを組み込んだ暫定スナップショット。汎用版の生成元・配布物には使用しない
 - `site/docs/`: 一般文書と体験会資料を統合する公開入口
 - `site/app/`: TurboWarpからエクスポートしたWebアプリ一式
 - `samples/`: Git管理するテキスト形式のサンプル台本
@@ -251,7 +249,7 @@ pnpm run build
 
 `pnpm run build` は配布用 `dist/downloads/kamishibai.sb3` を同じ正本から生成します。通常手順、置換時の安全判定、手動確認、ロールバックについては [`docs/general/06-developer-guide.md`](docs/general/06-developer-guide.md) を参照してください。
 
-浦島太郎の台本、専用スプライト、背景、画像、音声を組み込んだ状態は、汎用版と混同しないよう `urashima.sb3` に保存しています。この追跡済みバイナリはサンプルリポジトリへの移行が完了するまでの暫定保存物であり、`pnpm run build` では公開されません。
+浦島太郎の台本、専用スプライト、背景、画像、音声を組み込んだ `samples/urashima/urashima.sb3` は、別リポジトリ [`kubohiroya/tmpose-kamishibai-samples`](https://github.com/kubohiroya/tmpose-kamishibai-samples) で管理します。本体リポジトリの `pnpm run build` では、浦島太郎固有のSB3を生成・公開しません。
 
 ## バージョン
 

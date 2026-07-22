@@ -30,7 +30,7 @@
 
 `app/` ディレクトリを紙芝居アプリの正本としてGit管理します。ルートの `kamishibai.sb3` や `site/downloads/` 配下のSB3バイナリは正本として管理しません。
 
-浦島太郎の台本と画像・音声を組み込んだ開発時点のスナップショットは、汎用版と区別してルートの `urashima.sb3` に保存します。このファイルは浦島太郎の移行作業が完了するまでの暫定的なGit管理対象であり、汎用版 `kamishibai.sb3` の生成元や本体サイトの配布物には使用しません。浦島太郎固有の台本・アセット・生成物は、最終的に `kubohiroya/tmpose-kamishibai-samples` へ移管します。
+浦島太郎の台本と画像・音声を組み込んだスナップショットは、本体とは別の [`kubohiroya/tmpose-kamishibai-samples`](https://github.com/kubohiroya/tmpose-kamishibai-samples) リポジトリの `samples/urashima/urashima.sb3` で管理します。本体リポジトリでは、浦島太郎固有のSB3、台本、画像、音声を管理・配布しません。
 
 `app/` の主な内容は次のとおりです。
 

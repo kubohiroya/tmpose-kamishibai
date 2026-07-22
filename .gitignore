@@ -3,6 +3,7 @@ dist/
 output/
 tmp/
 /kamishibai.sb3
+/urashima.sb3
 /site/downloads/*.sb3
 .vivliostyle/
 .idea/
