@@ -28,11 +28,14 @@ export function registerKamishibaiTestExtensions(vm, clock) {
   const state = {
     actorSequences: new Map(),
     actorSkins: new Map(),
+    asyncInput: null,
     assets: new Map(),
+    keyInputBindings: new Map(),
     localStorage: new Map(),
     playingSounds: new Set(),
     timers: new Map(),
     tempVariables: null,
+    touchInputBindings: new Map(),
   };
 
   class ConsoleExtension {
@@ -331,27 +334,87 @@ export function registerKamishibaiTestExtensions(vm, clock) {
   }
 
   class RuntimeExpressionExtension {
+    constructor(runtime) {
+      this.runtime = runtime;
+    }
     getInfo() {
       return extensionInfo('twRuntimeExpression', [
         block('runtimeCondition', BlockType.BOOLEAN, ['EXPRESSION']),
       ]);
     }
-    runtimeCondition() { return false; }
+    runtimeCondition(args) {
+      const expression = Cast.toString(args.EXPRESSION).trim();
+      if (expression === 'true') return true;
+      if (expression === 'false' || !expression) return false;
+      return Cast.toBoolean(
+        this.runtime.ext_lmsTempVars2.getRuntimeVariable({VAR: expression}),
+      );
+    }
   }
 
   class AsyncInputExtension {
+    constructor(runtime) {
+      this.runtime = runtime;
+      state.asyncInput = this;
+      const reset = () => {
+        state.keyInputBindings.clear();
+        state.touchInputBindings.clear();
+      };
+      runtime.on('PROJECT_START', reset);
+      runtime.on('PROJECT_STOP_ALL', reset);
+    }
     getInfo() {
       return extensionInfo('twAsyncInput', [
         block('listenForKeyAndBroadcast', BlockType.COMMAND, [
           'KEY_ID', 'RUNTIME_VAR', 'VALUE', 'MESSAGE',
         ]),
+        block('listenForActorTouchAndBroadcast', BlockType.COMMAND, [
+          'ACTOR', 'RUNTIME_VAR', 'VALUE', 'MESSAGE',
+        ]),
         block('stopAllInputListeners'),
         block('stopAllKeyListeners'),
       ]);
     }
-    listenForKeyAndBroadcast() {}
-    stopAllInputListeners() {}
-    stopAllKeyListeners() {}
+    listenForKeyAndBroadcast(args, util) {
+      state.keyInputBindings.set(Cast.toString(args.KEY_ID), {
+        ...args,
+        ownerTargetId: util.target.id,
+      });
+    }
+    listenForActorTouchAndBroadcast(args, util) {
+      state.touchInputBindings.set(Cast.toString(args.ACTOR), {
+        ...args,
+        ownerTargetId: util.target.id,
+      });
+    }
+    stopAllInputListeners(_args, util) {
+      this.removeOwnedBindings(state.keyInputBindings, util.target.id);
+      this.removeOwnedBindings(state.touchInputBindings, util.target.id);
+    }
+    stopAllKeyListeners(_args, util) {
+      this.removeOwnedBindings(state.keyInputBindings, util.target.id);
+    }
+    emitKey(keyId) {
+      this.emit(state.keyInputBindings.get(keyId));
+    }
+    emitActorTouch(actorName) {
+      this.emit(state.touchInputBindings.get(actorName));
+    }
+    emit(binding) {
+      if (!binding) return;
+      this.runtime.ext_lmsTempVars2.setRuntimeVariable({
+        VAR: binding.RUNTIME_VAR,
+        STRING: binding.VALUE,
+      });
+      this.runtime.startHats('event_whenbroadcastreceived', {
+        BROADCAST_OPTION: binding.MESSAGE,
+      });
+    }
+    removeOwnedBindings(bindings, ownerTargetId) {
+      for (const [key, binding] of bindings) {
+        if (binding.ownerTargetId === ownerTargetId) bindings.delete(key);
+      }
+    }
   }
 
   class TimersExtension {

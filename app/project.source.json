@@ -11213,7 +11213,7 @@
             ],
             "STRING": [
               3,
-              "f#",
+              "f%",
               [
                 10,
                 "0"
@@ -11224,35 +11224,10 @@
           "shadow": false,
           "topLevel": false
         },
-        "f#": {
-          "opcode": "operator_add",
-          "next": null,
-          "parent": "by",
-          "inputs": {
-            "NUM1": [
-              3,
-              "f%",
-              [
-                4,
-                ""
-              ]
-            ],
-            "NUM2": [
-              1,
-              [
-                4,
-                "1"
-              ]
-            ]
-          },
-          "fields": {},
-          "shadow": false,
-          "topLevel": false
-        },
         "f%": {
           "opcode": "data_itemnumoflist",
           "next": null,
-          "parent": "f#",
+          "parent": "by",
           "inputs": {
             "ITEM": [
               3,
@@ -16221,7 +16196,7 @@
           "next": null,
           "parent": "b*",
           "inputs": {
-            ",vYi2;P{h+^YK_C~66`U": [
+            "{UQviUunYzy[ZsTvn~Or": [
               3,
               "mX",
               [
@@ -16229,7 +16204,7 @@
                 ""
               ]
             ],
-            "{GD`ge7!MUE2Rf:xL6;D": [
+            "YdBApM!}!?D7[sY^Nbl*": [
               3,
               "g[",
               [
@@ -16244,8 +16219,8 @@
           "mutation": {
             "tagName": "mutation",
             "children": [],
-            "proccode": "exec keyInputToChangeScene %s %s",
-            "argumentids": "[\",vYi2;P{h+^YK_C~66`U\",\"{GD`ge7!MUE2Rf:xL6;D\"]",
+            "proccode": "touchInputToChangeScene %s %s",
+            "argumentids": "[\"{UQviUunYzy[ZsTvn~Or\",\"YdBApM!}!?D7[sY^Nbl*\"]",
             "warp": "false"
           }
         },
@@ -16844,7 +16819,7 @@
           "topLevel": false
         },
         "b;": {
-          "opcode": "operator_and",
+          "opcode": "operator_or",
           "next": null,
           "parent": "(",
           "inputs": {
@@ -16854,7 +16829,7 @@
             ],
             "OPERAND2": [
               2,
-              "hf"
+              "hh"
             ]
           },
           "fields": {},
@@ -16862,7 +16837,7 @@
           "topLevel": false
         },
         "he": {
-          "opcode": "operator_lt",
+          "opcode": "operator_equals",
           "next": null,
           "parent": "b;",
           "inputs": {
@@ -16921,24 +16896,10 @@
           "shadow": false,
           "topLevel": false
         },
-        "hf": {
-          "opcode": "operator_not",
-          "next": null,
-          "parent": "b;",
-          "inputs": {
-            "OPERAND": [
-              2,
-              "hh"
-            ]
-          },
-          "fields": {},
-          "shadow": false,
-          "topLevel": false
-        },
         "hh": {
           "opcode": "twRuntimeExpression_runtimeCondition",
           "next": null,
-          "parent": "hf",
+          "parent": "b;",
           "inputs": {
             "EXPRESSION": [
               3,
@@ -17164,7 +17125,7 @@
               1,
               [
                 4,
-                "1"
+                "2"
               ]
             ]
           },
@@ -17173,10 +17134,17 @@
           "topLevel": false
         },
         "hk": {
-          "opcode": "operator_length",
+          "opcode": "strings_count",
           "next": null,
           "parent": "hj",
           "inputs": {
+            "SUBSTRING": [
+              1,
+              [
+                10,
+                ","
+              ]
+            ],
             "STRING": [
               3,
               "m:",
@@ -18597,11 +18565,11 @@
           "topLevel": false
         },
         ",": {
-          "opcode": "twAsyncInput_listenForKeyAndBroadcast",
+          "opcode": "twAsyncInput_listenForActorTouchAndBroadcast",
           "next": "nu",
           "parent": "cg",
           "inputs": {
-            "KEY_ID": [
+            "ACTOR": [
               3,
               "nv",
               [
