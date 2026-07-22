@@ -15,6 +15,7 @@
 - tmpose-kamishibai: アプリ本体・ドキュメント・汎用ビルドツール
   - [https://github.com/kubohiroya/tmpose-kamishibai](https://github.com/kubohiroya/tmpose-kamishibai)
 - tmpose-kamishibai-samples: 公開用台本・サンプル固有アセット
+  - [https://kubohiroya.github.io/tmpose-kamishibai-samples/](https://kubohiroya.github.io/tmpose-kamishibai-samples/)
   - [https://github.com/kubohiroya/tmpose-kamishibai-samples](https://github.com/kubohiroya/tmpose-kamishibai-samples)
 
 ### 1.2 `kamishibai.sb3` の依存物管理方針
@@ -32,7 +33,7 @@
 
 `app/` ディレクトリを紙芝居アプリの正本としてGit管理します。ルートの `kamishibai.sb3` や `site/downloads/` 配下のSB3バイナリは正本として管理しません。
 
-浦島太郎の台本と画像・音声を組み込んだスナップショットは、本体とは別の [`kubohiroya/tmpose-kamishibai-samples`](https://github.com/kubohiroya/tmpose-kamishibai-samples) リポジトリの `samples/urashima/urashima.sb3` で管理します。本体リポジトリでは、浦島太郎固有のSB3、台本、画像、音声を管理・配布しません。
+浦島太郎の台本と画像・音声を組み込んだスナップショットは、[サンプルサイト](https://kubohiroya.github.io/tmpose-kamishibai-samples/) で MPL-2.0 により配信し、本体とは別の [`kubohiroya/tmpose-kamishibai-samples`](https://github.com/kubohiroya/tmpose-kamishibai-samples) リポジトリの `samples/urashima/urashima.sb3` で管理します。本体リポジトリでは、浦島太郎固有のSB3、台本、画像、音声を管理・配布しません。
 
 `app/` の主な内容は次のとおりです。
 

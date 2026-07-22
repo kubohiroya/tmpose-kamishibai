@@ -49,6 +49,23 @@ test('links and documents the generated downloadable SB3', async () => {
   assert.match(readme, /`dist\/downloads\/kamishibai\.sb3`/u);
   for (const document of [developerGuide, readme]) {
     assert.match(document, /github\.com\/kubohiroya\/tmpose-kamishibai-samples/u);
+    assert.match(document, /kubohiroya\.github\.io\/tmpose-kamishibai-samples\//u);
+  }
+});
+
+test('links the public sample site without restoring the retired local page', async () => {
+  const pages = await Promise.all([
+    'site/index.html',
+    'site/docs/index.html',
+    'site/downloads/index.html',
+  ].map((relativePath) => readFile(path.join(projectRoot, relativePath), 'utf8')));
+
+  for (const page of pages) {
+    assert.match(
+      page,
+      /href="https:\/\/kubohiroya\.github\.io\/tmpose-kamishibai-samples\/"/u,
+    );
+    assert.doesNotMatch(page, /href="(?:\.\.\/)*samples\/"/u);
   }
 });
 
