@@ -69,6 +69,33 @@ test('links the public sample site without restoring the retired local page', as
   }
 });
 
+test('documents the generic, editor, and player artifact profiles', async () => {
+  const developerGuide = await readFile(
+    path.join(projectRoot, 'docs/general/06-developer-guide.md'),
+    'utf8',
+  );
+  const profileSection = developerGuide.match(
+    /### 1\.7 成果物プロファイル(?<section>[\s\S]*?)\n## 2\./u,
+  )?.groups?.section;
+
+  assert(profileSection, 'Developer guide is missing the artifact profile section.');
+  for (const profile of ['`generic`', '`editor`', '`player`']) {
+    assert(profileSection.includes(profile), `Artifact profile is missing: ${profile}`);
+  }
+  for (const filename of ['`kamishibai.sb3`', '`_urashima.sb3`', '`urashima.sb3`']) {
+    assert(profileSection.includes(filename), `Artifact filename is missing: ${filename}`);
+  }
+  assert.match(profileSection, /`generic`[^\n]*`kamishibai\.sb3`[^\n]*非埋め込み[^\n]*非埋め込み/u);
+  assert.match(profileSection, /`editor`[^\n]*`_urashima\.sb3`[^\n]*非埋め込み[^\n]*埋め込み/u);
+  assert.match(profileSection, /`player`[^\n]*`urashima\.sb3`[^\n]*埋め込み[^\n]*埋め込み/u);
+  assert.match(profileSection, /TurboWarp Packager[^\n]*`player`だけを入力/u);
+  assert.match(profileSection, /タイトル画面をクリック[^\n]*ファイル選択を行わず/u);
+  assert.match(profileSection, /「再生専用」ではなく「再生用」/u);
+  assert.match(profileSection, /issues\/60/u);
+  assert.match(profileSection, /tmpose-kamishibai-samples\/issues\/2/u);
+  assert.match(profileSection, /tmpose-kamishibai-samples\/issues\/7/u);
+});
+
 test('keeps only minimal validation scripts in the application repository', async () => {
   const sampleEntries = await readdir(path.join(projectRoot, 'samples')).catch((error) => {
     if (error.code === 'ENOENT') return [];
