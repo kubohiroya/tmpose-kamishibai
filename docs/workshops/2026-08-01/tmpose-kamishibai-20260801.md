@@ -9,36 +9,36 @@ AI紙芝居アプリも、ここから遊べます。
 
 このAI紙芝居アプリでは、サンプル台本として「浦島太郎」の物語を利用できます。ここでは、浦島太郎が竜宮城に到着したときに、浦島太郎自身が利用者といっしょにダンスをするようになっていますが、このワークショップでは、台本を書き換えるなどして、乙姫様が利用者といっしょにダンスをするという内容に変更してみましょう。
 
-乙姫様にどんなダンスポーズをさせるかを考え、棒人間の絵を描き、それをもとにAIに乙姫様の絵を描かせてみましょう。さらに、Teachable Machineでダンスポーズを認識できるモデルのトレーニングをしてみましょう。最後に、紙芝居の台本を更新し、AIによる成果物をとりまとめて、作品全体を遊べるようにしてみましょう。
+乙姫様にどんなダンスポーズをさせるかを考え、棒人間の絵を描き、それをもとに乙姫様の絵をAIに描かせてみましょう。さらに、ダンスポーズを認識できるようにAIをトレーニングしてみましょう。最後に、紙芝居の台本を更新し、AIによる成果物をとりまとめて、作品全体を遊べるようにしてみましょう。
 
-## 0.3 この体験会が想定する参加者
-
-「小学生の児童およびその保護者のペア」で参加されることを標準的な形として想定しています。
-
-* プログラミング経験（Scratchなど）は問いません
-* AI利用経験は問いません
-
-また、次のことを確認させてください。
-
-* マウスやキーボードの操作ができますか？
-* EdgeなどのWebブラウザの操作ができますか？
-* Windowsにおけるフォルダやファイルの概念を理解していますか？
-
-わからないという人は、この会を通じてスタッフがサポートしますので、安心してください。
-
-## 0.4 この体験会で学ぶこと
+## 0.3 この体験会で学ぶこと
 
 この体験会では、
 
 * 画像づくりAI
 * ポーズ認識AI
-* TurboWarpによる紙芝居プログラミング
+* 紙芝居プログラミングアプリ
 
 といった技術を組み合わせて、
 
 **「AI技術を応用して、紙芝居の物語の中に参加する仕組み」**
 
 を親子で作ります。楽しんでください！
+
+## 0.4 この体験会が想定する参加者
+
+この体験会は、「小学生の児童およびその保護者のペア」で参加していただくことを想定しています。
+
+* AI利用経験は問いません
+* プログラミング経験（Scratchなど）は問いません
+
+なお、念のため、次のことを確認させてください。
+
+* マウスやキーボードの操作ができますか？
+* EdgeなどのWebブラウザの操作ができますか？
+* Windowsにおけるフォルダやファイルの概念を理解していますか？
+
+わからないという人は、この会を通じてスタッフがサポートしますので、安心してください。
 
 # 1. はじめに
 
@@ -536,7 +536,8 @@ AI紙芝居アプリでは、それぞれのシーンで、カメラ画像から
 
 ```
 ---
-# scene 3 TMPoseURL=<https://teachablemachine.withgoogle.com/models/…>
+# scene 3
+TMPoseURL=https://teachablemachine.withgoogle.com/models/…
 ```
 
 【間違った内容を貼り付けしていないか、=記号などを消してしまっていないか確認してください】
@@ -645,7 +646,9 @@ asset=p4,costume:Princess
 【必要な行についてだけ、行頭の\#を削除するという方針について確認してください】
 
 ```
-#action=Princess:pose:p1,p2,p1,p2:pose1,pose2,pose1,pose2:Drum Funky,Drum Funky,Drum Funky,... \#action=Princess:pose:p1,p2,p3,p1,p2,p3:pose1,pose2,pose3,pose1,pose2,pose3:Drum Funky,Drum Funky,... \#action=Princess:pose:p1,p2,p3,p4,p1,p2,p3,p4:pose1,pose2,pose3,pose4,pose1,pose2,pose3,pose4:Drum...
+#action=Princess:pose:p1,p2,p1,p2:pose1,pose2,pose1,pose2:Drum Funky,Drum Funky,Drum Funky,...
+#action=Princess:pose:p1,p2,p3,p1,p2,p3:pose1,pose2,pose3,pose1,pose2,pose3:Drum Funky,Drum Funky,...
+#action=Princess:pose:p1,p2,p3,p4,p1,p2,p3,p4:pose1,pose2,pose3,pose4,pose1,pose2,pose3,pose4:Drum...
 ```
 
 以下の 6.4.1、 6.4.2、 6.4.3 節は、場合ごとの設定内容を示したものです。このうちいずれかひとつの形で設定を実施してください。
@@ -655,7 +658,9 @@ asset=p4,costume:Princess
 3行のうち1行目、アセット名部分に「p1」「p2」が書かれている行の行頭の\#記号を削除してください。ここでは、pose1,pose2のポーズ2つが2回繰り返されます。
 
 ```
-action=Princess:pose:p1,p2,p1,p2:pose1,pose2,pose1,pose2:Drum Funky,Drum Funky,Drum Funky,... \#action=Princess:pose:p1,p2,p3,p1,p2,p3:pose1,pose2,pose3,pose1,pose2,pose3:Drum Funky,Drum Funky,... \#action=Princess:pose:p1,p2,p3,p4,p1,p2,p3,p4:pose1,pose2,pose3,pose4,pose1,pose2,pose3,pose4:Drum...
+action=Princess:pose:p1,p2,p1,p2:pose1,pose2,pose1,pose2:Drum Funky,Drum Funky,Drum Funky,...
+#action=Princess:pose:p1,p2,p3,p1,p2,p3:pose1,pose2,pose3,pose1,pose2,pose3:Drum Funky,Drum Funky,...
+#action=Princess:pose:p1,p2,p3,p4,p1,p2,p3,p4:pose1,pose2,pose3,pose4,pose1,pose2,pose3,pose4:Drum...
 ```
 
 ### 6.4.2 ポーズ3つを作成した場合の設定
@@ -663,7 +668,9 @@ action=Princess:pose:p1,p2,p1,p2:pose1,pose2,pose1,pose2:Drum Funky,Drum Funky,D
 3行のうち2行目、アセット名部分に「p1」「p2」「p3」が書かれている行の行頭の\#記号を削除してください。ここでは、pose1,pose2,pose3のポーズ3つが2回繰り返されます。
 
 ```
-#action=Princess:pose:p1,p2,p1,p2:pose1,pose2,pose1,pose2:Drum Funky,Drum Funky,Drum Funky,... action=Princess:pose:p1,p2,p3,p1,p2,p3:pose1,pose2,pose3,pose1,pose2,pose3:Drum Funky,Drum Funky,... \#action=Princess:pose:p1,p2,p3,p4,p1,p2,p3,p4:pose1,pose2,pose3,pose4,pose1,pose2,pose3,pose4:Drum...
+#action=Princess:pose:p1,p2,p1,p2:pose1,pose2,pose1,pose2:Drum Funky,Drum Funky,Drum Funky,...
+action=Princess:pose:p1,p2,p3,p1,p2,p3:pose1,pose2,pose3,pose1,pose2,pose3:Drum Funky,Drum Funky,...
+#action=Princess:pose:p1,p2,p3,p4,p1,p2,p3,p4:pose1,pose2,pose3,pose4,pose1,pose2,pose3,pose4:Drum...
 ```
 
 ### 6.4.3 ポーズ4つを作成した場合の設定
@@ -671,7 +678,9 @@ action=Princess:pose:p1,p2,p1,p2:pose1,pose2,pose1,pose2:Drum Funky,Drum Funky,D
 3行のうち3行目、アセット名部分に「p1」「p2」「p3」「p4」が書かれている行の行頭の\#記号を削除してください。ここでは、pose1,pose2,pose3,pose4のポーズ4つが2回繰り返されます。
 
 ```
-action=Princess:pose:p1,p2,p1,p2:pose1,pose2,pose1,pose2:Drum Funky,Drum Funky,Drum Funky,... \#action=Princess:pose:p1,p2,p3,p1,p2,p3:pose1,pose2,pose3,pose1,pose2,pose3:Drum Funky,Drum Funky,... action=Princess:pose:p1,p2,p3,p4,p1,p2,p3,p4:pose1,pose2,pose3,pose4,pose1,pose2,pose3,pose4:Drum...
+#action=Princess:pose:p1,p2,p1,p2:pose1,pose2,pose1,pose2:Drum Funky,Drum Funky,Drum Funky,...
+#action=Princess:pose:p1,p2,p3,p1,p2,p3:pose1,pose2,pose3,pose1,pose2,pose3:Drum Funky,Drum Funky,...
+action=Princess:pose:p1,p2,p3,p4,p1,p2,p3,p4:pose1,pose2,pose3,pose4,pose1,pose2,pose3,pose4:Drum...
 ```
 
 ## 6.5 台本ファイルを保存する
