@@ -2,8 +2,9 @@ kamishibai=3.1
 # PR #44 manual smoke-test script.
 # 1. Load this file, then press Space or click to start.
 # 2. Confirm that the backdrop changes from Title to Stars.
-# 3. While the 30-second wait is active, press Right Arrow.
-# 4. Confirm that the backdrop changes from Stars to Title.
+# 3. Without pressing a key, confirm that Stars remains before 30 seconds.
+# 4. Confirm that the backdrop changes from Stars to Title after 30 seconds.
+# 5. Reload and press Right Arrow during the wait to smoke-test interruption.
 # This script uses only backdrops embedded in the generic SB3.
 asset=Title,backdrop
 asset=Stars,backdrop
