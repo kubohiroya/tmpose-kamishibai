@@ -20,6 +20,9 @@ const {
   PDFNumber,
 } = vivliostyleRequire('pdf-lib');
 const docsDirectory = path.join(projectRoot, 'dist/docs');
+const siteIndexPath = path.join(projectRoot, 'dist/index.html');
+const heroImageSourcePath = path.join(projectRoot, 'docs/images/image49.png');
+const heroImagePath = path.join(projectRoot, 'dist/images/image49.png');
 const docsIndexPath = path.join(docsDirectory, 'index.html');
 const generalDirectory = path.join(docsDirectory, generalDocumentConfig.outputDirectory);
 const workshopDirectory = path.join(docsDirectory, documentConfig.outputDirectory);
@@ -107,6 +110,23 @@ async function verifySamples() {
   }
 
   return sourceFilenames.length;
+}
+
+async function verifySiteIndex() {
+  const html = await readFile(siteIndexPath, 'utf8');
+  const images = await verifyLocalReferences(siteIndexPath, 'img', 'src');
+  const altTexts = attributeValues(html, 'img', 'alt');
+  const [sourceImage, publishedImage] = await Promise.all([
+    readFile(heroImageSourcePath),
+    readFile(heroImagePath),
+  ]);
+
+  assert(images.includes('images/image49.png'),
+    'The top page does not reference the configured hero image.');
+  assert(altTexts.includes('カメラ映像の上に浦島太郎とカメを重ね、ポーズ認識で紙芝居を進めているアプリ画面'),
+    'The top-page hero image does not have the expected alternative text.');
+  assert(sourceImage.equals(publishedImage),
+    'The published top-page hero image differs from docs/images/image49.png.');
 }
 
 async function pdfBookmarkCount(pdfPath) {
@@ -330,6 +350,7 @@ export async function verifyBuild() {
     ...attributeValues(html, 'img', 'style'),
   ];
   const readingOrder = publicationManifest.readingOrder.map((entry) => entry.url ?? entry);
+  await verifySiteIndex();
   const generalResults = await verifyGeneralDocuments(grade);
   const staffResults = await verifyStaffDocument();
   const sampleCount = await verifySamples();
