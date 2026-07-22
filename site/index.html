@@ -6,17 +6,34 @@
   <meta name="description" content="TMPose紙芝居 — ポーズで進めるAIインタラクティブ紙芝居">
   <title>TMPose紙芝居</title>
   <style>
-    :root { color-scheme: light; font-family: system-ui, sans-serif; }
-    body { margin: 0; background: #fff8ee; color: #3f302b; }
-    main { max-width: 880px; margin: auto; padding: 48px 24px 72px; }
+    :root {
+      color-scheme: light;
+      font-family: system-ui, sans-serif;
+      --ink: #3f302b;
+      --muted: #756960;
+      --paper: #fffdf8;
+      --canvas: #fff8ee;
+      --accent: #963f2f;
+      --line: #dbc9bb;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--canvas); color: var(--ink); }
+    main { max-width: 1080px; margin: auto; padding: 48px 24px 72px; }
     h1 { font-size: clamp(2rem, 6vw, 4rem); margin-bottom: .25rem; }
     .lead { font-size: 1.35rem; margin-top: 0; }
     .hero-image { display: block; width: 100%; height: auto; margin: 32px 0; border-radius: 18px; box-shadow: 0 16px 36px rgb(63 48 43 / 18%); }
-    .actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 32px 0; }
-    .button { display: inline-block; padding: 12px 18px; border-radius: 8px; background: #963f2f; color: white; text-decoration: none; font-weight: 700; }
-    .button.secondary { background: white; color: #963f2f; border: 1px solid #963f2f; }
     section { margin-top: 40px; }
-    li { margin: .5rem 0; }
+    .cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+    .content-card { display: flex; min-height: 190px; flex-direction: column; padding: 22px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); box-shadow: 0 5px 18px rgb(89 61 43 / 8%); color: var(--ink); text-decoration: none; transition: transform .15s ease, box-shadow .15s ease; }
+    .content-card:hover { transform: translateY(-2px); box-shadow: 0 9px 24px rgb(89 61 43 / 14%); }
+    .content-card:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+    .card-heading { display: flex; align-items: center; gap: .7rem; margin: 0 0 .75rem; color: var(--accent); font-size: 1.25rem; }
+    .card-icon { font-size: 1.6rem; line-height: 1; }
+    .content-card p { margin: 0; line-height: 1.7; }
+    .card-destination { margin-top: auto; padding-top: 1rem; color: var(--muted); font-size: .92rem; font-weight: 700; }
+    @media (max-width: 680px) {
+      .cards { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -27,22 +44,30 @@
 
   <img class="hero-image" src="images/image49.png" width="1999" height="1490" alt="カメラ映像の上に浦島太郎とカメを重ね、ポーズ認識で紙芝居を進めているアプリ画面">
 
-  <div class="actions">
-    <a class="button" href="https://sqs.prof.cuc.ac.jp/kamishibai/">現在公開中のWeb版を開く</a>
-    <a class="button secondary" href="docs/">ドキュメント</a>
-    <a class="button secondary" href="docs/workshops/2026-08-01/tmpose-kamishibai-20260801.pdf">体験会資料PDF</a>
-    <a class="button secondary" href="samples/">サンプル</a>
-    <a class="button secondary" href="downloads/">ダウンロード</a>
-  </div>
-
-  <section>
-    <h2>このサイトで提供するもの</h2>
-    <ul>
-      <li>PC・スマートフォンのブラウザで動作するWeb版</li>
-      <li>TurboWarpで編集できるSB3ファイル</li>
-      <li>浦島太郎などの紙芝居DSLサンプル</li>
-      <li>操作説明、DSL作成マニュアル、コマンドリファレンス</li>
-    </ul>
+  <section aria-labelledby="site-contents">
+    <h2 id="site-contents">このサイトで提供するもの</h2>
+    <div class="cards">
+      <a class="content-card" href="https://sqs.prof.cuc.ac.jp/kamishibai/">
+        <h3 class="card-heading"><span class="card-icon" aria-hidden="true">▶️</span>Web版を開く</h3>
+        <p>PC・スマートフォンのブラウザで紙芝居アプリを起動します。カメラの前でポーズを取り、物語を進められます。</p>
+        <span class="card-destination">紙芝居アプリへ</span>
+      </a>
+      <a class="content-card" href="docs/">
+        <h3 class="card-heading"><span class="card-icon" aria-hidden="true">📕</span>ドキュメント</h3>
+        <p>操作説明、DSL作成マニュアル、コマンドリファレンス、体験会資料をHTML・PDFで読めます。</p>
+        <span class="card-destination">ドキュメント一覧へ</span>
+      </a>
+      <a class="content-card" href="samples/">
+        <h3 class="card-heading"><span class="card-icon" aria-hidden="true">🎭</span>サンプル</h3>
+        <p>浦島太郎などの紙芝居DSLサンプルを閲覧・ダウンロードできます。</p>
+        <span class="card-destination">サンプル一覧へ</span>
+      </a>
+      <a class="content-card" href="downloads/">
+        <h3 class="card-heading"><span class="card-icon" aria-hidden="true">📁</span>ダウンロード</h3>
+        <p>TurboWarpで編集・実行できるkamishibai 3.1a1暫定版のSB3ファイルをダウンロードできます。</p>
+        <span class="card-destination">配布ファイル一覧へ</span>
+      </a>
+    </div>
   </section>
 </main>
 </body>

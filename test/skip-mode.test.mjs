@@ -5,7 +5,7 @@ import test from 'node:test';
 import {strFromU8, unzipSync} from 'fflate';
 
 const sb3Path = process.env.KAMISHIBAI_SB3_PATH
-  ?? new URL('../kamishibai.sb3', import.meta.url);
+  ?? new URL('../site/downloads/kamishibai-3_1a1.sb3', import.meta.url);
 const archive = unzipSync(new Uint8Array(readFileSync(sb3Path)));
 const project = JSON.parse(strFromU8(archive['project.json']));
 

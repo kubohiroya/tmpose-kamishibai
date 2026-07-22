@@ -1,1 +1,55 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ダウンロード | TMPose紙芝居</title></head><body><main><h1>ダウンロード</h1><p>最新のSB3ファイルとWeb版一式をここで配布します。サンプル台本は<a href="../samples/">サンプル一覧</a>から利用できます。</p><p><a href="../">トップへ戻る</a></p></main></body></html>
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="TMPose紙芝居のSB3ファイルをダウンロード">
+  <title>ダウンロード | TMPose紙芝居</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: system-ui, sans-serif;
+      --ink: #3f302b;
+      --muted: #756960;
+      --paper: #fffdf8;
+      --canvas: #fff8ee;
+      --accent: #963f2f;
+      --line: #dbc9bb;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--canvas); color: var(--ink); }
+    main { max-width: 880px; margin: auto; padding: 40px 24px 72px; }
+    nav { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 40px; }
+    nav a { color: var(--accent); }
+    h1 { margin-bottom: .35rem; font-size: clamp(2rem, 6vw, 3.5rem); }
+    .lead { color: var(--muted); font-size: 1.1rem; line-height: 1.7; }
+    article { margin-top: 32px; padding: 24px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); box-shadow: 0 5px 18px rgb(89 61 43 / 8%); }
+    article h2 { margin-top: 0; }
+    article p { line-height: 1.7; }
+    .status { display: inline-block; margin-left: .5rem; padding: .2rem .55rem; border-radius: 999px; background: #f5e1d8; color: var(--accent); font-size: .78rem; vertical-align: middle; }
+    .button { display: inline-block; margin: .5rem 0; padding: 12px 16px; border-radius: 8px; background: var(--accent); color: white; text-decoration: none; font-weight: 700; }
+    .file-info { color: var(--muted); font-size: .92rem; }
+  </style>
+</head>
+<body>
+<main>
+  <nav aria-label="サイトナビゲーション">
+    <a href="../">トップ</a>
+    <a href="../docs/">ドキュメント</a>
+    <a href="../samples/">サンプル</a>
+  </nav>
+
+  <header>
+    <h1>ダウンロード</h1>
+    <p class="lead">TurboWarpで編集・実行できるTMPose紙芝居のSB3ファイルを配布しています。</p>
+  </header>
+
+  <article>
+    <h2>kamishibai 3.1a1 <span class="status">暫定版</span></h2>
+    <p>kamishibai 3.1の暫定公開版です。ダウンロード後、TurboWarpでSB3ファイルを開いて利用できます。</p>
+    <p><a class="button" href="kamishibai-3_1a1.sb3" download>📁 SB3ファイルをダウンロード</a></p>
+    <p class="file-info">ファイル名: <code>kamishibai-3_1a1.sb3</code></p>
+  </article>
+</main>
+</body>
+</html>
