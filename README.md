@@ -249,8 +249,24 @@ pnpm run build
 
 浦島太郎の台本、専用スプライト、背景、画像、音声、組み込み済みSB3は、別リポジトリ [`kubohiroya/tmpose-kamishibai-samples`](https://github.com/kubohiroya/tmpose-kamishibai-samples) で管理します。本体リポジトリの `pnpm run build` では、浦島太郎固有コンテンツを生成・公開しません。
 
+## 汎用SB3・台本変換ビルダー
+
+`@kubohiroya/tmpose-kamishibai`は、外部画像・音声をベースSB3へ組み込み、台本の`asset=`行をプロジェクト内参照へ変換するJavaScript APIとCLIを提供します。消費側では浮動ブランチではなく、検証済みバージョンを固定します。
+
+```bash
+pnpm add --save-exact @kubohiroya/tmpose-kamishibai@3.1.0
+
+tmpose-kamishibai build-sb3 \
+  --base kamishibai.sb3 \
+  --script source.txt \
+  --assets assets.lock.json \
+  --output dist/sample
+```
+
+このコマンドは`dist/sample.sb3`、`dist/sample.txt`、`dist/sample.manifest.json`を検証してから一括で確定します。API、アセットマニフェスト、ネットワークとファイルの安全設定、決定的出力、エラー、ロールバックの詳細は[`docs/general/06-developer-guide.md`](docs/general/06-developer-guide.md)を参照してください。
+
 ## バージョン
 
-既存の開発履歴を引き継ぎ、初回公開版は`3.0.0`とします。
+既存の開発履歴を引き継ぎ、汎用ビルダーを公開するパッケージ版は`3.1.0`とします。パッケージ公開時は`package.json`のバージョンとGitタグ`v3.1.0`を一致させます。
 
 紙芝居アプリの配布SB3は、kamishibai 3.1の展開ソースからビルド時に生成します。
