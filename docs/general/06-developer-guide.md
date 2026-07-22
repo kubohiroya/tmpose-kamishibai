@@ -15,6 +15,17 @@
 * tmpose-kamishibai: アプリ本体・ドキュメント・サンプル
   * [https://github.com/kubohiroya/tmpose-kamishibai](https://github.com/kubohiroya/tmpose-kamishibai)
 
+### 1.2 `kamishibai.sb3` の依存物管理方針
+
+`kamishibai.sb3` は、台本固有の画像・音声アセットを組み込まない汎用実行環境として管理します。機能拡張とアセットは、提供元と用途に応じて次のように扱います。
+
+* Animated TextやTemporary Variablesなど、`extensions.turbowarp.org` で提供されるTurboWarp Extension Gallery採用済みの機能拡張は、外部URLを参照します。本資料では、これらをTurboWarp標準の機能拡張と呼びます。
+* Asset Manager、TMPose、Text Lines、Runtime Expression、Async Inputなど、tmpose-kamishibai固有の非サンドボックス機能拡張は、JavaScriptをbase64データURLに変換して `kamishibai.sb3` 内へ格納します。
+* 台本で使用する画像・音声アセットは `kamishibai.sb3` に組み込まず、台本ファイルの `asset=` 行から外部URLを参照します。
+* TurboWarp標準の機能拡張と外部アセットは、提供元が内容とURLを安定して維持することを前提に利用します。SHA-3などのハッシュ値による独自の完全性検証は行いません。
+
+外部アセットの提供元には、HTTPSで取得できること、ブラウザからの取得に必要なCORS設定が行われていること、URLが長期的に維持されることを求めます。配信内容またはURLが変更された場合は、必要に応じて台本ファイルを更新します。
+
 ## 2. 内部仕様: `skipMode` の状態遷移
 
 `skipMode` は、タイトル画面の表示中であること、または実行中の処理をどの単位まで進めるかという要求を、Temporary Variables拡張のランタイム変数で共有するための内部変数です。
