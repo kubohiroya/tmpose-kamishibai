@@ -128,26 +128,31 @@ async function verifyPdfFile(pdfPath, minimumSize = 10_000) {
   return document.getPageCount();
 }
 
-async function verifyGeneralDocuments() {
+async function verifyGeneralDocuments(grade) {
   const buildInfo = JSON.parse(await readFile(path.join(generalDirectory, 'build-info.json'), 'utf8'));
   const publicationManifest = JSON.parse(
     await readFile(path.join(generalDirectory, 'publication.json'), 'utf8'),
   );
   const readingOrder = publicationManifest.readingOrder.map((entry) => entry.url ?? entry);
   const docsIndexLinks = await verifyLocalReferences(docsIndexPath, 'a', 'href');
+  const docsIndex = await readFile(docsIndexPath, 'utf8');
   const generalTocLinks = await verifyLocalReferences(
     path.join(generalDirectory, generalDocumentConfig.tocHtmlFilename),
     'a',
     'href',
   );
   let totalPages = 0;
+  let rubyDocumentCount = 0;
+  let rubyCount = 0;
 
   assert(buildInfo.publicationKind === 'general-documentation',
     'General build metadata does not identify the general publication.');
-  assert(buildInfo.rubyApplied === false,
-    'General build metadata does not explicitly disable rubygana.');
+  assert(buildInfo.rubyApplied === true && buildInfo.rubyPolicy === 'selected-documents',
+    'General build metadata does not identify selective rubygana processing.');
   assert(buildInfo.documents.length === generalDocumentConfig.documents.length,
     'General build metadata does not list every configured document.');
+  assert(!docsIndex.includes('一般ドキュメントは原文どおりに組版し、rubyganaによるふりがな追加は行っていません。'),
+    'The retired non-ruby note remains on the documentation entrance page.');
 
   for (const generalDocument of generalDocumentConfig.documents) {
     const htmlFilename = generalDocument.sourceFilename.replace(/\.md$/u, '.html');
@@ -177,8 +182,29 @@ async function verifyGeneralDocuments() {
       `${generalDocument.sourceFilename} does not start with its configured title.`);
     assert(html.includes(generalDocument.title),
       `${htmlFilename} does not contain its configured title.`);
-    assert(!html.includes('<ruby') && !html.includes('data-rubygana-grade='),
-      `${htmlFilename} was unexpectedly processed by rubygana.`);
+    const documentBuildInfo = buildInfo.documents.find(
+      ({sourceFilename}) => sourceFilename === generalDocument.sourceFilename,
+    );
+    const shouldAddFurigana = generalDocument.addFurigana === true;
+    const documentRubyCount = (html.match(/<ruby\b/gu) ?? []).length;
+    const codeBlocks = html.match(/<pre\b[\s\S]*?<\/pre>/gu) ?? [];
+    assert(documentBuildInfo?.rubyApplied === shouldAddFurigana,
+      `${htmlFilename} has inconsistent rubygana build metadata.`);
+    if (shouldAddFurigana) {
+      assert(html.includes(`data-rubygana-grade="${grade}"`),
+        `${htmlFilename} does not record the configured rubygana grade.`);
+      assert(documentRubyCount >= 20,
+        `${htmlFilename} was not processed by rubygana.`);
+      assert(documentBuildInfo.learnedThroughGrade === grade,
+        `${htmlFilename} does not record its learned-through grade.`);
+      assert(codeBlocks.every((block) => !block.includes('<ruby')),
+        `rubygana changed a code block in ${htmlFilename}.`);
+      rubyDocumentCount += 1;
+      rubyCount += documentRubyCount;
+    } else {
+      assert(documentRubyCount === 0 && !html.includes('data-rubygana-grade='),
+        `${htmlFilename} was unexpectedly processed by rubygana.`);
+    }
     assert(readingOrder.includes(htmlFilename),
       `${htmlFilename} is missing from the general publication reading order.`);
     assert(docsIndexLinks.includes(`${generalDocumentConfig.outputDirectory}/${htmlFilename}`),
@@ -194,6 +220,8 @@ async function verifyGeneralDocuments() {
 
   assert(generalTocLinks.length >= generalDocumentConfig.documents.length,
     'General publication TOC does not link to every document.');
+  assert(rubyDocumentCount === 1 && rubyCount > 0,
+    `Expected one furigana-enabled general document, found ${rubyDocumentCount}.`);
   assert(docsIndexLinks.includes(
     `${documentConfig.outputDirectory}/${documentConfig.pdfFilename}`,
   ), 'Workshop PDF is missing from the documentation entrance page.');
@@ -201,6 +229,8 @@ async function verifyGeneralDocuments() {
   return {
     documentCount: generalDocumentConfig.documents.length,
     pageCount: totalPages,
+    rubyCount,
+    rubyDocumentCount,
   };
 }
 
@@ -300,7 +330,7 @@ export async function verifyBuild() {
     ...attributeValues(html, 'img', 'style'),
   ];
   const readingOrder = publicationManifest.readingOrder.map((entry) => entry.url ?? entry);
-  const generalResults = await verifyGeneralDocuments();
+  const generalResults = await verifyGeneralDocuments(grade);
   const staffResults = await verifyStaffDocument();
   const sampleCount = await verifySamples();
   const sourceHeadingCount = (source.match(/^#{1,4}\s+/gmu) ?? []).length;
@@ -421,7 +451,8 @@ export async function verifyBuild() {
 
   console.log(
     `Verified ${generalResults.documentCount} general HTML/PDF pairs `
-      + `(${generalResults.pageCount} PDF pages), ${tocLinks.length} workshop TOC links, `
+      + `(${generalResults.pageCount} PDF pages/${generalResults.rubyCount} ruby elements in `
+      + `${generalResults.rubyDocumentCount} document), ${tocLinks.length} workshop TOC links, `
       + `${images.length} workshop images, `
       + `staff PDF ${staffResults.pageCount} pages/${staffResults.imageCount} image, `
       + `${rubyCount} ruby elements, ${sampleCount} sample file(s), `
