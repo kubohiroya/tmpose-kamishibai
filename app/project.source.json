@@ -89,7 +89,8 @@
         "(|(cqQuX)fbz4;%~wS^B": "showCover",
         "BRhWRQ@e}Fz5h^/o!V%x": "showTitle",
         "pwe#tOp,Y8--.RyMz=P~": "stopKeyInput",
-        "HCH~21s%Au+vmI33ZwE#": "stopTouchInput"
+        "HCH~21s%Au+vmI33ZwE#": "stopTouchInput",
+        "skipFinishTimedActor": "finishTimedActorAction"
       },
       "blocks": {
         "iM": {
@@ -1232,7 +1233,7 @@
         },
         "dk": {
           "opcode": "procedures_definition",
-          "next": "dl",
+          "next": "ctxPoseSet",
           "parent": null,
           "inputs": {
             "custom_block": [
@@ -1286,7 +1287,7 @@
         "dl": {
           "opcode": "procedures_call",
           "next": "dn",
-          "parent": "dk",
+          "parent": "ctxPoseSet",
           "inputs": {},
           "fields": {},
           "shadow": false,
@@ -1401,7 +1402,7 @@
         },
         "e": {
           "opcode": "control_while",
-          "next": "ds",
+          "next": "ctxPoseDone",
           "parent": "dr",
           "inputs": {
             "CONDITION": [
@@ -1971,16 +1972,17 @@
           "topLevel": false
         },
         "i-": {
-          "opcode": "lmsTempVars2_deleteRuntimeVariable",
+          "opcode": "control_if",
           "next": null,
           "parent": "dE",
           "inputs": {
-            "VAR": [
-              1,
-              [
-                10,
-                "skipMode"
-              ]
+            "CONDITION": [
+              2,
+              "ctxPoseSkipEq"
+            ],
+            "SUBSTACK": [
+              2,
+              "ctxPoseSkipDelete"
             ]
           },
           "fields": {},
@@ -1990,7 +1992,7 @@
         "ds": {
           "opcode": "event_broadcast",
           "next": "dF",
-          "parent": "e",
+          "parent": "ctxPoseDone",
           "inputs": {
             "BROADCAST_INPUT": [
               1,
@@ -2214,13 +2216,17 @@
           "topLevel": false
         },
         "dJ": {
-          "opcode": "operator_not",
+          "opcode": "operator_and",
           "next": null,
           "parent": "at",
           "inputs": {
-            "OPERAND": [
+            "OPERAND1": [
               2,
-              "i@"
+              "ctxSpNot"
+            ],
+            "OPERAND2": [
+              2,
+              "ctxSpEq"
             ]
           },
           "fields": {},
@@ -2230,7 +2236,7 @@
         "i@": {
           "opcode": "lmsTempVars2_runtimeVariableExists",
           "next": null,
-          "parent": "dJ",
+          "parent": "ctxSpNot",
           "inputs": {
             "VAR": [
               1,
@@ -2270,7 +2276,7 @@
         },
         "i[": {
           "opcode": "sound_stopallsounds",
-          "next": null,
+          "next": "ctxPoseStopSound",
           "parent": "dK",
           "inputs": {},
           "fields": {},
@@ -2523,13 +2529,17 @@
           "topLevel": false
         },
         "dO": {
-          "opcode": "operator_not",
+          "opcode": "operator_and",
           "next": null,
           "parent": "aw",
           "inputs": {
-            "OPERAND": [
+            "OPERAND1": [
               2,
-              "ja"
+              "ctxDnNot"
+            ],
+            "OPERAND2": [
+              2,
+              "ctxDnExists"
             ]
           },
           "fields": {},
@@ -2539,7 +2549,7 @@
         "ja": {
           "opcode": "lmsTempVars2_runtimeVariableExists",
           "next": null,
-          "parent": "dO",
+          "parent": "ctxDnNot",
           "inputs": {
             "VAR": [
               1,
@@ -2555,7 +2565,7 @@
         },
         "i~": {
           "opcode": "lmsTempVars2_setRuntimeVariable",
-          "next": null,
+          "next": "ctxDownStopSound",
           "parent": "aw",
           "inputs": {
             "VAR": [
@@ -2612,13 +2622,17 @@
           "topLevel": false
         },
         "dP": {
-          "opcode": "operator_not",
+          "opcode": "operator_and",
           "next": null,
           "parent": "ax",
           "inputs": {
-            "OPERAND": [
+            "OPERAND1": [
               2,
-              "jd"
+              "ctxRtNot"
+            ],
+            "OPERAND2": [
+              2,
+              "ctxRtOr"
             ]
           },
           "fields": {},
@@ -2628,7 +2642,7 @@
         "jd": {
           "opcode": "lmsTempVars2_runtimeVariableExists",
           "next": null,
-          "parent": "dP",
+          "parent": "ctxRtNot",
           "inputs": {
             "VAR": [
               1,
@@ -2644,7 +2658,7 @@
         },
         "jc": {
           "opcode": "lmsTempVars2_setRuntimeVariable",
-          "next": null,
+          "next": "ctxRightStopSound",
           "parent": "ax",
           "inputs": {
             "VAR": [
@@ -4673,7 +4687,7 @@
         },
         "jX": {
           "opcode": "event_whenbroadcastreceived",
-          "next": "ej",
+          "next": "ctxStartClear",
           "parent": null,
           "inputs": {},
           "fields": {
@@ -4690,7 +4704,7 @@
         "ej": {
           "opcode": "procedures_call",
           "next": "o",
-          "parent": "jX",
+          "parent": "ctxStartSet",
           "inputs": {},
           "fields": {},
           "shadow": false,
@@ -6340,7 +6354,7 @@
         },
         "eS": {
           "opcode": "lmsTempVars2_deleteRuntimeVariable",
-          "next": "aW",
+          "next": "ctxCoverClear",
           "parent": "eR",
           "inputs": {
             "VAR": [
@@ -6358,7 +6372,7 @@
         "aW": {
           "opcode": "lmsTempVars2_setThreadVariable",
           "next": "a",
-          "parent": "eS",
+          "parent": "ctxCoverClear",
           "inputs": {
             "VAR": [
               1,
@@ -7596,15 +7610,23 @@
           "topLevel": false
         },
         "kJ": {
-          "opcode": "lmsTempVars2_runtimeVariableExists",
+          "opcode": "operator_equals",
           "next": null,
           "parent": "e^",
           "inputs": {
-            "VAR": [
+            "OPERAND1": [
+              3,
+              "ctxListSkipGet",
+              [
+                10,
+                ""
+              ]
+            ],
+            "OPERAND2": [
               1,
               [
                 10,
-                "skipMode"
+                "scene"
               ]
             ]
           },
@@ -7675,7 +7697,7 @@
             ],
             "SUBSTACK": [
               2,
-              "A"
+              "a/"
             ]
           },
           "fields": {},
@@ -7756,91 +7778,10 @@
           "shadow": true,
           "topLevel": false
         },
-        "A": {
-          "opcode": "control_if_else",
-          "next": null,
-          "parent": "a-",
-          "inputs": {
-            "CONDITION": [
-              2,
-              "e`"
-            ],
-            "SUBSTACK": [
-              2,
-              "e{"
-            ],
-            "SUBSTACK2": [
-              2,
-              "a/"
-            ]
-          },
-          "fields": {},
-          "shadow": false,
-          "topLevel": false
-        },
-        "e`": {
-          "opcode": "operator_equals",
-          "next": null,
-          "parent": "A",
-          "inputs": {
-            "OPERAND1": [
-              3,
-              "kN",
-              [
-                10,
-                ""
-              ]
-            ],
-            "OPERAND2": [
-              1,
-              [
-                10,
-                "action"
-              ]
-            ]
-          },
-          "fields": {},
-          "shadow": false,
-          "topLevel": false
-        },
-        "kN": {
-          "opcode": "lmsTempVars2_getRuntimeVariable",
-          "next": null,
-          "parent": "e`",
-          "inputs": {
-            "VAR": [
-              1,
-              [
-                10,
-                "skipMode"
-              ]
-            ]
-          },
-          "fields": {},
-          "shadow": false,
-          "topLevel": false
-        },
-        "kO": {
-          "opcode": "procedures_return",
-          "next": null,
-          "parent": "e{",
-          "inputs": {
-            "VALUE": [
-              1,
-              [
-                10,
-                ""
-              ]
-            ]
-          },
-          "fields": {},
-          "shadow": false,
-          "topLevel": false
-        },
         "a/": {
           "opcode": "sipcconsole_Journal",
-          "next": "a:",
-          "parent": "A",
+          "next": "ctxActionSet",
+          "parent": "a-",
           "inputs": {
             "string": [
               3,
@@ -7955,7 +7896,7 @@
         "a:": {
           "opcode": "lmsTempVars2_setThreadVariable",
           "next": "B",
-          "parent": "a/",
+          "parent": "ctxActionSet",
           "inputs": {
             "VAR": [
               1,
@@ -8022,7 +7963,7 @@
         },
         "B": {
           "opcode": "control_if",
-          "next": "kR",
+          "next": "ctxActionIf",
           "parent": "a:",
           "inputs": {
             "CONDITION": [
@@ -8132,7 +8073,7 @@
         "kR": {
           "opcode": "data_changevariableby",
           "next": null,
-          "parent": "B",
+          "parent": "ctxActionDone",
           "inputs": {
             "VALUE": [
               1,
@@ -9895,7 +9836,7 @@
         },
         "fB": {
           "opcode": "procedures_definition",
-          "next": "fC",
+          "next": "ctxSceneSet",
           "parent": null,
           "inputs": {
             "custom_block": [
@@ -10162,7 +10103,7 @@
         },
         "H": {
           "opcode": "control_while",
-          "next": "bl",
+          "next": "ctxBetweenSet",
           "parent": "fH",
           "inputs": {
             "CONDITION": [
@@ -11214,7 +11155,7 @@
         },
         "K": {
           "opcode": "control_if_else",
-          "next": null,
+          "next": "ctxSceneClear",
           "parent": "f!",
           "inputs": {
             "CONDITION": [
@@ -12860,7 +12801,7 @@
         },
         "gg": {
           "opcode": "control_repeat",
-          "next": null,
+          "next": "fadeOutFinal",
           "parent": "gf",
           "inputs": {
             "TIMES": [
@@ -12872,7 +12813,7 @@
             ],
             "SUBSTACK": [
               2,
-              "l-"
+              "fadeOutIf"
             ]
           },
           "fields": {},
@@ -12881,8 +12822,8 @@
         },
         "l-": {
           "opcode": "looks_changeeffectby",
-          "next": null,
-          "parent": "gg",
+          "next": "fadeOutWait",
+          "parent": "fadeOutIf",
           "inputs": {
             "CHANGE": [
               1,
@@ -12937,7 +12878,7 @@
         },
         "gi": {
           "opcode": "control_repeat",
-          "next": null,
+          "next": "fadeUpFinal",
           "parent": "gh",
           "inputs": {
             "TIMES": [
@@ -12949,7 +12890,7 @@
             ],
             "SUBSTACK": [
               2,
-              "l/"
+              "fadeUpIf"
             ]
           },
           "fields": {},
@@ -12958,8 +12899,8 @@
         },
         "l/": {
           "opcode": "looks_changeeffectby",
-          "next": null,
-          "parent": "gi",
+          "next": "fadeUpWait",
+          "parent": "fadeUpIf",
           "inputs": {
             "CHANGE": [
               1,
@@ -13125,7 +13066,7 @@
         },
         "l[": {
           "opcode": "event_whenbroadcastreceived",
-          "next": "gm",
+          "next": "ctxTitleClear",
           "parent": null,
           "inputs": {},
           "fields": {
@@ -13142,7 +13083,7 @@
         "gm": {
           "opcode": "looks_cleargraphiceffects",
           "next": "bJ",
-          "parent": "l[",
+          "parent": "ctxTitleClear",
           "inputs": {},
           "fields": {},
           "shadow": false,
@@ -19086,7 +19027,7 @@
         "fC": {
           "opcode": "sipcconsole_Journal",
           "next": "bj",
-          "parent": "fB",
+          "parent": "ctxSceneSet",
           "inputs": {
             "string": [
               1,
@@ -19120,7 +19061,7 @@
         "bl": {
           "opcode": "lmsTempVars2_setThreadVariable",
           "next": "fY",
-          "parent": "H",
+          "parent": "ctxBetweenSet",
           "inputs": {
             "VAR": [
               1,
@@ -19891,23 +19832,6 @@
           "shadow": false,
           "topLevel": false
         },
-        "e{": {
-          "opcode": "sipcconsole_Journal",
-          "next": "kO",
-          "parent": "A",
-          "inputs": {
-            "string": [
-              1,
-              [
-                10,
-                "return from actionList: skipMode=action"
-              ]
-            ]
-          },
-          "fields": {},
-          "shadow": false,
-          "topLevel": false
-        },
         "cl": {
           "opcode": "sipcconsole_Journal",
           "next": "nF",
@@ -20309,6 +20233,855 @@
           "topLevel": true,
           "x": 3260,
           "y": -1161
+        },
+        "ctxSpNot": {
+          "opcode": "operator_not",
+          "next": null,
+          "parent": "dJ",
+          "inputs": {
+            "OPERAND": [
+              2,
+              "i@"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "ctxSpEq": {
+          "opcode": "operator_equals",
+          "next": null,
+          "parent": "dJ",
+          "inputs": {
+            "OPERAND1": [
+              3,
+              "ctxSpGet",
+              [
+                10,
+                ""
+              ]
+            ],
+            "OPERAND2": [
+              1,
+              [
+                10,
+                "pose"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "ctxSpGet": {
+          "opcode": "lmsTempVars2_getRuntimeVariable",
+          "next": null,
+          "parent": "ctxSpEq",
+          "inputs": {
+            "VAR": [
+              1,
+              [
+                10,
+                "skipContext"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "ctxDnNot": {
+          "opcode": "operator_not",
+          "next": null,
+          "parent": "dO",
+          "inputs": {
+            "OPERAND": [
+              2,
+              "ja"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "ctxDnExists": {
+          "opcode": "lmsTempVars2_runtimeVariableExists",
+          "next": null,
+          "parent": "dO",
+          "inputs": {
+            "VAR": [
+              1,
+              [
+                10,
+                "skipContext"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "ctxRtNot": {
+          "opcode": "operator_not",
+          "next": null,
+          "parent": "dP",
+          "inputs": {
+            "OPERAND": [
+              2,
+              "jd"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "ctxRtOr": {
+          "opcode": "operator_or",
+          "next": null,
+          "parent": "dP",
+          "inputs": {
+            "OPERAND1": [
+              2,
+              "ctxRtAction"
+            ],
+            "OPERAND2": [
+              2,
+              "ctxRtPose"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "ctxRtAction": {
+          "opcode": "operator_equals",
+          "next": null,
+          "parent": "ctxRtOr",
+          "inputs": {
+            "OPERAND1": [
+              3,
+              "ctxRtGetA",
+              [
+                10,
+                ""
+              ]
+            ],
+            "OPERAND2": [
+              1,
+              [
+                10,
+                "action"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "ctxRtGetA": {
+          "opcode": "lmsTempVars2_getRuntimeVariable",
+          "next": null,
+          "parent": "ctxRtAction",
+          "inputs": {
+            "VAR": [
+              1,
+              [
+                10,
+                "skipContext"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "ctxRtPose": {
+          "opcode": "operator_equals",
+          "next": null,
+          "parent": "ctxRtOr",
+          "inputs": {
+            "OPERAND1": [
+              3,
+              "ctxRtGetP",
+              [
+                10,
+                ""
+              ]
+            ],
+            "OPERAND2": [
+              1,
+              [
+                10,
+                "pose"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "ctxRtGetP": {
+          "opcode": "lmsTempVars2_getRuntimeVariable",
+          "next": null,
+          "parent": "ctxRtPose",
+          "inputs": {
+            "VAR": [
+              1,
+              [
+                10,
+                "skipContext"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "ctxTitleClear": {
+          "opcode": "lmsTempVars2_deleteRuntimeVariable",
+          "next": "gm",
+          "parent": "l[",
+          "inputs": {
+            "VAR": [
+              1,
+              [
+                10,
+                "skipContext"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "ctxCoverClear": {
+          "opcode": "lmsTempVars2_deleteRuntimeVariable",
+          "next": "aW",
+          "parent": "eS",
+          "inputs": {
+            "VAR": [
+              1,
+              [
+                10,
+                "skipContext"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "ctxStartClear": {
+          "opcode": "lmsTempVars2_deleteRuntimeVariable",
+          "next": "ctxStartSet",
+          "parent": "jX",
+          "inputs": {
+            "VAR": [
+              1,
+              [
+                10,
+                "skipMode"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "ctxStartSet": {
+          "opcode": "lmsTempVars2_setRuntimeVariable",
+          "next": "ej",
+          "parent": "ctxStartClear",
+          "inputs": {
+            "VAR": [
+              1,
+              [
+                10,
+                "skipContext"
+              ]
+            ],
+            "STRING": [
+              1,
+              [
+                10,
+                "scene"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "ctxSceneSet": {
+          "opcode": "lmsTempVars2_setRuntimeVariable",
+          "next": "fC",
+          "parent": "fB",
+          "inputs": {
+            "VAR": [
+              1,
+              [
+                10,
+                "skipContext"
+              ]
+            ],
+            "STRING": [
+              1,
+              [
+                10,
+                "scene"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "ctxBetweenSet": {
+          "opcode": "lmsTempVars2_setRuntimeVariable",
+          "next": "bl",
+          "parent": "H",
+          "inputs": {
+            "VAR": [
+              1,
+              [
+                10,
+                "skipContext"
+              ]
+            ],
+            "STRING": [
+              1,
+              [
+                10,
+                "betweenActions"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "ctxSceneClear": {
+          "opcode": "lmsTempVars2_deleteRuntimeVariable",
+          "next": null,
+          "parent": "K",
+          "inputs": {
+            "VAR": [
+              1,
+              [
+                10,
+                "skipContext"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "ctxPoseSet": {
+          "opcode": "lmsTempVars2_setRuntimeVariable",
+          "next": "dl",
+          "parent": "dk",
+          "inputs": {
+            "VAR": [
+              1,
+              [
+                10,
+                "skipContext"
+              ]
+            ],
+            "STRING": [
+              1,
+              [
+                10,
+                "pose"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "ctxPoseDone": {
+          "opcode": "lmsTempVars2_setRuntimeVariable",
+          "next": "ds",
+          "parent": "e",
+          "inputs": {
+            "VAR": [
+              1,
+              [
+                10,
+                "skipContext"
+              ]
+            ],
+            "STRING": [
+              1,
+              [
+                10,
+                "action"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "ctxPoseSkipEq": {
+          "opcode": "operator_equals",
+          "next": null,
+          "parent": "i-",
+          "inputs": {
+            "OPERAND1": [
+              3,
+              "ctxPoseSkipGet",
+              [
+                10,
+                ""
+              ]
+            ],
+            "OPERAND2": [
+              1,
+              [
+                10,
+                "pose"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "ctxPoseSkipGet": {
+          "opcode": "lmsTempVars2_getRuntimeVariable",
+          "next": null,
+          "parent": "ctxPoseSkipEq",
+          "inputs": {
+            "VAR": [
+              1,
+              [
+                10,
+                "skipMode"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "ctxPoseSkipDelete": {
+          "opcode": "lmsTempVars2_deleteRuntimeVariable",
+          "next": null,
+          "parent": "i-",
+          "inputs": {
+            "VAR": [
+              1,
+              [
+                10,
+                "skipMode"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "ctxListSkipGet": {
+          "opcode": "lmsTempVars2_getRuntimeVariable",
+          "next": null,
+          "parent": "kJ",
+          "inputs": {
+            "VAR": [
+              1,
+              [
+                10,
+                "skipMode"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "ctxActionSet": {
+          "opcode": "lmsTempVars2_setRuntimeVariable",
+          "next": "a:",
+          "parent": "a/",
+          "inputs": {
+            "VAR": [
+              1,
+              [
+                10,
+                "skipContext"
+              ]
+            ],
+            "STRING": [
+              1,
+              [
+                10,
+                "action"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "ctxActionIf": {
+          "opcode": "control_if",
+          "next": "ctxActionDone",
+          "parent": "B",
+          "inputs": {
+            "CONDITION": [
+              2,
+              "ctxActionEq"
+            ],
+            "SUBSTACK": [
+              2,
+              "ctxActionDelete"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "ctxActionEq": {
+          "opcode": "operator_equals",
+          "next": null,
+          "parent": "ctxActionIf",
+          "inputs": {
+            "OPERAND1": [
+              3,
+              "ctxActionGet",
+              [
+                10,
+                ""
+              ]
+            ],
+            "OPERAND2": [
+              1,
+              [
+                10,
+                "action"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "ctxActionGet": {
+          "opcode": "lmsTempVars2_getRuntimeVariable",
+          "next": null,
+          "parent": "ctxActionEq",
+          "inputs": {
+            "VAR": [
+              1,
+              [
+                10,
+                "skipMode"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "ctxActionDelete": {
+          "opcode": "lmsTempVars2_deleteRuntimeVariable",
+          "next": null,
+          "parent": "ctxActionIf",
+          "inputs": {
+            "VAR": [
+              1,
+              [
+                10,
+                "skipMode"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "ctxActionDone": {
+          "opcode": "lmsTempVars2_setRuntimeVariable",
+          "next": "kR",
+          "parent": "ctxActionIf",
+          "inputs": {
+            "VAR": [
+              1,
+              [
+                10,
+                "skipContext"
+              ]
+            ],
+            "STRING": [
+              1,
+              [
+                10,
+                "betweenActions"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "ctxRightFinishActor": {
+          "opcode": "event_broadcastandwait",
+          "next": null,
+          "parent": "ctxRightFinishSequence",
+          "inputs": {
+            "BROADCAST_INPUT": [
+              1,
+              [
+                11,
+                "finishTimedActorAction",
+                "skipFinishTimedActor"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "ctxDownFinishActor": {
+          "opcode": "event_broadcastandwait",
+          "next": null,
+          "parent": "ctxDownFinishSequence",
+          "inputs": {
+            "BROADCAST_INPUT": [
+              1,
+              [
+                11,
+                "finishTimedActorAction",
+                "skipFinishTimedActor"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "ctxRightStopSound": {
+          "opcode": "twAssetManager_stopAllSounds",
+          "next": "ctxRightFinishSequence",
+          "parent": "jc",
+          "inputs": {},
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "ctxDownStopSound": {
+          "opcode": "twAssetManager_stopAllSounds",
+          "next": "ctxDownFinishSequence",
+          "parent": "i~",
+          "inputs": {},
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "ctxPoseStopSound": {
+          "opcode": "twAssetManager_stopAllSounds",
+          "next": null,
+          "parent": "i[",
+          "inputs": {},
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "ctxRightFinishSequence": {
+          "opcode": "twAssetManager_finishAllActorSequences",
+          "next": "ctxRightFinishActor",
+          "parent": "ctxRightStopSound",
+          "inputs": {},
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "ctxDownFinishSequence": {
+          "opcode": "twAssetManager_finishAllActorSequences",
+          "next": "ctxDownFinishActor",
+          "parent": "ctxDownStopSound",
+          "inputs": {},
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "fadeOutIf": {
+          "opcode": "control_if",
+          "next": null,
+          "parent": "gg",
+          "inputs": {
+            "CONDITION": [
+              2,
+              "fadeOutNoSkip"
+            ],
+            "SUBSTACK": [
+              2,
+              "l-"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "fadeOutNoSkip": {
+          "opcode": "operator_not",
+          "next": null,
+          "parent": "fadeOutIf",
+          "inputs": {
+            "OPERAND": [
+              2,
+              "fadeOutSkipExists"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "fadeOutSkipExists": {
+          "opcode": "lmsTempVars2_runtimeVariableExists",
+          "next": null,
+          "parent": "fadeOutNoSkip",
+          "inputs": {
+            "VAR": [
+              1,
+              [
+                10,
+                "skipMode"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "fadeOutWait": {
+          "opcode": "control_wait",
+          "next": null,
+          "parent": "l-",
+          "inputs": {
+            "DURATION": [
+              1,
+              [
+                5,
+                "0.05"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "fadeOutFinal": {
+          "opcode": "looks_seteffectto",
+          "next": null,
+          "parent": "gg",
+          "inputs": {
+            "VALUE": [
+              1,
+              [
+                4,
+                "-100"
+              ]
+            ]
+          },
+          "fields": {
+            "EFFECT": [
+              "BRIGHTNESS",
+              null
+            ]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "fadeUpIf": {
+          "opcode": "control_if",
+          "next": null,
+          "parent": "gi",
+          "inputs": {
+            "CONDITION": [
+              2,
+              "fadeUpNoSkip"
+            ],
+            "SUBSTACK": [
+              2,
+              "l/"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "fadeUpNoSkip": {
+          "opcode": "operator_not",
+          "next": null,
+          "parent": "fadeUpIf",
+          "inputs": {
+            "OPERAND": [
+              2,
+              "fadeUpSkipExists"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "fadeUpSkipExists": {
+          "opcode": "lmsTempVars2_runtimeVariableExists",
+          "next": null,
+          "parent": "fadeUpNoSkip",
+          "inputs": {
+            "VAR": [
+              1,
+              [
+                10,
+                "skipMode"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "fadeUpWait": {
+          "opcode": "control_wait",
+          "next": null,
+          "parent": "l/",
+          "inputs": {
+            "DURATION": [
+              1,
+              [
+                5,
+                "0.05"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "fadeUpFinal": {
+          "opcode": "looks_seteffectto",
+          "next": null,
+          "parent": "gi",
+          "inputs": {
+            "VALUE": [
+              1,
+              [
+                4,
+                "0"
+              ]
+            ]
+          },
+          "fields": {
+            "EFFECT": [
+              "BRIGHTNESS",
+              null
+            ]
+          },
+          "shadow": false,
+          "topLevel": false
         }
       },
       "comments": {
@@ -21109,8 +21882,8 @@
           }
         },
         "cC": {
-          "opcode": "looks_sayforsecs",
-          "next": null,
+          "opcode": "looks_say",
+          "next": "actorSayWait",
           "parent": "cB",
           "inputs": {
             "MESSAGE": [
@@ -21119,14 +21892,6 @@
               [
                 10,
                 "こんにちは!"
-              ]
-            ],
-            "SECS": [
-              3,
-              "n:",
-              [
-                4,
-                "2"
               ]
             ]
           },
@@ -21154,7 +21919,7 @@
         "n:": {
           "opcode": "lmsTempVars2_getRuntimeVariable",
           "next": null,
-          "parent": "cC",
+          "parent": "actorSayWait",
           "inputs": {
             "VAR": [
               1,
@@ -21342,8 +22107,8 @@
           }
         },
         "cE": {
-          "opcode": "looks_thinkforsecs",
-          "next": null,
+          "opcode": "looks_think",
+          "next": "actorThinkWait",
           "parent": "cD",
           "inputs": {
             "MESSAGE": [
@@ -21352,14 +22117,6 @@
               [
                 10,
                 "うーん..."
-              ]
-            ],
-            "SECS": [
-              3,
-              "n]",
-              [
-                4,
-                "2"
               ]
             ]
           },
@@ -21387,7 +22144,7 @@
         "n]": {
           "opcode": "lmsTempVars2_getRuntimeVariable",
           "next": null,
-          "parent": "cE",
+          "parent": "actorThinkWait",
           "inputs": {
             "VAR": [
               1,
@@ -23872,6 +24629,1000 @@
             "OPERAND": [
               2,
               "iw"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "actorFinishHat": {
+          "opcode": "event_whenbroadcastreceived",
+          "next": "actorFinishMatchIf",
+          "parent": null,
+          "inputs": {},
+          "fields": {
+            "BROADCAST_OPTION": [
+              "finishTimedActorAction",
+              "skipFinishTimedActor"
+            ]
+          },
+          "shadow": false,
+          "topLevel": true,
+          "x": 1840,
+          "y": -808
+        },
+        "actorFinishMatchIf": {
+          "opcode": "control_if",
+          "next": null,
+          "parent": "actorFinishHat",
+          "inputs": {
+            "CONDITION": [
+              2,
+              "actorFinishMatch"
+            ],
+            "SUBSTACK": [
+              2,
+              "actorFinishSayIf"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "actorFinishMatch": {
+          "opcode": "operator_or",
+          "next": null,
+          "parent": "actorFinishMatchIf",
+          "inputs": {
+            "OPERAND1": [
+              2,
+              "actorFinishAll"
+            ],
+            "OPERAND2": [
+              2,
+              "actorFinishListed"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "actorFinishAll": {
+          "opcode": "operator_equals",
+          "next": null,
+          "parent": "actorFinishMatch",
+          "inputs": {
+            "OPERAND1": [
+              3,
+              "actorFinishAllTarget",
+              [
+                10,
+                ""
+              ]
+            ],
+            "OPERAND2": [
+              1,
+              [
+                10,
+                "*"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "actorFinishAllTarget": {
+          "opcode": "lmsTempVars2_getRuntimeVariable",
+          "next": null,
+          "parent": "actorFinishAll",
+          "inputs": {
+            "VAR": [
+              1,
+              [
+                10,
+                "actionTarget"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "actorFinishListed": {
+          "opcode": "operator_gt",
+          "next": null,
+          "parent": "actorFinishMatch",
+          "inputs": {
+            "OPERAND1": [
+              3,
+              "actorFinishCount",
+              [
+                10,
+                ""
+              ]
+            ],
+            "OPERAND2": [
+              1,
+              [
+                10,
+                "0"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "actorFinishCount": {
+          "opcode": "strings_count",
+          "next": null,
+          "parent": "actorFinishListed",
+          "inputs": {
+            "STRING": [
+              3,
+              "actorFinishTargetWrap",
+              [
+                10,
+                ""
+              ]
+            ],
+            "SUBSTRING": [
+              3,
+              "actorFinishNameWrap",
+              [
+                10,
+                ""
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "actorFinishTargetWrap": {
+          "opcode": "operator_join",
+          "next": null,
+          "parent": "actorFinishCount",
+          "inputs": {
+            "STRING1": [
+              1,
+              [
+                10,
+                ","
+              ]
+            ],
+            "STRING2": [
+              3,
+              "actorFinishTargetEnd",
+              [
+                10,
+                ""
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "actorFinishTargetEnd": {
+          "opcode": "operator_join",
+          "next": null,
+          "parent": "actorFinishTargetWrap",
+          "inputs": {
+            "STRING1": [
+              3,
+              "actorFinishTargetGet",
+              [
+                10,
+                ""
+              ]
+            ],
+            "STRING2": [
+              1,
+              [
+                10,
+                ","
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "actorFinishTargetGet": {
+          "opcode": "lmsTempVars2_getRuntimeVariable",
+          "next": null,
+          "parent": "actorFinishTargetEnd",
+          "inputs": {
+            "VAR": [
+              1,
+              [
+                10,
+                "actionTarget"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "actorFinishNameWrap": {
+          "opcode": "operator_join",
+          "next": null,
+          "parent": "actorFinishCount",
+          "inputs": {
+            "STRING1": [
+              1,
+              [
+                10,
+                ","
+              ]
+            ],
+            "STRING2": [
+              3,
+              "actorFinishNameEnd",
+              [
+                10,
+                ""
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "actorFinishNameEnd": {
+          "opcode": "operator_join",
+          "next": null,
+          "parent": "actorFinishNameWrap",
+          "inputs": {
+            "STRING1": [
+              3,
+              [
+                12,
+                "actorName",
+                "!D[3t~fTZ;JNXAIXw.HQ"
+              ],
+              [
+                10,
+                ""
+              ]
+            ],
+            "STRING2": [
+              1,
+              [
+                10,
+                ","
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "actorFinishSayIf": {
+          "opcode": "control_if",
+          "next": "actorFinishMoveIf",
+          "parent": "actorFinishMatchIf",
+          "inputs": {
+            "CONDITION": [
+              2,
+              "actorFinishSpeech"
+            ],
+            "SUBSTACK": [
+              2,
+              "actorFinishSpeechClear"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "actorFinishSpeech": {
+          "opcode": "operator_or",
+          "next": null,
+          "parent": "actorFinishSayIf",
+          "inputs": {
+            "OPERAND1": [
+              2,
+              "actorFinishSay"
+            ],
+            "OPERAND2": [
+              2,
+              "actorFinishThink"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "actorFinishSay": {
+          "opcode": "operator_equals",
+          "next": null,
+          "parent": "actorFinishSpeech",
+          "inputs": {
+            "OPERAND1": [
+              3,
+              "actorFinishSayGet",
+              [
+                10,
+                ""
+              ]
+            ],
+            "OPERAND2": [
+              1,
+              [
+                10,
+                "say"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "actorFinishSayGet": {
+          "opcode": "lmsTempVars2_getRuntimeVariable",
+          "next": null,
+          "parent": "actorFinishSay",
+          "inputs": {
+            "VAR": [
+              1,
+              [
+                10,
+                "actionCommand"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "actorFinishThink": {
+          "opcode": "operator_equals",
+          "next": null,
+          "parent": "actorFinishSpeech",
+          "inputs": {
+            "OPERAND1": [
+              3,
+              "actorFinishThinkGet",
+              [
+                10,
+                ""
+              ]
+            ],
+            "OPERAND2": [
+              1,
+              [
+                10,
+                "think"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "actorFinishThinkGet": {
+          "opcode": "lmsTempVars2_getRuntimeVariable",
+          "next": null,
+          "parent": "actorFinishThink",
+          "inputs": {
+            "VAR": [
+              1,
+              [
+                10,
+                "actionCommand"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "actorFinishSpeechClear": {
+          "opcode": "looks_say",
+          "next": null,
+          "parent": "actorFinishSayIf",
+          "inputs": {
+            "MESSAGE": [
+              1,
+              [
+                10,
+                ""
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "actorFinishMoveIf": {
+          "opcode": "control_if",
+          "next": "actorFinishStop",
+          "parent": "actorFinishSayIf",
+          "inputs": {
+            "CONDITION": [
+              2,
+              "actorFinishMove"
+            ],
+            "SUBSTACK": [
+              2,
+              "actorFinishGoTo"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "actorFinishMove": {
+          "opcode": "operator_equals",
+          "next": null,
+          "parent": "actorFinishMoveIf",
+          "inputs": {
+            "OPERAND1": [
+              3,
+              "actorFinishMoveGet",
+              [
+                10,
+                ""
+              ]
+            ],
+            "OPERAND2": [
+              1,
+              [
+                10,
+                "moveTo"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "actorFinishMoveGet": {
+          "opcode": "lmsTempVars2_getRuntimeVariable",
+          "next": null,
+          "parent": "actorFinishMove",
+          "inputs": {
+            "VAR": [
+              1,
+              [
+                10,
+                "actionCommand"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "actorFinishGoTo": {
+          "opcode": "motion_gotoxy",
+          "next": null,
+          "parent": "actorFinishMoveIf",
+          "inputs": {
+            "X": [
+              3,
+              "actorFinishX",
+              [
+                4,
+                "0"
+              ]
+            ],
+            "Y": [
+              3,
+              "actorFinishY",
+              [
+                4,
+                "0"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "actorFinishX": {
+          "opcode": "strings_split",
+          "next": null,
+          "parent": "actorFinishGoTo",
+          "inputs": {
+            "STRING": [
+              3,
+              "actorFinishXParam",
+              [
+                10,
+                ""
+              ]
+            ],
+            "SPLIT": [
+              1,
+              [
+                10,
+                ","
+              ]
+            ],
+            "ITEM": [
+              1,
+              [
+                4,
+                "1"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "actorFinishXParam": {
+          "opcode": "lmsTempVars2_getRuntimeVariable",
+          "next": null,
+          "parent": "actorFinishX",
+          "inputs": {
+            "VAR": [
+              1,
+              [
+                10,
+                "actionParam"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "actorFinishY": {
+          "opcode": "strings_split",
+          "next": null,
+          "parent": "actorFinishGoTo",
+          "inputs": {
+            "STRING": [
+              3,
+              "actorFinishYParam",
+              [
+                10,
+                ""
+              ]
+            ],
+            "SPLIT": [
+              1,
+              [
+                10,
+                ","
+              ]
+            ],
+            "ITEM": [
+              1,
+              [
+                4,
+                "2"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "actorFinishYParam": {
+          "opcode": "lmsTempVars2_getRuntimeVariable",
+          "next": null,
+          "parent": "actorFinishY",
+          "inputs": {
+            "VAR": [
+              1,
+              [
+                10,
+                "actionParam"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "actorFinishStop": {
+          "opcode": "control_stop",
+          "next": null,
+          "parent": "actorFinishMoveIf",
+          "inputs": {},
+          "fields": {
+            "STOP_OPTION": [
+              "other scripts in sprite",
+              null
+            ]
+          },
+          "shadow": false,
+          "topLevel": false,
+          "mutation": {
+            "tagName": "mutation",
+            "children": [],
+            "hasnext": "true"
+          }
+        },
+        "actorSayWait": {
+          "opcode": "procedures_call",
+          "next": "actorSayClear",
+          "parent": "cC",
+          "inputs": {
+            "skipWaitSeconds": [
+              3,
+              "n:",
+              [
+                4,
+                "0"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false,
+          "mutation": {
+            "tagName": "mutation",
+            "children": [],
+            "proccode": "wait for actor action %s seconds",
+            "argumentids": "[\"skipWaitSeconds\"]",
+            "warp": "false"
+          }
+        },
+        "actorSayClear": {
+          "opcode": "looks_say",
+          "next": null,
+          "parent": "actorSayWait",
+          "inputs": {
+            "MESSAGE": [
+              1,
+              [
+                10,
+                ""
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "actorThinkWait": {
+          "opcode": "procedures_call",
+          "next": "actorThinkClear",
+          "parent": "cE",
+          "inputs": {
+            "skipWaitSeconds": [
+              3,
+              "n]",
+              [
+                4,
+                "0"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false,
+          "mutation": {
+            "tagName": "mutation",
+            "children": [],
+            "proccode": "wait for actor action %s seconds",
+            "argumentids": "[\"skipWaitSeconds\"]",
+            "warp": "false"
+          }
+        },
+        "actorThinkClear": {
+          "opcode": "looks_think",
+          "next": null,
+          "parent": "actorThinkWait",
+          "inputs": {
+            "MESSAGE": [
+              1,
+              [
+                10,
+                ""
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "actorWaitDef": {
+          "opcode": "procedures_definition",
+          "next": "actorWaitStart",
+          "parent": null,
+          "inputs": {
+            "custom_block": [
+              1,
+              "actorWaitProto"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": true,
+          "x": 1840,
+          "y": -1025
+        },
+        "actorWaitProto": {
+          "opcode": "procedures_prototype",
+          "next": null,
+          "parent": "actorWaitDef",
+          "inputs": {
+            "skipWaitSeconds": [
+              1,
+              "actorWaitArgShadow"
+            ]
+          },
+          "fields": {},
+          "shadow": true,
+          "topLevel": false,
+          "mutation": {
+            "tagName": "mutation",
+            "children": [],
+            "proccode": "wait for actor action %s seconds",
+            "argumentids": "[\"skipWaitSeconds\"]",
+            "argumentnames": "[\"seconds\"]",
+            "argumentdefaults": "[\"1\"]",
+            "warp": "false"
+          }
+        },
+        "actorWaitArgShadow": {
+          "opcode": "argument_reporter_string_number",
+          "next": null,
+          "parent": "actorWaitProto",
+          "inputs": {},
+          "fields": {
+            "VALUE": [
+              "seconds",
+              null
+            ]
+          },
+          "shadow": true,
+          "topLevel": false
+        },
+        "actorWaitStart": {
+          "opcode": "lmsTimers_startResetTimer",
+          "next": "actorWaitRepeat",
+          "parent": "actorWaitDef",
+          "inputs": {
+            "TIMER": [
+              3,
+              "actorWaitStartName",
+              [
+                10,
+                ""
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "actorWaitStartName": {
+          "opcode": "operator_join",
+          "next": null,
+          "parent": "actorWaitStart",
+          "inputs": {
+            "STRING1": [
+              1,
+              [
+                10,
+                "actorAction:"
+              ]
+            ],
+            "STRING2": [
+              3,
+              [
+                12,
+                "actorName",
+                "!D[3t~fTZ;JNXAIXw.HQ"
+              ],
+              [
+                10,
+                ""
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "actorWaitRepeat": {
+          "opcode": "control_repeat_until",
+          "next": "actorWaitRemove",
+          "parent": "actorWaitStart",
+          "inputs": {
+            "CONDITION": [
+              2,
+              "actorWaitDone"
+            ],
+            "SUBSTACK": [
+              2,
+              "actorWaitYield"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "actorWaitDone": {
+          "opcode": "operator_or",
+          "next": null,
+          "parent": "actorWaitRepeat",
+          "inputs": {
+            "OPERAND1": [
+              2,
+              "actorWaitSkipped"
+            ],
+            "OPERAND2": [
+              2,
+              "actorWaitElapsed"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "actorWaitSkipped": {
+          "opcode": "lmsTempVars2_runtimeVariableExists",
+          "next": null,
+          "parent": "actorWaitDone",
+          "inputs": {
+            "VAR": [
+              1,
+              [
+                10,
+                "skipMode"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "actorWaitElapsed": {
+          "opcode": "operator_gt",
+          "next": null,
+          "parent": "actorWaitDone",
+          "inputs": {
+            "OPERAND1": [
+              3,
+              "actorWaitValue",
+              [
+                10,
+                "0"
+              ]
+            ],
+            "OPERAND2": [
+              3,
+              "actorWaitSeconds",
+              [
+                10,
+                "0"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "actorWaitValue": {
+          "opcode": "lmsTimers_valueOfTimer",
+          "next": null,
+          "parent": "actorWaitElapsed",
+          "inputs": {
+            "TIMER": [
+              3,
+              "actorWaitValueName",
+              [
+                10,
+                ""
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "actorWaitValueName": {
+          "opcode": "operator_join",
+          "next": null,
+          "parent": "actorWaitValue",
+          "inputs": {
+            "STRING1": [
+              1,
+              [
+                10,
+                "actorAction:"
+              ]
+            ],
+            "STRING2": [
+              3,
+              [
+                12,
+                "actorName",
+                "!D[3t~fTZ;JNXAIXw.HQ"
+              ],
+              [
+                10,
+                ""
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "actorWaitSeconds": {
+          "opcode": "argument_reporter_string_number",
+          "next": null,
+          "parent": "actorWaitElapsed",
+          "inputs": {},
+          "fields": {
+            "VALUE": [
+              "seconds",
+              null
+            ]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "actorWaitYield": {
+          "opcode": "control_wait",
+          "next": null,
+          "parent": "actorWaitRepeat",
+          "inputs": {
+            "DURATION": [
+              1,
+              [
+                5,
+                "0"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "actorWaitRemove": {
+          "opcode": "lmsTimers_removeTimer",
+          "next": null,
+          "parent": "actorWaitRepeat",
+          "inputs": {
+            "TIMER": [
+              3,
+              "actorWaitRemoveName",
+              [
+                10,
+                ""
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "actorWaitRemoveName": {
+          "opcode": "operator_join",
+          "next": null,
+          "parent": "actorWaitRemove",
+          "inputs": {
+            "STRING1": [
+              1,
+              [
+                10,
+                "actorAction:"
+              ]
+            ],
+            "STRING2": [
+              3,
+              [
+                12,
+                "actorName",
+                "!D[3t~fTZ;JNXAIXw.HQ"
+              ],
+              [
+                10,
+                ""
+              ]
             ]
           },
           "fields": {},
