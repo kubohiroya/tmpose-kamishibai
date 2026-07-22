@@ -3,6 +3,8 @@ import {createRequire} from 'node:module';
 import path from 'node:path';
 import {fileURLToPath, pathToFileURL} from 'node:url';
 
+import {strFromU8, unzipSync} from 'fflate';
+
 import {
   documentConfig,
   generalDocumentConfig,
@@ -28,7 +30,7 @@ const downloadSourcePath = path.join(projectRoot, 'site/downloads', downloadFile
 const downloadDirectory = path.join(projectRoot, 'dist/downloads');
 const downloadIndexPath = path.join(downloadDirectory, 'index.html');
 const downloadPath = path.join(downloadDirectory, downloadFilename);
-const legacySb3Path = path.join(projectRoot, 'kamishibai.sb3');
+const developmentSb3Path = path.join(projectRoot, 'kamishibai.sb3');
 const docsIndexPath = path.join(docsDirectory, 'index.html');
 const generalDirectory = path.join(docsDirectory, generalDocumentConfig.outputDirectory);
 const workshopDirectory = path.join(docsDirectory, documentConfig.outputDirectory);
@@ -58,18 +60,6 @@ const samplesIndexPath = path.join(samplesDirectory, 'index.html');
 function assert(condition, message) {
   if (!condition) {
     throw new Error(message);
-  }
-}
-
-async function pathExists(targetPath) {
-  try {
-    await access(targetPath);
-    return true;
-  } catch (error) {
-    if (error?.code === 'ENOENT') {
-      return false;
-    }
-    throw error;
   }
 }
 
@@ -166,10 +156,11 @@ async function verifySiteIndex() {
 async function verifyDownloads() {
   const html = await readFile(downloadIndexPath, 'utf8');
   const links = await verifyLocalReferences(downloadIndexPath, 'a', 'href');
-  const [sourceArchive, publishedArchive, archiveStat] = await Promise.all([
+  const [sourceArchive, publishedArchive, archiveStat, developmentArchive] = await Promise.all([
     readFile(downloadSourcePath),
     readFile(downloadPath),
     stat(downloadPath),
+    readFile(developmentSb3Path),
   ]);
 
   assert(links.includes(downloadFilename),
@@ -182,8 +173,18 @@ async function verifyDownloads() {
     'The published SB3 differs from its site/downloads source.');
   assert(archiveStat.size > 1_000_000 && publishedArchive.subarray(0, 2).toString() === 'PK',
     'The published SB3 is not a plausible ZIP-based Scratch project.');
-  assert(!(await pathExists(legacySb3Path)),
-    'The retired repository-root kamishibai.sb3 still exists.');
+  assert(developmentArchive.length > 1_000_000
+      && developmentArchive.subarray(0, 2).toString() === 'PK',
+    'The repository-root development SB3 is not a plausible ZIP-based Scratch project.');
+
+  const developmentProjectFile = unzipSync(
+    new Uint8Array(developmentArchive),
+  )['project.json'];
+  assert(developmentProjectFile,
+    'The repository-root development SB3 does not contain project.json.');
+  const developmentProject = JSON.parse(strFromU8(developmentProjectFile));
+  assert(Array.isArray(developmentProject.targets),
+    'The repository-root development SB3 project.json does not contain targets.');
 
   return {filename: downloadFilename, size: archiveStat.size};
 }
