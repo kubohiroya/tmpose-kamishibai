@@ -3,12 +3,9 @@ import {readFileSync} from 'node:fs';
 import test from 'node:test';
 import vm from 'node:vm';
 
-import {strFromU8, unzipSync} from 'fflate';
+import {loadKamishibaiProject} from './helpers/sb3-project.mjs';
 
-const sb3Path = process.env.KAMISHIBAI_SB3_PATH
-  ?? new URL('../kamishibai.sb3', import.meta.url);
-const archive = unzipSync(new Uint8Array(readFileSync(sb3Path)));
-const project = JSON.parse(strFromU8(archive['project.json']));
+const project = loadKamishibaiProject();
 const stage = project.targets.find((target) => target.isStage);
 const relatedDocumentation = [
   '01-user-guide.md',
