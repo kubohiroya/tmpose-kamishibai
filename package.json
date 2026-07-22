@@ -26,6 +26,7 @@
   "license": "MIT",
   "devDependencies": {
     "@vivliostyle/cli": "11.1.0",
+    "fflate": "0.8.3",
     "gh-pages": "^6.3.0",
     "rubygana": "github:kubohiroya/rubygana#a24b8a699a1b033546f4d1a47a63005f7af95735"
   },
