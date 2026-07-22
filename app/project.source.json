@@ -3729,7 +3729,7 @@
             ],
             "SUBSTACK2": [
               2,
-              "n"
+              "sceneTextCommandDispatch"
             ]
           },
           "fields": {},
@@ -3769,6 +3769,201 @@
           "fields": {
             "VALUE": [
               "key",
+              null
+            ]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "sceneTextCommandDispatch": {
+          "opcode": "control_if_else",
+          "next": null,
+          "parent": "m",
+          "inputs": {
+            "CONDITION": [
+              2,
+              "sceneCommandIsText"
+            ],
+            "SUBSTACK": [
+              2,
+              "sceneSetTextValue"
+            ],
+            "SUBSTACK2": [
+              2,
+              "n"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "sceneCommandIsText": {
+          "opcode": "strings_identical",
+          "next": null,
+          "parent": "sceneTextCommandDispatch",
+          "inputs": {
+            "OPERAND1": [
+              3,
+              "sceneCommandKeyForText",
+              [
+                10,
+                "A"
+              ]
+            ],
+            "OPERAND2": [
+              1,
+              [
+                10,
+                "text"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "sceneCommandKeyForText": {
+          "opcode": "argument_reporter_string_number",
+          "next": null,
+          "parent": "sceneCommandIsText",
+          "inputs": {},
+          "fields": {
+            "VALUE": [
+              "key",
+              null
+            ]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "sceneSetTextValue": {
+          "opcode": "twAssetManager_setTextValue",
+          "next": null,
+          "parent": "sceneTextCommandDispatch",
+          "inputs": {
+            "NAME": [
+              3,
+              "sceneTextAssetName",
+              [
+                10,
+                "Narration"
+              ]
+            ],
+            "VALUE": [
+              3,
+              "sceneTextValue",
+              [
+                10,
+                ""
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "sceneTextAssetName": {
+          "opcode": "procedures_call",
+          "next": null,
+          "parent": "sceneSetTextValue",
+          "inputs": {
+            "3EuUXc]=fdSRVL$b+,GJ": [
+              1,
+              [
+                10,
+                "1"
+              ]
+            ],
+            "6gg`b%Ljytx;YRj[*Eo{": [
+              1,
+              [
+                10,
+                ":"
+              ]
+            ],
+            "lf^o4yyeS~=(X#Oy_T}y": [
+              3,
+              "sceneTextCommandValueForName",
+              [
+                10,
+                ""
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false,
+          "mutation": {
+            "tagName": "mutation",
+            "children": [],
+            "proccode": "selectValue # %s separated by %s from %s",
+            "argumentids": "[\"3EuUXc]=fdSRVL$b+,GJ\",\"6gg`b%Ljytx;YRj[*Eo{\",\"lf^o4yyeS~=(X#Oy_T}y\"]",
+            "warp": "true",
+            "return": "1"
+          }
+        },
+        "sceneTextCommandValueForName": {
+          "opcode": "argument_reporter_string_number",
+          "next": null,
+          "parent": "sceneTextAssetName",
+          "inputs": {},
+          "fields": {
+            "VALUE": [
+              "value",
+              null
+            ]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "sceneTextValue": {
+          "opcode": "procedures_call",
+          "next": null,
+          "parent": "sceneSetTextValue",
+          "inputs": {
+            "3EuUXc]=fdSRVL$b+,GJ": [
+              1,
+              [
+                10,
+                "2"
+              ]
+            ],
+            "6gg`b%Ljytx;YRj[*Eo{": [
+              1,
+              [
+                10,
+                ":"
+              ]
+            ],
+            "lf^o4yyeS~=(X#Oy_T}y": [
+              3,
+              "sceneTextCommandValueForText",
+              [
+                10,
+                ""
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false,
+          "mutation": {
+            "tagName": "mutation",
+            "children": [],
+            "proccode": "selectValue # %s separated by %s from %s",
+            "argumentids": "[\"3EuUXc]=fdSRVL$b+,GJ\",\"6gg`b%Ljytx;YRj[*Eo{\",\"lf^o4yyeS~=(X#Oy_T}y\"]",
+            "warp": "true",
+            "return": "1"
+          }
+        },
+        "sceneTextCommandValueForText": {
+          "opcode": "argument_reporter_string_number",
+          "next": null,
+          "parent": "sceneTextValue",
+          "inputs": {},
+          "fields": {
+            "VALUE": [
+              "value",
               null
             ]
           },
@@ -3973,7 +4168,7 @@
         "n": {
           "opcode": "control_if_else",
           "next": null,
-          "parent": "m",
+          "parent": "sceneTextCommandDispatch",
           "inputs": {
             "CONDITION": [
               2,

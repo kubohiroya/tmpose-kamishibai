@@ -209,6 +209,62 @@ test('keeps the external script flow when the embedded script slot is empty', as
   assert.equal(harness.hasRuntimeVariable('script'), false);
 });
 
+test('updates and clears a registered text asset from scene commands', async (context) => {
+  const harness = await loadKamishibaiVm();
+  context.after(() => harness.quit());
+  startScript(harness, [
+    'kamishibai=3.1',
+    'asset=Title,backdrop',
+    'asset=Stars,backdrop',
+    'asset=Narration,text',
+    'actor=Narration,Narration',
+    'cover=Title,',
+    '---',
+    'sceneLabel=first',
+    'text=Narration:むかし',
+    'action=stage:Stars',
+    'action=Narration:show:Narration:0,0,100',
+    'action=wait:30',
+    '---',
+    'sceneLabel=second',
+    'text=Narration:つづき',
+    'action=stage:Title',
+    'action=Narration:show:Narration:0,0,100',
+    'action=wait:30',
+    '---',
+    'sceneLabel=third',
+    'text=Narration:',
+    'action=stage:Stars',
+    'action=Narration:show:Narration:0,0,100',
+    'action=wait:30',
+  ].join('\n'));
+
+  harness.runUntil(() => (
+    harness.getRuntimeVariable('text:Narration') === 'むかし'
+    && harness.getActor('Narration')?.visible === true
+  ));
+  assert.equal(harness.getActor('Narration')?.visible, true);
+  assert.equal(harness.hasRuntimeVariable('Narration'), false);
+  assert.deepEqual(harness.extensionState.consoleErrors, []);
+
+  harness.pressKey('ArrowDown');
+  harness.runUntil(() => (
+    Number(harness.getRuntimeVariable('sceneIndex')) === 2
+    && harness.getRuntimeVariable('text:Narration') === 'つづき'
+    && harness.getBackdropName() === 'Title'
+  ));
+  assert.equal(harness.getBackdropName(), 'Title');
+
+  harness.pressKey('ArrowDown');
+  harness.runUntil(() => (
+    Number(harness.getRuntimeVariable('sceneIndex')) === 3
+    && harness.getRuntimeVariable('text:Narration') === ''
+    && harness.getBackdropName() === 'Stars'
+  ));
+  assert.equal(harness.getBackdropName(), 'Stars');
+  assert.deepEqual(harness.extensionState.consoleErrors, []);
+});
+
 test('ignores rehearsal keys while the project is stopped', async (context) => {
   const harness = await loadKamishibaiVm();
   context.after(() => harness.quit());

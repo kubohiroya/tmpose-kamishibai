@@ -279,10 +279,14 @@ test('builds a player with the exact transformed script and starts it from the t
         'asset=Scene,file:assets/backdrop.svg',
         'asset=StageAudio,file:assets/stage.wav',
         'asset=Title,backdrop',
+        'asset=Narration,text',
+        'actor=Narration,Narration',
         'cover=Title,',
         '---',
         'sceneLabel=first',
         'action=stage:Scene',
+        'action=Narration:show:Narration:0,0,100',
+        'text=Narration:むかし',
         'action=wait:30',
         '',
       ].join('\n'),
@@ -322,9 +326,17 @@ test('builds a player with the exact transformed script and starts it from the t
     harness.runUntil(() => harness.getRuntimeVariable('skipMode') === 'title');
     harness.setRuntimeVariable('script', 'stale script from another session');
     harness.clickStage();
-    harness.runUntil(() => harness.getBackdropName() === 'Builder Scene');
+    harness.runUntil(
+      () =>
+        harness.getBackdropName() === 'Builder Scene' &&
+        harness.getRuntimeVariable('text:Narration') === 'むかし' &&
+        harness.getActor('Narration')?.visible === true,
+    );
 
     assert.equal(harness.getRuntimeVariable('script'), validated.script);
+    assert.equal(harness.getActor('Narration')?.visible, true);
+    assert.equal(harness.hasRuntimeVariable('Narration'), false);
+    assert.deepEqual(harness.extensionState.consoleErrors, []);
     assert.equal(
       harness.extensionState.assets.get('StageAudio'),
       'sound:@stage:Builder Stage Audio',
