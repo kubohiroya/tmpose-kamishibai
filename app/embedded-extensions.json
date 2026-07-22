@@ -1,0 +1,40 @@
+{
+  "formatVersion": 1,
+  "extensions": [
+    {
+      "id": "twAssetManager",
+      "path": "extensions/twAssetManager.js",
+      "mediaType": "text/javascript",
+      "parameters": [],
+      "encoding": "base64"
+    },
+    {
+      "id": "tmpose",
+      "path": "extensions/tmpose.js",
+      "mediaType": "text/javascript",
+      "parameters": [],
+      "encoding": "base64"
+    },
+    {
+      "id": "kubohiroyatextlines",
+      "path": "extensions/kubohiroyatextlines.js",
+      "mediaType": "text/javascript",
+      "parameters": [],
+      "encoding": "base64"
+    },
+    {
+      "id": "twRuntimeExpression",
+      "path": "extensions/twRuntimeExpression.js",
+      "mediaType": "text/javascript",
+      "parameters": [],
+      "encoding": "base64"
+    },
+    {
+      "id": "twAsyncInput",
+      "path": "extensions/twAsyncInput.js",
+      "mediaType": "text/javascript",
+      "parameters": [],
+      "encoding": "base64"
+    }
+  ]
+}
