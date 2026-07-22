@@ -4,6 +4,7 @@ import {mkdir, mkdtemp, readFile, rm, symlink, writeFile} from 'node:fs/promises
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
+import {clearTimeout, setTimeout} from 'node:timers';
 import {fileURLToPath} from 'node:url';
 
 import {strFromU8, unzipSync} from 'fflate';
@@ -456,7 +457,19 @@ test('rejects HTTP failures, redirects, type, size, and hash mismatches', async 
         baseEntry,
         async (_url, {signal}) =>
           new Promise((_resolve, reject) => {
-            signal.addEventListener('abort', () => reject(signal.reason), {once: true});
+            const guard = setTimeout(
+              () => reject(new Error('Fetch mock did not receive the timeout abort.')),
+              1_000,
+            );
+            const rejectOnAbort = () => {
+              clearTimeout(guard);
+              reject(signal.reason);
+            };
+            if (signal.aborted) {
+              rejectOnAbort();
+            } else {
+              signal.addEventListener('abort', rejectOnAbort, {once: true});
+            }
           }),
         {requestTimeoutMs: 5},
       ),
