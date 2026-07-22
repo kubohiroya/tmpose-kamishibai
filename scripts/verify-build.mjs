@@ -55,6 +55,17 @@ const buildInfoPath = path.join(workshopDirectory, 'build-info.json');
 const samplesSourceDirectory = path.join(projectRoot, 'samples');
 const samplesDirectory = path.join(projectRoot, 'dist/samples');
 const samplesIndexPath = path.join(samplesDirectory, 'index.html');
+const documentationCardIcons = [
+  ['🕹️', '紙芝居アプリ 操作説明書'],
+  ['✍️', '紙芝居DSLファイル作成マニュアル'],
+  ['📚', '紙芝居DSL コマンドリファレンス'],
+  ['👥', '紙芝居アプリ 概要説明書 大人向け'],
+  ['🧒', '紙芝居アプリ 概要説明書 子供向け'],
+  ['🛠️', '紙芝居アプリ ソフトウェア開発者向け資料'],
+  ['🕰️', '紙芝居DSL 2.0から3.1への変更履歴'],
+  ['🤖', '親子AIプログラミング体験会 2026年8月1日版'],
+  ['🧰', '親子AIプログラミング体験会スタッフ向け資料2026年8月1日版'],
+];
 
 function assert(condition, message) {
   if (!condition) {
@@ -241,6 +252,14 @@ async function verifyGeneralDocuments(grade) {
     'General build metadata does not list every configured document.');
   assert(!docsIndex.includes('一般ドキュメントは原文どおりに組版し、rubyganaによるふりがな追加は行っていません。'),
     'The retired non-ruby note remains on the documentation entrance page.');
+  assert((docsIndex.match(/<span class="card-icon" aria-hidden="true">/gu) ?? []).length
+      === documentationCardIcons.length,
+  `Expected ${documentationCardIcons.length} documentation card icons.`);
+  for (const [icon, title] of documentationCardIcons) {
+    assert(docsIndex.includes(
+      `<h3><span class="card-icon" aria-hidden="true">${icon}</span>${title}</h3>`,
+    ), `The documentation card for ${title} does not use the expected ${icon} icon.`);
+  }
 
   for (const generalDocument of generalDocumentConfig.documents) {
     const htmlFilename = generalDocument.sourceFilename.replace(/\.md$/u, '.html');
