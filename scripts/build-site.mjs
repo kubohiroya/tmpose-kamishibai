@@ -10,7 +10,7 @@ const source = new URL('../site/', import.meta.url);
 const output = new URL('../dist/', import.meta.url);
 const outputPath = fileURLToPath(output);
 const faviconPath = path.join(outputPath, 'favicon.png');
-const heroImageSource = new URL('../docs/images/image49.png', import.meta.url);
+const heroImageSource = new URL('../docs/images/image01.png', import.meta.url);
 const heroImageDirectory = new URL('../dist/images/', import.meta.url);
 const downloadSb3 = new URL('../dist/downloads/kamishibai.sb3', import.meta.url);
 
@@ -49,7 +49,7 @@ await cp(source, output, {recursive: true});
 const sb3Build = await buildSb3({outputPath: fileURLToPath(downloadSb3)});
 console.log(`Built downloadable SB3: ${sb3Build.outputPath}`);
 await mkdir(heroImageDirectory, {recursive: true});
-await copyFile(heroImageSource, new URL('image49.png', heroImageDirectory));
+await copyFile(heroImageSource, new URL('image01.png', heroImageDirectory));
 await buildDocs();
 await addFaviconLinks();
 await verifyBuild();
