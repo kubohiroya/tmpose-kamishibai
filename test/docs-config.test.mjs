@@ -95,7 +95,7 @@ test('publishes appendix A as a standalone non-ruby staff document', () => {
     }],
   );
   assert.match(source, new RegExp(`^# ${staffDocumentConfig.title}$`, 'mu'));
-  assert.match(source, /^## 1\. 体験会運営用資料$/mu);
+  assert.match(source, /^# 1\. 体験会運営用資料$/mu);
   assert.doesNotMatch(source, /^## 2\. アプリ$/mu);
   assert.doesNotMatch(source, /^## 3\. (?:関連)?ライブラリ(?:など)?$/mu);
   assert.doesNotMatch(source, /^#{1,3} [ABC]\./mu);

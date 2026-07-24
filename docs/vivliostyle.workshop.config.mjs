@@ -26,7 +26,7 @@ export default defineConfig({
       rel: 'cover',
       path: `${documentConfig.sourceDirectory}/${documentConfig.coverFilename}`,
       output: documentConfig.coverHtmlFilename,
-      imageSrc: 'images/image49.png',
+      imageSrc: 'images/image01.png',
       theme: [
         'theme.css',
         'document-theme.css',

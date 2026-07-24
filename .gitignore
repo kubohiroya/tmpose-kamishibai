@@ -6,5 +6,6 @@ tmp/
 /urashima.sb3
 /site/downloads/*.sb3
 .vivliostyle/
+/.serena/
 .idea/
 .DS_Store

@@ -25,8 +25,8 @@ const docsDirectory = path.join(projectRoot, 'dist/docs');
 const siteIndexPath = path.join(projectRoot, 'dist/index.html');
 const faviconSourcePath = path.join(projectRoot, 'site/favicon.png');
 const faviconPath = path.join(outputDirectory, 'favicon.png');
-const heroImageSourcePath = path.join(projectRoot, 'docs/images/image49.png');
-const heroImagePath = path.join(projectRoot, 'dist/images/image49.png');
+const heroImageSourcePath = path.join(projectRoot, 'docs/images/image01.png');
+const heroImagePath = path.join(projectRoot, 'dist/images/image01.png');
 const downloadFilename = 'kamishibai.sb3';
 const downloadSourceDirectory = path.join(projectRoot, 'site/downloads');
 const downloadDirectory = path.join(projectRoot, 'dist/downloads');
@@ -156,12 +156,12 @@ async function verifySiteIndex() {
     readFile(heroImagePath),
   ]);
 
-  assert(images.includes('images/image49.png'),
+  assert(images.includes('images/image01.png'),
     'The top page does not reference the configured hero image.');
   assert(altTexts.includes('カメラ映像の上に浦島太郎とカメを重ね、ポーズ認識で紙芝居を進めているアプリ画面'),
     'The top-page hero image does not have the expected alternative text.');
   assert(sourceImage.equals(publishedImage),
-    'The published top-page hero image differs from docs/images/image49.png.');
+    'The published top-page hero image differs from docs/images/image01.png.');
   assert(cardCount === 4, `Expected four top-page content cards, found ${cardCount}.`);
   assert(allLinks.includes('https://sqs.prof.cuc.ac.jp/kamishibai/'),
     'The top page does not link to the published web app.');
@@ -386,7 +386,7 @@ async function verifyStaffDocument() {
 
   assert(source.startsWith(`# ${staffDocumentConfig.title}\n`),
     'Staff Markdown does not start with the configured title.');
-  assert(/^## 1\. 体験会運営用資料$/mu.test(source),
+  assert(/^# 1\. 体験会運営用資料$/mu.test(source),
     'Staff Markdown does not contain the reorganized operations section.');
   assert(!/^## 2\. アプリ$/mu.test(source)
       && !/^## 3\. (?:関連)?ライブラリ(?:など)?$/mu.test(source),
@@ -397,7 +397,7 @@ async function verifyStaffDocument() {
     'Staff HTML does not contain its configured title.');
   assert(!html.includes('<ruby') && !html.includes('data-rubygana-grade='),
     'Staff HTML was unexpectedly processed by rubygana.');
-  assert(images.length === 1 && images[0] === 'images/image14.jpg',
+  assert(images.length === 1 && images[0] === 'images/image03.jpg',
     'Staff HTML does not contain the expected local venue map.');
   assert(JSON.stringify(readingOrder) === JSON.stringify([staffDocumentConfig.htmlFilename]),
     `Unexpected staff publication reading order: ${readingOrder.join(', ')}`);
@@ -439,10 +439,12 @@ export async function verifyBuild() {
   const tocLabelCount = (toc.match(/class="toc-label"/gu) ?? []).length;
   const codeBlocks = combinedHtml.match(/<pre\b[\s\S]*?<\/pre>/gu) ?? [];
   const sourceImagePlacements = [...combinedSource.matchAll(
-    /!\[\]\[(image\d+)\](?:\{style="width: ([0-9.]+)px;"\})?/gu,
+    /!\[\]\(\.\.\/\.\.\/images\/(image\d{2}\.(?:jpg|png))\)\{style="(width|height): ([0-9.]+)px;"\}/gu,
   )];
   const sourceImageCount = sourceImagePlacements.length;
-  const sourceImageWidths = sourceImagePlacements.map(([, , width]) => width);
+  const sourceImageSizes = sourceImagePlacements.map(([, , dimension, size]) => (
+    `${dimension}:${size}`
+  ));
   const docsEntries = await readdir(docsDirectory, {withFileTypes: true});
   const tocLinks = await verifyLocalReferences(tocPath, 'a', 'href');
   const coverImages = await verifyLocalReferences(coverHtmlPath, 'img', 'src');
@@ -549,18 +551,19 @@ export async function verifyBuild() {
   assert(incorrectNameRubyCount === 0,
     'Documentation HTML still contains the incorrect ゆうや reading.');
   assert(sourceImageCount > 0, 'Documentation Markdown does not contain any images.');
-  assert(sourceImageWidths.every((width) => width && Number(width) > 0),
-    'Every Markdown image placement must have a positive pixel width.');
+  assert(sourceImagePlacements.every(([, , , size]) => Number(size) > 0),
+    'Every Markdown image placement must have a positive pixel size.');
   assert(images.length === sourceImageCount,
     `Expected ${sourceImageCount} documentation image elements, found ${images.length}.`);
-  const generatedImageWidths = imageStyles.map((style) => (
-    style.match(/(?:^|;)\s*width:\s*([0-9.]+)px;/u)?.[1]
-  ));
+  const generatedImageSizes = imageStyles.map((style) => {
+    const match = style.match(/(?:^|;)\s*(width|height):\s*([0-9.]+)px;/u);
+    return match ? `${match[1]}:${match[2]}` : undefined;
+  });
   assert(imageStyles.length === images.length
-      && generatedImageWidths.every((width) => width && Number(width) > 0),
-  'A generated documentation image is missing its source placement width.');
-  assert(JSON.stringify(generatedImageWidths) === JSON.stringify(sourceImageWidths),
-    'Generated documentation image widths do not match the Markdown placements.');
+      && generatedImageSizes.every(Boolean),
+  'A generated documentation image is missing its source placement size.');
+  assert(JSON.stringify(generatedImageSizes) === JSON.stringify(sourceImageSizes),
+    'Generated documentation image sizes do not match the Markdown placements.');
   assert(!combinedHtml.includes('data:image/'),
     'Documentation HTML contains an embedded image data URL.');
   assert(toc.includes(`data-rubygana-grade="${grade}"`),
